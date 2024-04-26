@@ -1,0 +1,46 @@
+{
+  "name": "echo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "yarn workspace @echo/web vite",
+    "build": "yarn workspace @echo/web tsc && vite build",
+    "format": "prettier --check \"packages/**/*.{ts, tsx}\"",
+    "gen": "yarn plop",
+    "lint": "yarn workspaces run lint",
+    "preview": "yarn workspace @echo/web vite preview",
+    "typecheck": "yarn workspaces run typecheck",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@effect/schema": "^0.67.13",
+    "effect": "^3.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-inject": "^5.0.5",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vitejs/plugin-react-swc": "^3.5.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "husky": "~9.0.11",
+    "plop": "^4.0.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "packages/components/*",
+    "packages/core/*",
+    "packages/infrastructure/*",
+    "packages/workflows/*",
+    "packages/workers/*"
+  ]
+}
