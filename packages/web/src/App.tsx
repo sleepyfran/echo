@@ -1,18 +1,22 @@
 import {
   AvailableProviders,
   type FolderContent,
-  ProviderFactory,
-  ProviderType,
   type Authentication,
   type AuthenticationInfo,
   type Provider,
   type ProviderMetadata,
 } from "@echo/core-types";
-import { providerFactoryByMetadata } from "./provider-loader";
-import { Effect, Layer } from "effect";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
+import {
+  createResultMatcher,
+  useEffectRunner,
+  useEffectTs,
+  useMatcherOf,
+  useOnMountEffect,
+} from "./effect-bridge-hooks";
+import { lazyLoadProviderFromMetadata } from "@echo/infrastructure-bootstrap";
 import { AppConfigLive } from "./app-config";
-import { useEffectTs } from "./effect-bridge-hooks";
+import { Match } from "effect";
 
 type Status =
   | { state: "none-selected" }
@@ -23,37 +27,35 @@ type Status =
       createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
     };
 
-const loadProviderByMetadata = (metadata: ProviderMetadata) =>
-  Effect.gen(function* () {
-    const providerFactoryLive = providerFactoryByMetadata(metadata).pipe(
-      Layer.provide(AppConfigLive),
-    );
-
-    return yield* Effect.provide(
-      Effect.gen(function* () {
-        const providerFactory = yield* ProviderFactory;
-        const authentication = yield* providerFactory.authenticationProvider;
-
-        return {
-          metadata,
-          authentication,
-          createMediaProvider: providerFactory.createMediaProvider,
-        };
-      }),
-      providerFactoryLive,
-    );
-  });
-
 export const App = () => {
   const [status, setStatus] = useState<Status>({
     state: "none-selected",
   });
+  const runEffect = useEffectRunner();
 
-  const addProvider = useCallback((metadata: ProviderMetadata) => {
-    Effect.runPromise(loadProviderByMetadata(metadata)).then((result) =>
-      setStatus({ state: "selected", ...result }),
-    );
-  }, []);
+  const addProvider = useCallback(
+    (metadata: ProviderMetadata) => {
+      const effect = lazyLoadProviderFromMetadata(metadata, AppConfigLive);
+      const matcher = createResultMatcher(effect);
+
+      runEffect(effect).then(
+        matcher.pipe(
+          Match.tag("initial", () => {}),
+          Match.tag("success", (state) =>
+            setStatus({
+              state: "selected",
+              metadata,
+              authentication: state.result.authentication,
+              createMediaProvider: state.result.createMediaProvider,
+            }),
+          ),
+          Match.tag("failure", () => setStatus({ state: "none-selected" })),
+          Match.exhaustive,
+        ),
+      );
+    },
+    [runEffect],
+  );
 
   return status.state === "none-selected" ? (
     <ProviderSelector onProviderSelected={addProvider} />
@@ -83,23 +85,24 @@ const ProviderAuthenticator = ({
   createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
 }) => {
   const [connectToProvider, connectState] = useEffectTs(authentication.connect);
+  const matcher = useMatcherOf(authentication.connect);
 
   return (
     <div>
       {metadata.id}
-      {connectState.state === "initial" && (
-        <button onClick={connectToProvider}>Login</button>
-      )}
-      {connectState.state === "success" &&
-        metadata.type === ProviderType.FileBased && (
+      {matcher.pipe(
+        Match.tag("initial", () => (
+          <button onClick={connectToProvider}>Login</button>
+        )),
+        Match.tag("success", (state) => (
           <SelectRoot
-            authInfo={connectState.result}
+            authInfo={state.result}
             createMediaProvider={createMediaProvider}
           />
-        )}
-      {connectState.state === "failure" && (
-        <div>Error: {connectState.error}</div>
-      )}
+        )),
+        Match.tag("failure", (state) => <div>Error: {state.error}</div>),
+        Match.exhaustive,
+      )(connectState)}
     </div>
   );
 };
@@ -116,19 +119,21 @@ const SelectRoot = ({
     [createMediaProvider, authInfo],
   );
 
-  const [listRoot, listState] = useEffectTs(mediaProvider.listRoot);
-
-  useEffect(() => listRoot(), [listRoot]);
+  const listState = useOnMountEffect(mediaProvider.listRoot);
+  const matcher = useMatcherOf(mediaProvider.listRoot);
 
   return (
     <div>
-      {listState.state === "initial" && (
-        <div>Loading root of media provider...</div>
-      )}
-      {listState.state === "success" && (
-        <FolderSelector foldersOrFiles={listState.result} />
-      )}
-      {listState.state === "failure" && <div>Error: {listState.error}</div>}
+      {matcher.pipe(
+        Match.tag("initial", () => (
+          <div>Loading root of media provider...</div>
+        )),
+        Match.tag("success", (state) => (
+          <FolderSelector foldersOrFiles={state.result} />
+        )),
+        Match.tag("failure", (state) => <div>Error: {state.error}</div>),
+        Match.exhaustive,
+      )(listState)}
     </div>
   );
 };
