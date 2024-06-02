@@ -5,7 +5,7 @@ import type { Guid } from "../model";
  * Interface around crypto-related operations like generating UUIDs.
  */
 export interface Crypto {
-  readonly generateUuid: () => Effect.Effect<Guid>;
+  readonly generateUuid: Effect.Effect<Guid>;
 }
 
 /**

@@ -34,13 +34,13 @@ export const createListFolder =
 
           return item.folder
             ? {
-                type: "folder" as const,
+                _tag: "folder" as const,
                 id: item.id,
                 name: item.name,
               }
             : item.file && item["@microsoft.graph.downloadUrl"]
               ? {
-                  type: "file" as const,
+                  _tag: "file" as const,
                   id: item.id,
                   name: item.name,
                   byteSize: item.size ?? 0,

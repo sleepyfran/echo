@@ -1,29 +1,38 @@
+import { Schema } from "@effect/schema";
 import { Context } from "effect";
 
 /**
- * Defines the global application configuration.
+ * Defines the schema for the application configuration.
  */
-export type AppConfig = {
+export const AppConfigSchema = Schema.Struct({
   /**
    * Settings related to the Graph API.
    */
-  graph: {
+  graph: Schema.Struct({
     /**
      * The client ID of the application registered in Azure AD.
      */
-    clientId: string;
+    clientId: Schema.String.pipe(Schema.nonEmpty()),
 
     /**
      * The redirect URI of the application registered in Azure AD.
      */
-    redirectUri: string;
+    redirectUri: Schema.String.pipe(
+      Schema.nonEmpty(),
+      Schema.startsWith("https://"),
+    ),
 
     /**
      * List of scopes to request when authenticating.
      */
-    scopes: string[];
-  };
-};
+    scopes: Schema.NonEmptyArray(Schema.String),
+  }),
+});
+
+/**
+ * Defines the global application configuration.
+ */
+export type AppConfig = Schema.Schema.Type<typeof AppConfigSchema>;
 
 /**
  * Tag to identify the application configuration in the context.

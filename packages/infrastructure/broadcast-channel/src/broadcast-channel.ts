@@ -12,12 +12,6 @@ type Request<TSchema extends Schema, TActionId extends keyof TSchema> = {
   input: Parameters<TSchema[TActionId]>;
 };
 
-/**
- * Error thrown when an action times out after either the specified timeout
- * or the default timeout.
- */
-export class ActionTimedOutError extends Error {}
-
 const createRequest = <TSchema extends Schema, TActionId extends keyof TSchema>(
   correlationId: Guid,
   actionId: TActionId,
@@ -47,7 +41,7 @@ export const BroadcastChannelLive = Layer.effect(
           return {
             send: (actionId, input) =>
               Effect.gen(function* () {
-                const correlationId = yield* crypto.generateUuid();
+                const correlationId = yield* crypto.generateUuid;
                 const request = createRequest(correlationId, actionId, input);
                 const channel = yield* _broadcastChannel.get;
 
@@ -56,25 +50,27 @@ export const BroadcastChannelLive = Layer.effect(
                 });
               }),
             registerResolver: (actionId, resolver) =>
-              Effect.gen(function* () {
-                const channel = yield* _broadcastChannel.get;
+              Effect.fork(
+                Effect.gen(function* () {
+                  const channel = yield* _broadcastChannel.get;
 
-                return Stream.fromEventListener<
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  MessageEvent<Request<any, any>>
-                >(channel, "message").pipe(
-                  Stream.tap((event) =>
-                    Console.log(
-                      `Received request for action ${event.data.actionId} with correlation ${event.data.identifier}`,
-                    ),
-                  ),
-                  Stream.filter((event) => event.data.actionId === actionId),
-                  Stream.runForEach((event) =>
+                  return yield* Stream.fromEventListener<
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    resolver(event.data.input as any),
-                  ),
-                );
-              }),
+                    MessageEvent<Request<any, any>>
+                  >(channel, "message").pipe(
+                    Stream.tap((event) =>
+                      Console.log(
+                        `Received request for action ${event.data.actionId} with correlation ${event.data.identifier}`,
+                      ),
+                    ),
+                    Stream.filter((event) => event.data.actionId === actionId),
+                    Stream.runForEach((event) =>
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      resolver(event.data.input as any),
+                    ),
+                  );
+                }),
+              ),
           };
         }),
     });

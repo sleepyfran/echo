@@ -1,4 +1,4 @@
-import { Context, Effect, Scope } from "effect";
+import { Context, Effect, Fiber, Scope } from "effect";
 import type { Schema } from "../broadcast";
 
 /**
@@ -17,14 +17,23 @@ export type BroadcastChannel<TSchema extends Schema> = {
   ): Effect.Effect<void>;
 
   /**
-   * Registers a resolver for a specific action. The resolver will be called
-   * whenever a message is received in the channel for the specified action ID.
+   * Registers a resolver for a specific action and processes the messages in
+   * the background. Returns an effect that produces a fiber that can be used
+   * to interrupt the resolver, essentially stopping the processing of messages.
    */
   registerResolver<TActionId extends keyof TSchema>(
     actionId: TActionId,
     resolver: (input: TSchema[TActionId]) => Effect.Effect<void>,
-  ): Effect.Effect<void>;
+  ): Effect.Effect<Fiber.RuntimeFiber<void>>;
 };
+
+/**
+ * Defines all the possible broadcast channel names that can be used in the
+ * typed broadcast channel.
+ */
+export enum BroadcastChannelName {
+  MediaProvider = "media-provider",
+}
 
 /**
  * A factory that can create new instances of a typed broadcast channel for
@@ -36,7 +45,7 @@ export class BroadcastChannelFactory extends Context.Tag(
   BroadcastChannelFactory,
   {
     readonly create: <TSchema extends Schema>(
-      channelName: string,
+      channelName: BroadcastChannelName,
     ) => Effect.Effect<BroadcastChannel<TSchema>, never, Scope.Scope>;
   }
 >() {}

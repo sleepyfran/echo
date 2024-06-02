@@ -1,3 +1,5 @@
+import * as S from "@effect/schema/Schema";
+
 /**
  * ID of the provider that the metadata is for.
  */
@@ -19,10 +21,11 @@ export enum ProviderType {
  * Metadata of a provider that can identify the provider and the capabilities
  * it supports.
  */
-export type ProviderMetadata = {
-  id: ProviderId;
-  type: ProviderType;
-};
+export const ProviderMetadataSchema = S.Struct({
+  id: S.Enums(ProviderId),
+  type: S.Enums(ProviderType),
+});
+export type ProviderMetadata = S.Schema.Type<typeof ProviderMetadataSchema>;
 
 /**
  * Metadata of the OneDrive provider.

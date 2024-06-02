@@ -21,10 +21,10 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@effect/schema@^0.67.13":
-  version "0.67.13"
-  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.67.13.tgz#66eb21f96c5e68d9e16867441be93aeb8c71844b"
-  integrity sha512-MVd/50CKM18vpOA1dF9fMUdwP0HKH3hISFzS0LB7gsBZ+381V1PmxIJia/1VLmh4S6RKf4pFaQz27VtRUbh1Zg==
+"@effect/schema@^0.67.18":
+  version "0.67.18"
+  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.67.18.tgz#1045ec45134488415b22832006e7b72c59395503"
+  integrity sha512-jvi5Vvl6jA/n6MhVupTubcxQhMUEpelitlkykiBvXKKBvotyKZ1Clw+shdhLFrFfjGM0g3Yv/L+7m8RbCiTqLg==
   dependencies:
     fast-check "^3.17.2"
 
@@ -912,10 +912,10 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
-effect@^3.2.5:
-  version "3.2.5"
-  resolved "https://registry.yarnpkg.com/effect/-/effect-3.2.5.tgz#bf81b3a9a7b5dd329701ea2c883b63fb8f513c66"
-  integrity sha512-Qs/NAX2s/ClRATbiImc4IuzzAs+1RaFzZm7zRx9NKmLFnIeCC+h2LwkrOuprG3PsDM+g1IfPEFWvVbTSDKPnFA==
+effect@^3.2.8:
+  version "3.2.8"
+  resolved "https://registry.yarnpkg.com/effect/-/effect-3.2.8.tgz#2517f72cf7041605243f3a1ec65859b3b6b39cd5"
+  integrity sha512-W9xHCXg+CKwvNb+/vEsfiBxSqyOEAyjo7mz1M7Kq5ZtxBUyefOsQxc3oGME7bTcxD4OozWcR27Sk4iYxHERoZg==
 
 emoji-regex@^10.3.0:
   version "10.3.0"

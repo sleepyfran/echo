@@ -1,0 +1,15 @@
+{
+  "name": "@echo/workers-media-provider",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the MediaProvider related workers",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/infrastructure-broadcast-channel": "^1.0.0",
+    "@echo/infrastructure-browser-crypto": "^1.0.0"
+  }
+}
