@@ -1,5 +1,9 @@
 import type { Effect } from "effect/Effect";
-import type { AuthenticationInfo, Folder, FolderContent } from "../model";
+import type {
+  AuthenticationInfo,
+  FolderMetadata,
+  FolderContentMetadata,
+} from "../model";
 import type { Authentication } from "./authentication";
 import { Context } from "effect";
 
@@ -14,14 +18,14 @@ export type FileBasedProvider = {
   /**
    * Lists the root folder of the provider.
    */
-  readonly listRoot: Effect<FolderContent, FileBasedProviderError>;
+  readonly listRoot: Effect<FolderContentMetadata, FileBasedProviderError>;
 
   /**
    * Lists the given folder.
    */
   readonly listFolder: (
-    folder: Folder,
-  ) => Effect<FolderContent, FileBasedProviderError>;
+    folder: FolderMetadata,
+  ) => Effect<FolderContentMetadata, FileBasedProviderError>;
 };
 
 /**

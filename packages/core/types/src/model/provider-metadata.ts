@@ -1,5 +1,3 @@
-import * as S from "@effect/schema/Schema";
-
 /**
  * ID of the provider that the metadata is for.
  */
@@ -21,11 +19,10 @@ export enum ProviderType {
  * Metadata of a provider that can identify the provider and the capabilities
  * it supports.
  */
-export const ProviderMetadataSchema = S.Struct({
-  id: S.Enums(ProviderId),
-  type: S.Enums(ProviderType),
-});
-export type ProviderMetadata = S.Schema.Type<typeof ProviderMetadataSchema>;
+export type ProviderMetadata = {
+  id: ProviderId;
+  type: ProviderType;
+};
 
 /**
  * Metadata of the OneDrive provider.
@@ -50,3 +47,27 @@ export const AvailableProviders = [
   OneDriveProviderMetadata,
   SpotifyProviderMetadata,
 ] as const;
+
+/**
+ * Enum of possible errors that can occur when interacting with a provider.
+ */
+export enum ProviderError {
+  /**
+   * The provided token has expired or is no longer valid.
+   */
+  TokenExpired = "token-expired",
+
+  /**
+   * The provider encountered an error when trying to connect to the API.
+   */
+  ApiGatewayError = "api-gateway-error",
+}
+
+/**
+ * Defines all the possible states that a provider can be in.
+ */
+export type ProviderStatus =
+  | { _tag: "not-started" }
+  | { _tag: "syncing" }
+  | { _tag: "errored"; error: ProviderError }
+  | { _tag: "stopped" };

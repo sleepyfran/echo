@@ -1,6 +1,6 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
-import { FileBasedProviderError, type Folder } from "@echo/core-types";
+import { FileBasedProviderError, type FolderMetadata } from "@echo/core-types";
 import type { CollectionResult } from "./types.ts";
 import { Effect } from "effect";
 
@@ -11,7 +11,7 @@ type RootItem = Pick<DriveItem, "folder" | "name" | "id">;
  */
 export const createListRoot = (
   client: Client,
-): Effect.Effect<Folder[], FileBasedProviderError> =>
+): Effect.Effect<FolderMetadata[], FileBasedProviderError> =>
   Effect.tryPromise<CollectionResult<RootItem>, FileBasedProviderError>({
     try: () =>
       client
@@ -29,7 +29,7 @@ export const createListRoot = (
 
         return item.folder
           ? {
-              type: "folder" as const,
+              _tag: "folder" as const,
               id: item.id,
               name: item.name,
             }

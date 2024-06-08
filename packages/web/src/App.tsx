@@ -1,67 +1,54 @@
 import {
   AvailableProviders,
-  type FolderContent,
+  type FolderContentMetadata,
   type Authentication,
   type AuthenticationInfo,
   type Provider,
   type ProviderMetadata,
+  type FolderMetadata,
+  BroadcastChannelFactory,
+  BroadcastChannelName,
+  type MainThreadToMediaProviderBroadcastSchema,
 } from "@echo/core-types";
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
-  createResultMatcher,
-  useEffectRunner,
+  useEffectCallback,
   useEffectTs,
   useMatcherOf,
   useOnMountEffect,
 } from "./effect-bridge-hooks";
 import { lazyLoadProviderFromMetadata } from "@echo/infrastructure-bootstrap";
+import { BroadcastChannelLive } from "@echo/infrastructure-broadcast-channel";
+import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
 import { AppConfigLive } from "./app-config";
-import { Match } from "effect";
-
-type Status =
-  | { state: "none-selected" }
-  | {
-      state: "selected";
-      metadata: ProviderMetadata;
-      authentication: Authentication;
-      createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
-    };
+import { Effect, Match } from "effect";
 
 export const App = () => {
-  const [status, setStatus] = useState<Status>({
-    state: "none-selected",
-  });
-  const runEffect = useEffectRunner();
-
-  const addProvider = useCallback(
-    (metadata: ProviderMetadata) => {
-      const effect = lazyLoadProviderFromMetadata(metadata, AppConfigLive);
-      const matcher = createResultMatcher(effect);
-
-      runEffect(effect).then(
-        matcher.pipe(
-          Match.tag("initial", () => {}),
-          Match.tag("success", (state) =>
-            setStatus({
-              state: "selected",
-              metadata,
-              authentication: state.result.authentication,
-              createMediaProvider: state.result.createMediaProvider,
-            }),
-          ),
-          Match.tag("failure", () => setStatus({ state: "none-selected" })),
-          Match.exhaustive,
-        ),
-      );
-    },
-    [runEffect],
+  const [addProvider, addProviderStatus, matcher] = useEffectCallback(
+    lazyLoadProviderFromMetadata,
   );
 
-  return status.state === "none-selected" ? (
-    <ProviderSelector onProviderSelected={addProvider} />
-  ) : (
-    <ProviderAuthenticator {...status} />
+  const onProviderSelected = useCallback(
+    (metadata: ProviderMetadata) => addProvider(metadata, AppConfigLive),
+    [addProvider],
   );
+
+  return matcher.pipe(
+    Match.tag("initial", () => (
+      <ProviderSelector onProviderSelected={onProviderSelected} />
+    )),
+    Match.tag("success", ({ result }) => (
+      <ProviderAuthenticator
+        metadata={result.metadata}
+        authentication={result.authentication}
+        createMediaProvider={result.createMediaProvider}
+      />
+    )),
+    Match.tag("failure", () => (
+      <div style={{ color: "red" }}>Failed to load provider.</div>
+    )),
+    Match.exhaustive,
+  )(addProviderStatus);
 };
 
 const ProviderSelector = ({
@@ -84,8 +71,9 @@ const ProviderAuthenticator = ({
   authentication: Authentication;
   createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
 }) => {
-  const [connectToProvider, connectState] = useEffectTs(authentication.connect);
-  const matcher = useMatcherOf(authentication.connect);
+  const [connectToProvider, connectState, matcher] = useEffectTs(
+    authentication.connect,
+  );
 
   return (
     <div>
@@ -97,6 +85,7 @@ const ProviderAuthenticator = ({
         Match.tag("success", (state) => (
           <SelectRoot
             authInfo={state.result}
+            metadata={metadata}
             createMediaProvider={createMediaProvider}
           />
         )),
@@ -109,9 +98,11 @@ const ProviderAuthenticator = ({
 
 const SelectRoot = ({
   authInfo,
+  metadata,
   createMediaProvider,
 }: {
   authInfo: AuthenticationInfo;
+  metadata: ProviderMetadata;
   createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
 }) => {
   const mediaProvider = useMemo(
@@ -129,7 +120,11 @@ const SelectRoot = ({
           <div>Loading root of media provider...</div>
         )),
         Match.tag("success", (state) => (
-          <FolderSelector foldersOrFiles={state.result} />
+          <FolderSelector
+            authInfo={authInfo}
+            metadata={metadata}
+            foldersOrFiles={state.result}
+          />
         )),
         Match.tag("failure", (state) => <div>Error: {state.error}</div>),
         Match.exhaustive,
@@ -138,12 +133,73 @@ const SelectRoot = ({
   );
 };
 
+const startMediaProviderEffect = (
+  authInfo: AuthenticationInfo,
+  metadata: ProviderMetadata,
+  rootFolder: FolderMetadata,
+) =>
+  Effect.gen(function* () {
+    const { create: createBroadcastChannel } = yield* BroadcastChannelFactory;
+    const broadcastChannel =
+      yield* createBroadcastChannel<MainThreadToMediaProviderBroadcastSchema>(
+        BroadcastChannelName.MediaProvider,
+      );
+
+    yield* broadcastChannel.send("start", {
+      _tag: "file-based",
+      metadata,
+      authInfo,
+      rootFolder,
+    });
+  }).pipe(
+    Effect.provide(BroadcastChannelLive),
+    Effect.provide(BrowserCryptoLive),
+    Effect.scoped,
+  ); // TODO: Move to some other layer for the main app.
+
 const FolderSelector = ({
+  authInfo,
   foldersOrFiles,
+  metadata,
 }: {
-  foldersOrFiles: FolderContent;
+  authInfo: AuthenticationInfo;
+  foldersOrFiles: FolderContentMetadata;
+  metadata: ProviderMetadata;
 }) => {
-  return foldersOrFiles.map((folderOrFile) => (
-    <button key={folderOrFile.id}>{folderOrFile.name}</button>
-  ));
+  const [selectRoot, selectRootState, matcher] = useEffectCallback(
+    startMediaProviderEffect,
+  );
+
+  // TODO: Don't tie React onto this! This should be done either on the effect or in a utility function.
+  const folders = useMemo(
+    () =>
+      foldersOrFiles.flatMap((folderOrFile) =>
+        Match.value(folderOrFile).pipe(
+          Match.tag("folder", (folder) => [folder]),
+          Match.tag("file", () => []),
+          Match.exhaustive,
+        ),
+      ),
+    [foldersOrFiles],
+  );
+
+  return matcher.pipe(
+    Match.tag("initial", () =>
+      folders.map((folder) => (
+        <button
+          onClick={() => selectRoot(authInfo, metadata, folder)}
+          key={folder.id}
+        >
+          {folder.name}
+        </button>
+      )),
+    ),
+    Match.tag("success", () => <h1>Done-o! Check the console :^)</h1>),
+    Match.tag("failure", () => (
+      <h1 style={{ color: "red" }}>
+        Uh, oh! Something went wrong. Check the console :(
+      </h1>
+    )),
+    Match.exhaustive,
+  )(selectRootState);
 };

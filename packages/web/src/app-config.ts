@@ -1,7 +1,10 @@
 import { AppConfig } from "@echo/core-types";
 import { Layer } from "effect";
 
-const appConfig: AppConfig = {
+/**
+ * The application configuration.
+ */
+export const appConfig: AppConfig = {
   graph: {
     clientId: import.meta.env.VITE_CLIENT_ID,
     redirectUri: import.meta.env.VITE_REDIRECT_URI,

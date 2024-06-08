@@ -18,7 +18,7 @@ type EffectResultState<TResult, TError> =
  * @returns A matcher that can be used to match the different states of an effect.
  */
 export const createResultMatcher = <TResult, TError>(
-  _effect: Effect.Effect<TResult, TError>,
+  _effect?: Effect.Effect<TResult, TError>,
 ) => Match.type<EffectResultState<TResult, TError>>();
 
 /**
@@ -33,6 +33,16 @@ export const useMatcherOf = <TResult, TError>(
   return useMemo(() => createResultMatcher(effectRef.current), []);
 };
 
+/**
+ * Hook that creates a matcher that is referentially stable for delayed effects.
+ * @param _effectFn Unused, but required to infer the type of the effect.
+ * @returns A matcher that can be used to match the different states of the effect.
+ */
+export const useMatcherOfDelayed = <TResult, TError>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _effectFn: (...args: any[]) => Effect.Effect<TResult, TError>,
+) => useMemo(() => createResultMatcher<TResult, TError>(), []);
+
 const toFailure = <TError>(
   error: TError | string,
 ): EffectResultState<never, TError> => ({
@@ -41,80 +51,79 @@ const toFailure = <TError>(
 });
 
 /**
- * Returns a function that can be used to run an Effect (from effect-ts, not the
- * React concept) that returns a promise with the result of the effect.
- *
- * Syncs the effect with the component lifecycle, cancelling the effect when the
- * component is unmounted and attempts to handle the different states of the
- * effect without throwing errors.
- * @returns A function that can be used to run an Effect.
+ * Wrapper around `Effect.runPromiseExit` that runs the given effect and returns
+ * a promise that resolves to the result of the effect.
  */
-export const useEffectRunner = () => {
-  const abortControllerRef = useRef<AbortController | null>();
-
-  // Having a custom abort controller allows us to cancel the effect when the
-  // component that is using this hook is unmounted. However, in strict mode
-  // React re-renders the component twice, which causes the cleanup to be called
-  // for no reason at the beginning and causes errors. So, commenting this out
-  // for now, it could be later re-introduced if needed.
-  // useEffect(() => {
-  //   abortControllerRef.current = new AbortController();
-
-  //   return () => {
-  //     if (abortControllerRef.current) {
-  //       abortControllerRef.current.abort();
-  //     }
-  //   };
-  // });
-
-  return useCallback(
-    <TResult, TError>(
-      effect: Effect.Effect<TResult, TError>,
-    ): Promise<EffectResultState<TResult, TError>> =>
-      Effect.runPromiseExit(effect, {
-        signal: abortControllerRef.current?.signal,
-      }).then((exit) =>
-        Exit.match(exit, {
-          onSuccess: (value) => ({ _tag: "success", result: value }),
-          onFailure: (cause) => {
-            if (Cause.isFailType(cause)) {
-              return toFailure(cause.error);
-            } else {
-              return toFailure(Cause.pretty(cause));
-            }
-          },
-        }),
-      ),
-    [],
+export const runEffect = <TResult, TError>(
+  effect: Effect.Effect<TResult, TError>,
+): Promise<EffectResultState<TResult, TError>> => {
+  return Effect.runPromiseExit(effect).then((exit) =>
+    Exit.match(exit, {
+      onSuccess: (value) => ({ _tag: "success", result: value }),
+      onFailure: (cause) => {
+        if (Cause.isFailType(cause)) {
+          return toFailure(cause.error);
+        } else {
+          return toFailure(Cause.pretty(cause));
+        }
+      },
+    }),
   );
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EffectCallback<TInput extends any[]> = (...args: TInput) => void;
+type EffectMatcher<TResult, TError> = ReturnType<
+  typeof useMatcherOfDelayed<TResult, TError>
+>;
+
+/**
+ * Wraps the given callback in a function that accepts the same parameters but
+ * runs the effect returned by the given callback when called, returning back a
+ * union of possible states based on the effect's result and a matcher for that
+ * union.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const useEffectCallback = <TInput extends any[], TResult, TError>(
+  effectFn: (...args: TInput) => Effect.Effect<TResult, TError>,
+): [
+  EffectCallback<TInput>,
+  EffectResultState<TResult, TError>,
+  EffectMatcher<TResult, TError>,
+] => {
+  const [state, setState] = useState<EffectResultState<TResult, TError>>({
+    _tag: "initial",
+  });
+
+  // We don't want to re-run the effect when the component re-renders, so keep
+  // it referentially stable. Later, when the callback is called, we'll run the
+  // effect with the latest function.
+  const _effectFn = useRef(effectFn);
+
+  const executeEffect = useCallback((...args: TInput) => {
+    const effect = _effectFn.current(...args);
+    return runEffect(effect).then(setState);
+  }, []);
+
+  const matcher = useMatcherOfDelayed(effectFn);
+
+  return [executeEffect, state, matcher] as const;
 };
 
 /**
  * Runs the given Effect (from effect-ts, not the React concept) when the
  * callback is called via `Effect.runPromiseExit`, returning back a union of
- * possible states based on the Effect's result.
+ * possible states based on the Effect's result and a matcher for that union.
  *
  * TODO: Come up with a better name? What can we possibly call this? 🤬
  */
 export const useEffectTs = <TResult, TError>(
   effect: Effect.Effect<TResult, TError>,
-): [RunEffectCallback, EffectResultState<TResult, TError>] => {
-  const [state, setState] = useState<EffectResultState<TResult, TError>>({
-    _tag: "initial",
-  });
-  const runEffect = useEffectRunner();
-
-  // Wrap the effect in a ref to avoid re-running the effect when the component
-  // re-renders.
-  const effectRef = useRef(effect);
-
-  const executeEffect = useCallback(
-    () => runEffect(effectRef.current).then(setState),
-    [runEffect],
-  );
-
-  return [executeEffect, state] as const;
-};
+): [
+  RunEffectCallback,
+  EffectResultState<TResult, TError>,
+  EffectMatcher<TResult, TError>,
+] => useEffectCallback(() => effect);
 
 /**
  * Runs the given Effect (from effect-ts, not the React concept) when the

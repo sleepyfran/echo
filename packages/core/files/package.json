@@ -1,0 +1,12 @@
+{
+  "name": "@echo/core-files",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the core Files code",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {}
+}

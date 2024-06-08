@@ -2,8 +2,8 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import {
   FileBasedProviderError,
-  type Folder,
-  type FolderContent,
+  type FolderMetadata,
+  type FolderContentMetadata,
 } from "@echo/core-types";
 import type { CollectionResult } from "./types.ts";
 import { Effect } from "effect";
@@ -20,7 +20,9 @@ type FolderItem = Pick<
  */
 export const createListFolder =
   (client: Client) =>
-  (folder: Folder): Effect.Effect<FolderContent, FileBasedProviderError> =>
+  (
+    folder: FolderMetadata,
+  ): Effect.Effect<FolderContentMetadata, FileBasedProviderError> =>
     Effect.tryPromise<CollectionResult<FolderItem>, FileBasedProviderError>({
       try: () => client.api(`/me/drive/items/${folder.id}/children`).get(),
       catch: () => FileBasedProviderError.NotFound,

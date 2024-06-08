@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@echo/core-auth": "^1.0.0",
     "@echo/infrastructure-broadcast-channel": "^1.0.0",
     "@echo/infrastructure-browser-crypto": "^1.0.0"
   }

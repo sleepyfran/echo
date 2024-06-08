@@ -43,7 +43,7 @@ export const MsalAuthenticationLive = Layer.effect(
         });
 
         const authResult = yield* Effect.tryPromise({
-          try: () => app.loginPopup({ scopes: appConfig.graph.scopes }),
+          try: () => app.loginPopup({ scopes: [...appConfig.graph.scopes] }),
           catch: () => AuthenticationError.Unknown,
         });
 

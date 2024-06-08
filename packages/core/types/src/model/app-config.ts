@@ -19,7 +19,9 @@ export const AppConfigSchema = Schema.Struct({
      */
     redirectUri: Schema.String.pipe(
       Schema.nonEmpty(),
-      Schema.startsWith("https://"),
+      Schema.filter(
+        (url) => url.startsWith("http://") || url.startsWith("https://"),
+      ),
     ),
 
     /**

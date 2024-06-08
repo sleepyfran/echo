@@ -1,13 +1,18 @@
 import { BroadcastChannelLive } from "@echo/infrastructure-broadcast-channel";
 import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
-import { Effect, Match, Stream } from "effect";
+import { Effect, Match, Ref, Stream } from "effect";
 import * as S from "@effect/schema/Schema";
 import { InitMessage, init } from "./init";
+import { WorkerStateRef, type WorkerState } from "./state";
 
 export const WorkerMessage = S.Union(InitMessage);
 type WorkerMessage = S.Schema.Type<typeof WorkerMessage>;
 
 const decodeWorkerMessage = S.decode(WorkerMessage);
+
+const initialState = Ref.make<WorkerState>({
+  fiberByProvider: new Map(),
+});
 
 /**
  * This worker effect is the main entry-point for the media provider worker and
@@ -25,6 +30,7 @@ const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
       )(message);
     }),
   ),
+  Effect.provideServiceEffect(WorkerStateRef, initialState),
   Effect.provide(BroadcastChannelLive),
   Effect.provide(BrowserCryptoLive),
   Effect.scoped,

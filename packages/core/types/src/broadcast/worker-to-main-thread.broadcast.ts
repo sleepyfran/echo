@@ -1,4 +1,4 @@
-import type { ProviderMetadata } from "../model";
+import type { ProviderMetadata, ProviderStatus } from "../model";
 
 /**
  * Defines the schema for messages flowing from the media provider worker to the
@@ -6,12 +6,10 @@ import type { ProviderMetadata } from "../model";
  */
 export type MediaProviderWorkerToMainThreadBroadcastSchema = {
   /**
-   * Signal raised by the media provider when the token has either expired
-   * or is no longer valid. Upon receiving this signal, the main thread
-   * should acquire a new token from the provider and re-start the provider
-   * with the new token.
+   * Reports the status of a provider to the main thread.
    */
-  stoppedDueToExpiredToken: {
+  reportStatus: {
     metadata: ProviderMetadata;
+    status: ProviderStatus;
   };
 };

@@ -1,0 +1,17 @@
+{
+  "name": "@echo/infrastructure-mmb-metadata-provider",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the MmbMetadataProvider related infrastructure",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "buffer": "^6.0.3",
+    "music-metadata-browser": "^2.5.10",
+    "process": "^0.11.10"
+  }
+}

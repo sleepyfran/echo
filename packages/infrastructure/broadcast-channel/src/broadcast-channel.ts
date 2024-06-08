@@ -45,6 +45,10 @@ export const BroadcastChannelLive = Layer.effect(
                 const request = createRequest(correlationId, actionId, input);
                 const channel = yield* _broadcastChannel.get;
 
+                yield* Console.log(
+                  `Sending request for action ${String(actionId)} with correlation ${correlationId}`,
+                );
+
                 return yield* Effect.sync(() => {
                   channel.postMessage(request);
                 });

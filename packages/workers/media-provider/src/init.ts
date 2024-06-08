@@ -1,13 +1,15 @@
 import {
   BroadcastChannelFactory,
   AppConfig,
-  type MainThreadToMediaProviderBroadcast,
+  type MainThreadToMediaProviderBroadcastSchema,
   BroadcastChannelName,
   AppConfigSchema,
+  type MediaProviderWorkerToMainThreadBroadcastSchema,
 } from "@echo/core-types";
-import { Effect, Layer, Scope, Exit, Console, Fiber } from "effect";
+import { Console, Effect, Fiber, Layer } from "effect";
 import { startMediaProviderResolver } from "./resolvers/start.resolver";
 import * as S from "@effect/schema/Schema";
+import { WorkerStateRef } from "./state";
 
 export const InitMessage = S.TaggedStruct("init", {
   payload: S.Struct({
@@ -25,41 +27,38 @@ export const initMessageEncoder = S.encode(InitMessage);
  */
 export const init = (message: InitMessage) =>
   Effect.gen(function* () {
+    yield* Console.log("Initializing media provider worker...");
+
     const { appConfig } = message.payload;
     const { create: createBroadcastChannel } = yield* BroadcastChannelFactory;
+    const workerStateRef = yield* WorkerStateRef;
 
     const appConfigLayer = Layer.succeed(AppConfig, AppConfig.of(appConfig));
 
     const mainThreadToWorkerChannel =
-      yield* createBroadcastChannel<MainThreadToMediaProviderBroadcast>(
+      yield* createBroadcastChannel<MainThreadToMediaProviderBroadcastSchema>(
         BroadcastChannelName.MediaProvider,
       );
 
-    const fiberScope = yield* Scope.make();
-    const startFiber = yield* mainThreadToWorkerChannel.registerResolver(
-      "start",
-      (input) =>
-        startMediaProviderResolver(input).pipe(Effect.provide(appConfigLayer)),
-    );
+    const broadcastChannelToMainThread =
+      yield* createBroadcastChannel<MediaProviderWorkerToMainThreadBroadcastSchema>(
+        BroadcastChannelName.MediaProvider,
+      );
 
-    const stopFiber = yield* mainThreadToWorkerChannel.registerResolver(
-      "stop",
-      (_input) =>
-        Effect.gen(function* () {
-          yield* Scope.close(
-            fiberScope,
-            Exit.succeed("Stopped all main thread to worker resolvers"),
-          );
+    const startResolverFiber =
+      yield* mainThreadToWorkerChannel.registerResolver("start", (input) =>
+        startMediaProviderResolver({
+          appConfigLayer,
+          broadcastChannel: broadcastChannelToMainThread,
+          input,
+          workerStateRef,
         }),
+      );
+
+    const stopResolverFiber = yield* mainThreadToWorkerChannel.registerResolver(
+      "stop",
+      (_input) => Effect.succeed(() => {}),
     );
 
-    // Cleanup the fibers when the scope is closed.
-    Scope.addFinalizer(
-      fiberScope,
-      Effect.gen(function* () {
-        yield* Console.log("Cleaning up main thread to worker resolvers");
-        yield* Fiber.interrupt(startFiber);
-        yield* Fiber.interrupt(stopFiber);
-      }),
-    );
+    Fiber.joinAll([startResolverFiber, stopResolverFiber]);
   });
