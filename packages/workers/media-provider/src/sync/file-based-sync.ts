@@ -9,7 +9,7 @@ import {
   type BroadcastChannel,
   type MetadataProvider,
 } from "@echo/core-types";
-import { Console, Effect, Match, Schedule, Stream } from "effect";
+import { Effect, Match, Schedule, Stream } from "effect";
 import { isSupportedAudioFile } from "@echo/core-files";
 import { partiallyDownloadIntoStream } from "./partial-downloader";
 
@@ -29,7 +29,7 @@ export const syncFileBasedProvider = ({
   rootFolder,
 }: SyncFileBasedProviderInput) =>
   Effect.gen(function* () {
-    yield* Console.log(`Starting sync for provider ${metadata.id}`);
+    yield* Effect.log(`Starting sync for provider ${metadata.id}`);
 
     const supportedContentStream = yield* retrieveSupportedFilesFromFolder(
       provider,
@@ -47,12 +47,12 @@ export const syncFileBasedProvider = ({
       Stream.runForEach((either) =>
         Match.value(either).pipe(
           Match.tag("Left", ({ left }) =>
-            Console.error(
+            Effect.logError(
               `Failed to retrieve metadata for file with error ${left}`,
             ),
           ),
           Match.tag("Right", ({ right }) =>
-            Console.log(
+            Effect.log(
               `Successfully retrieve metadata for file with metadata ${right.artists} / ${right.title}`,
             ),
           ),
@@ -78,7 +78,7 @@ const partiallyDownloadFile = (file: FileMetadata) =>
       schedule: Schedule.exponential("1 second"),
     }),
     Effect.tapError((error) =>
-      Console.error(
+      Effect.logError(
         `Failed to download file ${file.name} with error: ${error}`,
       ),
     ),

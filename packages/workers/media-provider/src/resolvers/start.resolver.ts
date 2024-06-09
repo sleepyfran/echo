@@ -10,7 +10,7 @@ import {
   lazyLoadMetadataProvider,
   lazyLoadProviderFromMetadata,
 } from "@echo/infrastructure-bootstrap";
-import { Console, Effect, Layer, Match, Ref } from "effect";
+import { Effect, Layer, Match, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
@@ -29,7 +29,7 @@ export const startMediaProviderResolver = ({
   workerStateRef,
 }: StartMediaProviderResolverInput) =>
   Effect.gen(function* () {
-    yield* Console.log(`Starting media provider ${input.metadata.id}`);
+    yield* Effect.log(`Starting media provider ${input.metadata.id}`);
 
     const currentWorkerState = yield* workerStateRef.get;
     const alreadyStarted = currentWorkerState.fiberByProvider.has(
@@ -37,21 +37,21 @@ export const startMediaProviderResolver = ({
     );
 
     if (alreadyStarted) {
-      yield* Console.log(
+      yield* Effect.log(
         `Provider with ID ${input.metadata.id} is already started. Ignoring command.`,
       );
       return;
     }
 
     if (!isValidToken(input.authInfo)) {
-      yield* Console.error(
+      yield* Effect.logError(
         `Token for provider with ID ${input.metadata.id} is expired. Aborting initialization.`,
       );
       yield* notifyMainThreadOfExpiredToken(broadcastChannel, input.metadata);
       return;
     }
 
-    yield* Console.log(
+    yield* Effect.log(
       `Starting provider with ID ${input.metadata.id} and type ${input.metadata.type}.`,
     );
 

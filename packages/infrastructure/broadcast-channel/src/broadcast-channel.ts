@@ -4,7 +4,7 @@ import {
   type Guid,
   type Schema,
 } from "@echo/core-types";
-import { Console, Effect, Layer, Ref, Stream } from "effect";
+import { Effect, Layer, Ref, Stream } from "effect";
 
 type Request<TSchema extends Schema, TActionId extends keyof TSchema> = {
   identifier: Guid;
@@ -45,7 +45,7 @@ export const BroadcastChannelLive = Layer.effect(
                 const request = createRequest(correlationId, actionId, input);
                 const channel = yield* _broadcastChannel.get;
 
-                yield* Console.log(
+                yield* Effect.log(
                   `Sending request for action ${String(actionId)} with correlation ${correlationId}`,
                 );
 
@@ -63,7 +63,7 @@ export const BroadcastChannelLive = Layer.effect(
                     MessageEvent<Request<any, any>>
                   >(channel, "message").pipe(
                     Stream.tap((event) =>
-                      Console.log(
+                      Effect.log(
                         `Received request for action ${event.data.actionId} with correlation ${event.data.identifier}`,
                       ),
                     ),

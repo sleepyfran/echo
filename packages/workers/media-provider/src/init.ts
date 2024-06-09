@@ -6,7 +6,7 @@ import {
   AppConfigSchema,
   type MediaProviderWorkerToMainThreadBroadcastSchema,
 } from "@echo/core-types";
-import { Console, Effect, Fiber, Layer } from "effect";
+import { Effect, Fiber, Layer } from "effect";
 import { startMediaProviderResolver } from "./resolvers/start.resolver";
 import * as S from "@effect/schema/Schema";
 import { WorkerStateRef } from "./state";
@@ -27,7 +27,7 @@ export const initMessageEncoder = S.encode(InitMessage);
  */
 export const init = (message: InitMessage) =>
   Effect.gen(function* () {
-    yield* Console.log("Initializing media provider worker...");
+    yield* Effect.log("Initializing media provider worker...");
 
     const { appConfig } = message.payload;
     const { create: createBroadcastChannel } = yield* BroadcastChannelFactory;

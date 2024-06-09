@@ -12,6 +12,10 @@ export const lazyLoadMetadataProvider = Effect.promise(async () => {
     );
     return mmbMetadataProvider;
   } catch (error) {
+    // This should technically not happen, but since Music Metadata Browser is
+    // using node dependencies and Vite is not particularly great at handling
+    // those by default, print the error in big red letters so that it's easier
+    // to spot.
     console.error(error);
     throw error;
   }
