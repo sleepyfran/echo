@@ -8,5 +8,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@effect/schema": "^0.67.18",
+    "effect": "^3.2.8"
+  }
 }

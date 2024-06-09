@@ -1,6 +1,10 @@
-import type { ProviderMetadata } from "@echo/core-types";
 import { Effect, Layer } from "effect";
-import { ProviderId, type AppConfig, ProviderFactory } from "@echo/core-types";
+import {
+  ProviderId,
+  type AppConfig,
+  type ProviderMetadata,
+  ProviderFactory,
+} from "@echo/core-types";
 
 /**
  * Lazy loads a media provider based on the metadata provided.
