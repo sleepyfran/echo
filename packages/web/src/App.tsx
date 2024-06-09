@@ -17,9 +17,10 @@ import {
   useMatcherOf,
   useOnMountEffect,
 } from "./effect-bridge-hooks";
-import { lazyLoadProviderFromMetadata } from "@echo/infrastructure-bootstrap";
-import { BroadcastChannelLive } from "@echo/infrastructure-broadcast-channel";
-import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
+import {
+  MainLive,
+  lazyLoadProviderFromMetadata,
+} from "@echo/infrastructure-bootstrap";
 import { AppConfigLive } from "./app-config";
 import { Effect, Match } from "effect";
 
@@ -151,11 +152,7 @@ const startMediaProviderEffect = (
       authInfo,
       rootFolder,
     });
-  }).pipe(
-    Effect.provide(BroadcastChannelLive),
-    Effect.provide(BrowserCryptoLive),
-    Effect.scoped,
-  ); // TODO: Move to some other layer for the main app.
+  }).pipe(Effect.provide(MainLive), Effect.scoped); // TODO: Review the need to always pass a scope to the broadcast. Maybe a singleton would be better for the main layer?
 
 const FolderSelector = ({
   authInfo,

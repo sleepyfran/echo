@@ -1,5 +1,4 @@
-import { BroadcastChannelLive } from "@echo/infrastructure-broadcast-channel";
-import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
+import { WorkerLive } from "@echo/infrastructure-bootstrap";
 import { Effect, Match, Ref, Stream } from "effect";
 import * as S from "@effect/schema/Schema";
 import { InitMessage, init } from "./init";
@@ -30,9 +29,8 @@ const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
       )(message);
     }),
   ),
+  Effect.provide(WorkerLive),
   Effect.provideServiceEffect(WorkerStateRef, initialState),
-  Effect.provide(BroadcastChannelLive),
-  Effect.provide(BrowserCryptoLive),
   Effect.scoped,
 );
 
