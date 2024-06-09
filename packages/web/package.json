@@ -13,7 +13,6 @@
   "dependencies": {
     "@echo/core-types": "^1.0.0",
     "@echo/infrastructure-bootstrap": "^1.0.0",
-    "@echo/workers-media-provider": "^1.0.0",
     "effect": "^3.2.8"
   },
   "devDependencies": {
