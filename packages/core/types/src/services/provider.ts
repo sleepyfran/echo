@@ -18,7 +18,7 @@ export type FileBasedProvider = {
   /**
    * Lists the root folder of the provider.
    */
-  readonly listRoot: Effect<FolderContentMetadata, FileBasedProviderError>;
+  readonly listRoot: Effect<FolderMetadata[], FileBasedProviderError>;
 
   /**
    * Lists the given folder.

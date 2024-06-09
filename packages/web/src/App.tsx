@@ -1,6 +1,5 @@
 import {
   AvailableProviders,
-  type FolderContentMetadata,
   type Authentication,
   type AuthenticationInfo,
   type Provider,
@@ -124,7 +123,7 @@ const SelectRoot = ({
           <FolderSelector
             authInfo={authInfo}
             metadata={metadata}
-            foldersOrFiles={state.result}
+            folders={state.result}
           />
         )),
         Match.tag("failure", (state) => <div>Error: {state.error}</div>),
@@ -156,28 +155,15 @@ const startMediaProviderEffect = (
 
 const FolderSelector = ({
   authInfo,
-  foldersOrFiles,
+  folders,
   metadata,
 }: {
   authInfo: AuthenticationInfo;
-  foldersOrFiles: FolderContentMetadata;
+  folders: FolderMetadata[];
   metadata: ProviderMetadata;
 }) => {
   const [selectRoot, selectRootState, matcher] = useEffectCallback(
     startMediaProviderEffect,
-  );
-
-  // TODO: Don't tie React onto this! This should be done either on the effect or in a utility function.
-  const folders = useMemo(
-    () =>
-      foldersOrFiles.flatMap((folderOrFile) =>
-        Match.value(folderOrFile).pipe(
-          Match.tag("folder", (folder) => [folder]),
-          Match.tag("file", () => []),
-          Match.exhaustive,
-        ),
-      ),
-    [foldersOrFiles],
   );
 
   return matcher.pipe(
