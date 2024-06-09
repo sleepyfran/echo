@@ -31,7 +31,6 @@ const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
   ),
   Effect.provide(WorkerLive),
   Effect.provideServiceEffect(WorkerStateRef, initialState),
-  Effect.scoped,
 );
 
 Effect.runPromise(worker);

@@ -151,7 +151,7 @@ const startMediaProviderEffect = (
       authInfo,
       rootFolder,
     });
-  }).pipe(Effect.provide(MainLive), Effect.scoped); // TODO: Review the need to always pass a scope to the broadcast. Maybe a singleton would be better for the main layer?
+  }).pipe(Effect.provide(MainLive));
 
 const FolderSelector = ({
   authInfo,

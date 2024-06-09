@@ -1,4 +1,4 @@
-import { Context, Effect, Fiber, Scope } from "effect";
+import { Context, Effect, Fiber } from "effect";
 import type { Schema } from "../broadcast";
 
 /**
@@ -46,6 +46,6 @@ export class BroadcastChannelFactory extends Context.Tag(
   {
     readonly create: <TSchema extends Schema>(
       channelName: BroadcastChannelName,
-    ) => Effect.Effect<BroadcastChannel<TSchema>, never, Scope.Scope>;
+    ) => Effect.Effect<BroadcastChannel<TSchema>, never>;
   }
 >() {}
