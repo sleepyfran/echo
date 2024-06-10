@@ -3,7 +3,7 @@ import {
   MetadataProvider,
   type TrackMetadata,
 } from "@echo/core-types";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { Buffer } from "buffer";
 import process from "process";
 import { parseReadableStream } from "music-metadata-browser";
@@ -16,7 +16,7 @@ globalThis.process = process;
  * Creates a metadata provider that uses `music-metadata-browser` to extract
  * the information.
  */
-export const mmbMetadataProvider = MetadataProvider.of({
+const mmbMetadataProvider = MetadataProvider.of({
   /**
    * Attempts to extract metadata from the given readable stream. The provided
    * file is used to hint the mime type and size of the stream.
@@ -46,3 +46,11 @@ export const mmbMetadataProvider = MetadataProvider.of({
       ),
     ),
 });
+
+/**
+ * Layer that provides a metadata provider that uses `music-metadata-browser`.
+ */
+export const MmbMetadataProviderLive = Layer.succeed(
+  MetadataProvider,
+  mmbMetadataProvider,
+);

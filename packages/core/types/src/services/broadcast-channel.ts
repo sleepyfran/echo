@@ -21,10 +21,12 @@ export type BroadcastChannel<TSchema extends Schema> = {
    * the background. Returns an effect that produces a fiber that can be used
    * to interrupt the resolver, essentially stopping the processing of messages.
    */
-  registerResolver<TActionId extends keyof TSchema>(
+  registerResolver<TActionId extends keyof TSchema, TRequirements>(
     actionId: TActionId,
-    resolver: (input: TSchema[TActionId]) => Effect.Effect<void>,
-  ): Effect.Effect<Fiber.RuntimeFiber<void>>;
+    resolver: (
+      input: TSchema[TActionId],
+    ) => Effect.Effect<void, never, TRequirements>,
+  ): Effect.Effect<Fiber.RuntimeFiber<void>, never, TRequirements>;
 };
 
 /**

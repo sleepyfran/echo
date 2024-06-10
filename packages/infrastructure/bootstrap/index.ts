@@ -1,2 +1,2 @@
-export * from "./src/layers";
-export * from "./src/loaders";
+export { MainLive, WorkerLive } from "./src/layers";
+export { LazyLoadedProvider, initializeWorkers } from "./src/loaders";

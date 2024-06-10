@@ -1,10 +1,29 @@
-import { Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect";
 import {
   ProviderId,
-  type AppConfig,
+  AppConfig,
   type ProviderMetadata,
   ProviderFactory,
+  type Authentication,
 } from "@echo/core-types";
+
+/**
+ * Service that can lazily load a media provider.
+ */
+export type LazyLoadedProvider = {
+  readonly load: (metadata: ProviderMetadata) => Effect.Effect<{
+    metadata: ProviderMetadata;
+    authentication: Authentication;
+    createMediaProvider: ProviderFactory["createMediaProvider"];
+  }>;
+};
+
+/**
+ * Tag to identify the lazy loaded provider service.
+ */
+export const LazyLoadedProvider = Context.GenericTag<LazyLoadedProvider>(
+  "@echo/infrastructure-bootstrap/LazyLoadedProvider",
+);
 
 /**
  * Lazy loads a media provider based on the metadata provided.
@@ -26,33 +45,36 @@ const lazyLoadFromMetadata = (
   );
 };
 
-/**
- * Lazy loads a provider by the given metadata.
- * @param metadata The metadata of the provider to load.
- * @param appConfigLayer Layer that can provide the app config.
- * @returns An effect that can provide a factory for the provider.
- */
-export const lazyLoadProviderFromMetadata = (
-  metadata: ProviderMetadata,
-  appConfigLayer: Layer.Layer<AppConfig, never>,
-) =>
+const createLazyLoadedProvider = (metadata: ProviderMetadata) =>
   Effect.gen(function* () {
-    const providerFactory = yield* lazyLoadFromMetadata(metadata);
-    const providerFactoryLive = providerFactory.pipe(
-      Layer.provide(appConfigLayer),
-    );
+    const providerFactory = yield* ProviderFactory;
+    const authentication = yield* providerFactory.authenticationProvider;
 
-    return yield* Effect.provide(
-      Effect.gen(function* () {
-        const providerFactory = yield* ProviderFactory;
-        const authentication = yield* providerFactory.authenticationProvider;
-
-        return {
-          metadata,
-          authentication,
-          createMediaProvider: providerFactory.createMediaProvider,
-        };
-      }),
-      providerFactoryLive,
-    );
+    return {
+      metadata,
+      authentication,
+      createMediaProvider: providerFactory.createMediaProvider,
+    };
   });
+
+/**
+ * A layer that can lazily load a media provider based on the metadata provided.
+ */
+export const LazyLoadedProviderLive = Layer.effect(
+  LazyLoadedProvider,
+  Effect.gen(function* () {
+    const appConfig = yield* AppConfig;
+
+    return LazyLoadedProvider.of({
+      load: (metadata) =>
+        Effect.gen(function* () {
+          const providerFactory = yield* lazyLoadFromMetadata(metadata);
+
+          return yield* Effect.provide(
+            createLazyLoadedProvider(metadata),
+            providerFactory,
+          );
+        }).pipe(Effect.provideService(AppConfig, appConfig)),
+    });
+  }),
+);

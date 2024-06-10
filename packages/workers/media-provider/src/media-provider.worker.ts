@@ -24,7 +24,7 @@ const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
       const message = yield* decodeWorkerMessage(event.data);
 
       return yield* Match.type<WorkerMessage>().pipe(
-        Match.tag("init", (message) => init(message)),
+        Match.tag("init", () => init()),
         Match.exhaustive,
       )(message);
     }),

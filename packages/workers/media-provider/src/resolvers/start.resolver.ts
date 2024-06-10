@@ -1,16 +1,13 @@
 import {
-  AppConfig,
   ProviderError,
   type MainThreadToMediaProviderBroadcastSchema,
   type MediaProviderWorkerToMainThreadBroadcastSchema,
   type ProviderMetadata,
   type BroadcastChannel,
+  MetadataProvider,
 } from "@echo/core-types";
-import {
-  lazyLoadMetadataProvider,
-  lazyLoadProviderFromMetadata,
-} from "@echo/infrastructure-bootstrap";
-import { Effect, Layer, Match, Ref } from "effect";
+import { LazyLoadedProvider } from "@echo/infrastructure-bootstrap";
+import { Effect, Match, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
@@ -19,11 +16,9 @@ type StartMediaProviderResolverInput = {
   input: MainThreadToMediaProviderBroadcastSchema["start"];
   broadcastChannel: BroadcastChannel<MediaProviderWorkerToMainThreadBroadcastSchema>;
   workerStateRef: Ref.Ref<WorkerState>;
-  appConfigLayer: Layer.Layer<AppConfig>;
 };
 
 export const startMediaProviderResolver = ({
-  appConfigLayer,
   broadcastChannel,
   input,
   workerStateRef,
@@ -55,12 +50,10 @@ export const startMediaProviderResolver = ({
       `Starting provider with ID ${input.metadata.id} and type ${input.metadata.type}.`,
     );
 
-    const { createMediaProvider } = yield* lazyLoadProviderFromMetadata(
-      input.metadata,
-      appConfigLayer,
-    );
+    const lazyLoader = yield* LazyLoadedProvider;
+    const { createMediaProvider } = yield* lazyLoader.load(input.metadata);
     const mediaProvider = createMediaProvider(input.authInfo);
-    const metadataProvider = yield* lazyLoadMetadataProvider;
+    const metadataProvider = yield* MetadataProvider;
 
     const runtimeFiber = yield* Match.type<
       MainThreadToMediaProviderBroadcastSchema["start"]

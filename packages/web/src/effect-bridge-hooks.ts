@@ -134,12 +134,12 @@ export const useEffectTs = <TResult, TError>(
  */
 export const useOnMountEffect = <TResult, TError>(
   effect: Effect.Effect<TResult, TError>,
-) => {
-  const [runEffect, state] = useEffectTs(effect);
+): [EffectResultState<TResult, TError>, EffectMatcher<TResult, TError>] => {
+  const [runEffect, state, matcher] = useEffectTs(effect);
 
   useEffect(() => {
     runEffect();
   }, [runEffect]);
 
-  return state;
+  return [state, matcher];
 };

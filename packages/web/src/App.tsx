@@ -13,24 +13,40 @@ import { useCallback, useMemo } from "react";
 import {
   useEffectCallback,
   useEffectTs,
-  useMatcherOf,
   useOnMountEffect,
 } from "./effect-bridge-hooks";
-import {
-  MainLive,
-  lazyLoadProviderFromMetadata,
-} from "@echo/infrastructure-bootstrap";
-import { AppConfigLive } from "./app-config";
 import { Effect, Match } from "effect";
+import { LazyLoadedProvider, MainLive } from "@echo/infrastructure-bootstrap";
+
+const retrieveLazyLoader = Effect.gen(function* () {
+  return yield* LazyLoadedProvider;
+}).pipe(Effect.provide(MainLive));
 
 export const App = () => {
-  const [addProvider, addProviderStatus, matcher] = useEffectCallback(
-    lazyLoadProviderFromMetadata,
+  const [state, matcher] = useOnMountEffect(retrieveLazyLoader);
+
+  return matcher.pipe(
+    Match.tag("initial", () => <h1>Initializing Echo...</h1>),
+    Match.tag("success", ({ result: lazyLoader }) => (
+      <MainScreen lazyLoader={lazyLoader} />
+    )),
+    Match.tag("failure", () => (
+      <h1 style={{ color: "red" }}>
+        Something went wrong initializing echo... Maybe report a bug :)
+      </h1>
+    )),
+    Match.exhaustive,
+  )(state);
+};
+
+const MainScreen = ({ lazyLoader }: { lazyLoader: LazyLoadedProvider }) => {
+  const [loadProvider, addProviderStatus, matcher] = useEffectCallback(
+    lazyLoader.load,
   );
 
   const onProviderSelected = useCallback(
-    (metadata: ProviderMetadata) => addProvider(metadata, AppConfigLive),
-    [addProvider],
+    (metadata: ProviderMetadata) => loadProvider(metadata),
+    [loadProvider],
   );
 
   return matcher.pipe(
@@ -110,8 +126,7 @@ const SelectRoot = ({
     [createMediaProvider, authInfo],
   );
 
-  const listState = useOnMountEffect(mediaProvider.listRoot);
-  const matcher = useMatcherOf(mediaProvider.listRoot);
+  const [listState, matcher] = useOnMountEffect(mediaProvider.listRoot);
 
   return (
     <div>
