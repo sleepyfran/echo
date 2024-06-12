@@ -32,3 +32,4 @@ export const Artist = S.Struct({
    */
   imageUrl: S.Option(S.String),
 });
+export type Artist = S.Schema.Type<typeof Artist>;

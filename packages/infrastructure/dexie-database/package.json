@@ -1,0 +1,17 @@
+{
+  "name": "@echo/infrastructure-dexie-database",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the DexieDatabase related infrastructure",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-strings": "^1.0.0",
+    "@echo/core-types": "^1.0.0",
+    "dexie": "^4.0.7",
+    "effect": "^3.2.8"
+  }
+}

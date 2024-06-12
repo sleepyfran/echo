@@ -49,3 +49,4 @@ export const Track = S.Struct({
    */
   durationInMilliseconds: S.Int.pipe(S.greaterThan(0)),
 });
+export type Track = S.Schema.Type<typeof Track>;
