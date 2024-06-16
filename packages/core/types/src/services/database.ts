@@ -46,6 +46,16 @@ export type Table<
   TSchema extends Tables[TTableKey],
 > = {
   /**
+   * Adds the given record to the table.
+   */
+  readonly addOne: (record: TSchema) => Effect.Effect<void>;
+
+  /**
+   * Adds the given records to the table.
+   */
+  readonly addMany: (records: TSchema[]) => Effect.Effect<void>;
+
+  /**
    * Retrieves a specific record from the table by its ID.
    */
   readonly byId: (id: TSchema["id"]) => Effect.Effect<Option.Option<TSchema>>;

@@ -69,5 +69,11 @@ export enum ProviderError {
 export type ProviderStatus =
   | { _tag: "not-started" }
   | { _tag: "syncing" }
+  | {
+      _tag: "synced";
+      lastSyncedAt: Date;
+      syncedFiles: number;
+      filesWithError: number;
+    }
   | { _tag: "errored"; error: ProviderError }
   | { _tag: "stopped" };

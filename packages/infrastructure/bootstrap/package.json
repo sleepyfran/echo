@@ -12,6 +12,7 @@
     "@echo/core-types": "^1.0.0",
     "@echo/infrastructure-broadcast-channel": "^1.0.0",
     "@echo/infrastructure-browser-crypto": "^1.0.0",
+    "@echo/infrastructure-dexie-database": "^1.0.0",
     "@echo/infrastructure-mmb-metadata-provider": "^1.0.0",
     "@echo/infrastructure-onedrive-provider": "^1.0.0",
     "@echo/workers-media-provider": "^1.0.0",

@@ -33,4 +33,13 @@ const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
   Effect.provideServiceEffect(WorkerStateRef, initialState),
 );
 
-Effect.runPromise(worker);
+Effect.runPromise(worker)
+  .then(() => {
+    console.warn("Media provider worker is done");
+  })
+  .catch((error) => {
+    console.error(
+      "Media provider worker has failed, was this expected?",
+      error,
+    );
+  });

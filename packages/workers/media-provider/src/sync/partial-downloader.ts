@@ -1,7 +1,10 @@
 import type { FileMetadata } from "@echo/core-types";
 import { Effect } from "effect";
 
-enum DownloadError {
+/**
+ * Enumerates the errors that can occur during the download process.
+ */
+export enum DownloadError {
   NoBodyReturned = "no-body-returned",
   Unknown = "unknown",
 }

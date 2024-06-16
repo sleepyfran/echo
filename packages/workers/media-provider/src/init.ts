@@ -50,5 +50,8 @@ export const init = () =>
       (_input) => Effect.succeed(() => {}),
     );
 
+    yield* Effect.log(
+      "Media provider worker initialized, awaiting resolving fibers.",
+    );
     Fiber.joinAll([startResolverFiber, stopResolverFiber]);
   });

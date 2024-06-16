@@ -1,6 +1,7 @@
 import { Layer } from "effect";
 import { BroadcastChannelLive } from "@echo/infrastructure-broadcast-channel";
 import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
+import { DexieDatabaseLive } from "@echo/infrastructure-dexie-database";
 import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provider";
 import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";
@@ -12,6 +13,7 @@ import { AppConfigLive } from "./app-config";
 export const MainLive = BroadcastChannelLive.pipe(
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
+  Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(AppConfigLive),
 );
 
@@ -22,6 +24,7 @@ export const MainLive = BroadcastChannelLive.pipe(
 export const WorkerLive = BroadcastChannelLive.pipe(
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
+  Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(MmbMetadataProviderLive),
   Layer.provideMerge(AppConfigLive),
 );

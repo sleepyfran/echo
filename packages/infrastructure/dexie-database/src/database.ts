@@ -37,6 +37,16 @@ const createTable = <
   db: DexieDatabase,
   tableName: TSchemaKey,
 ): Table<TSchemaKey, TSchema> => ({
+  addOne: (record) =>
+    Effect.gen(function* () {
+      const table = db[tableName] as DexieTable<TSchema>;
+      return yield* Effect.promise(() => table.add(record));
+    }),
+  addMany: (records) =>
+    Effect.gen(function* () {
+      const table = db[tableName] as DexieTable<TSchema>;
+      return yield* Effect.promise(() => table.bulkAdd(records));
+    }),
   byId: (id) =>
     Effect.gen(function* () {
       const table = db[tableName];

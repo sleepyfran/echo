@@ -155,12 +155,12 @@ const startMediaProviderEffect = (
 ) =>
   Effect.gen(function* () {
     const { create: createBroadcastChannel } = yield* BroadcastChannelFactory;
-    const broadcastChannel =
+    const toWorkerBroadcastChannel =
       yield* createBroadcastChannel<MainThreadToMediaProviderBroadcastSchema>(
         BroadcastChannelName.MediaProvider,
       );
 
-    yield* broadcastChannel.send("start", {
+    yield* toWorkerBroadcastChannel.send("start", {
       _tag: "file-based",
       metadata,
       authInfo,

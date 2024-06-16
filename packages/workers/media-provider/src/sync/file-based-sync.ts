@@ -8,10 +8,15 @@ import {
   ProviderError,
   type BroadcastChannel,
   type MetadataProvider,
+  type TrackMetadata,
+  MetadataProviderError,
 } from "@echo/core-types";
 import { Effect, Match, Schedule, Stream } from "effect";
 import { isSupportedAudioFile } from "@echo/core-files";
-import { partiallyDownloadIntoStream } from "./partial-downloader";
+import {
+  DownloadError,
+  partiallyDownloadIntoStream,
+} from "./partial-downloader";
 
 type SyncFileBasedProviderInput = {
   metadata: ProviderMetadata;
@@ -31,40 +36,45 @@ export const syncFileBasedProvider = ({
   Effect.gen(function* () {
     yield* Effect.log(`Starting sync for provider ${metadata.id}`);
 
+    yield* broadcastChannel.send("reportStatus", {
+      metadata,
+      status: { _tag: "syncing" },
+    });
+
     const supportedContentStream = yield* retrieveSupportedFilesFromFolder(
       provider,
       rootFolder,
     );
 
-    return yield* supportedContentStream.pipe(
-      Stream.mapEffect(partiallyDownloadFile, { concurrency: 10 }),
-      Stream.mapEffect(
-        ([stream, file]) =>
-          metadataProvider.trackMetadataFromReadableStream(stream, file),
-        { concurrency: 10 },
-      ),
-      Stream.either,
-      Stream.runForEach((either) =>
-        Match.value(either).pipe(
-          Match.tag("Left", ({ left }) =>
-            Effect.logError(
-              `Failed to retrieve metadata for file with error ${left}`,
-            ),
-          ),
-          Match.tag("Right", ({ right }) =>
-            Effect.log(
-              `Successfully retrieve metadata for file with metadata ${right.artists} / ${right.title}`,
-            ),
-          ),
-          Match.exhaustive,
-        ),
-      ),
+    const { processed, errors } = yield* resolveMetadataFromStream(
+      { metadataProvider },
+      supportedContentStream,
     );
+
+    // TODO: Save to database.
+
+    return yield* broadcastChannel.send("reportStatus", {
+      metadata,
+      status: {
+        _tag: "synced",
+        lastSyncedAt: new Date(),
+        filesWithError: errors.length,
+        syncedFiles: processed.length,
+      },
+    });
   }).pipe(
     Effect.catchAll(() =>
-      broadcastChannel.send("reportStatus", {
-        metadata,
-        status: { _tag: "errored", error: ProviderError.ApiGatewayError },
+      Effect.gen(function* () {
+        yield* Effect.logError(
+          "Sync has failed, reporting error with API to main thread.",
+        );
+
+        // If we end up here, the provider has failed to retrieve any
+        // files, since the stream is made to never fail. Report back an error.
+        yield* broadcastChannel.send("reportStatus", {
+          metadata,
+          status: { _tag: "errored", error: ProviderError.ApiGatewayError },
+        });
       }),
     ),
   );
@@ -112,3 +122,42 @@ const retrieveSupportedFilesFromFolder = (
       Stream.flatten({ concurrency: "unbounded" }),
     );
   });
+
+const resolveMetadataFromStream = (
+  { metadataProvider }: Pick<SyncFileBasedProviderInput, "metadataProvider">,
+  stream: Stream.Stream<FileMetadata>,
+) =>
+  stream.pipe(
+    Stream.mapEffect(
+      (file) =>
+        partiallyDownloadFile(file).pipe(
+          Effect.flatMap(([stream, file]) =>
+            metadataProvider.trackMetadataFromReadableStream(stream, file),
+          ),
+          Effect.map((metadata) => ({ metadata, file })),
+          Effect.either /* We don't want to fail the whole stream in case we
+                         can't process one element, instead collect both
+                         successes and errors into the stream so that we can
+                         report them back to the main thread */,
+        ),
+      { concurrency: 10 },
+    ),
+    Stream.runFold(
+      {
+        processed: [] as { metadata: TrackMetadata; file: FileMetadata }[],
+        errors: [] as (DownloadError | MetadataProviderError | ProviderError)[],
+      },
+      (acc, currentItem) =>
+        Match.value(currentItem).pipe(
+          Match.tag("Left", ({ left: error }) => ({
+            ...acc,
+            errors: [...acc.errors, error],
+          })),
+          Match.tag("Right", ({ right: processedFile }) => ({
+            ...acc,
+            processed: [...acc.processed, processedFile],
+          })),
+          Match.exhaustive,
+        ),
+    ),
+  );
