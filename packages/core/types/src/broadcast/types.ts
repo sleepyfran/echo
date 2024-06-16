@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Defines all available channels.
  */
@@ -6,5 +7,7 @@ export type ChannelName = "mediaProvider";
 /**
  * Defines the base schema that all broadcast channel schemas should follow.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Schema = Record<string, any>;
+export type Schema = {
+  actions: Record<string, any>;
+  resolvers: Record<string, any>;
+};

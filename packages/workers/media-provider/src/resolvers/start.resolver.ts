@@ -1,10 +1,9 @@
 import {
   ProviderError,
-  type MainThreadToMediaProviderBroadcastSchema,
-  type MediaProviderWorkerToMainThreadBroadcastSchema,
   type ProviderMetadata,
   type BroadcastChannel,
   MetadataProvider,
+  type MediaProviderBroadcastSchema,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/infrastructure-bootstrap";
 import { Effect, Match, Ref } from "effect";
@@ -12,9 +11,13 @@ import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
 
+type Input = MediaProviderBroadcastSchema["worker"]["resolvers"]["start"];
+type TBroadcastChannel = BroadcastChannel<
+  MediaProviderBroadcastSchema["worker"]
+>;
 type StartMediaProviderResolverInput = {
-  input: MainThreadToMediaProviderBroadcastSchema["start"];
-  broadcastChannel: BroadcastChannel<MediaProviderWorkerToMainThreadBroadcastSchema>;
+  input: Input;
+  broadcastChannel: TBroadcastChannel;
   workerStateRef: Ref.Ref<WorkerState>;
 };
 
@@ -55,9 +58,7 @@ export const startMediaProviderResolver = ({
     const mediaProvider = createMediaProvider(input.authInfo);
     const metadataProvider = yield* MetadataProvider;
 
-    const runtimeFiber = yield* Match.type<
-      MainThreadToMediaProviderBroadcastSchema["start"]
-    >().pipe(
+    const runtimeFiber = yield* Match.type<Input>().pipe(
       Match.tag("file-based", (input) =>
         Effect.fork(
           syncFileBasedProvider({
@@ -81,7 +82,7 @@ export const startMediaProviderResolver = ({
   });
 
 export const notifyMainThreadOfExpiredToken = (
-  broadcastChannel: BroadcastChannel<MediaProviderWorkerToMainThreadBroadcastSchema>,
+  broadcastChannel: TBroadcastChannel,
   metadata: ProviderMetadata,
 ) =>
   Effect.gen(function* () {

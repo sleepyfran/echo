@@ -1,13 +1,11 @@
 import {
   AvailableProviders,
+  MediaProviderMainThreadBroadcastChannel,
   type Authentication,
   type AuthenticationInfo,
   type Provider,
   type ProviderMetadata,
   type FolderMetadata,
-  BroadcastChannelFactory,
-  BroadcastChannelName,
-  type MainThreadToMediaProviderBroadcastSchema,
 } from "@echo/core-types";
 import { useCallback, useMemo } from "react";
 import {
@@ -15,7 +13,7 @@ import {
   useEffectTs,
   useOnMountEffect,
 } from "./effect-bridge-hooks";
-import { Effect, Match } from "effect";
+import { Effect, Fiber, Match } from "effect";
 import { LazyLoadedProvider, MainLive } from "@echo/infrastructure-bootstrap";
 
 const retrieveLazyLoader = Effect.gen(function* () {
@@ -154,18 +152,39 @@ const startMediaProviderEffect = (
   rootFolder: FolderMetadata,
 ) =>
   Effect.gen(function* () {
-    const { create: createBroadcastChannel } = yield* BroadcastChannelFactory;
-    const toWorkerBroadcastChannel =
-      yield* createBroadcastChannel<MainThreadToMediaProviderBroadcastSchema>(
-        BroadcastChannelName.MediaProvider,
-      );
+    const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
 
-    yield* toWorkerBroadcastChannel.send("start", {
+    // TODO: Move somewhere else.
+    const reportStatusFiber = yield* broadcastChannel.registerResolver(
+      "reportStatus",
+      (status) =>
+        Match.value(status.status).pipe(
+          Match.tag("not-started", () =>
+            Effect.log("Worker reported not being started yet"),
+          ),
+          Match.tag("syncing", () => Effect.log("Worker is syncing")),
+          Match.tag("synced", (data) =>
+            Effect.log(
+              `Worker has finished syncing ${data.syncedFiles} files. ${data.filesWithError} files had errors and were not synced`,
+            ),
+          ),
+          Match.tag("errored", () => Effect.logError("Worker has errored")),
+          Match.tag("stopped", () =>
+            Effect.log("Worker has reported not running"),
+          ),
+          Match.exhaustive,
+        ),
+    );
+
+    yield* broadcastChannel.send("start", {
       _tag: "file-based",
       metadata,
       authInfo,
       rootFolder,
     });
+
+    // TODO: This should DEFINITELY be somewhere else.
+    yield* Fiber.join(reportStatusFiber);
   }).pipe(Effect.provide(MainLive));
 
 const FolderSelector = ({

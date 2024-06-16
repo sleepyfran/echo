@@ -1,9 +1,4 @@
-import {
-  BroadcastChannelFactory,
-  type MainThreadToMediaProviderBroadcastSchema,
-  BroadcastChannelName,
-  type MediaProviderWorkerToMainThreadBroadcastSchema,
-} from "@echo/core-types";
+import { MediaProviderWorkerBroadcastChannel } from "@echo/core-types";
 import { Effect, Fiber } from "effect";
 import { startMediaProviderResolver } from "./resolvers/start.resolver";
 import * as S from "@effect/schema/Schema";
@@ -23,29 +18,20 @@ export const init = () =>
   Effect.gen(function* () {
     yield* Effect.log("Initializing media provider worker...");
 
-    const { create: createBroadcastChannel } = yield* BroadcastChannelFactory;
     const workerStateRef = yield* WorkerStateRef;
+    const broadcastChannel = yield* MediaProviderWorkerBroadcastChannel;
 
-    const mainThreadToWorkerChannel =
-      yield* createBroadcastChannel<MainThreadToMediaProviderBroadcastSchema>(
-        BroadcastChannelName.MediaProvider,
-      );
-
-    const broadcastChannelToMainThread =
-      yield* createBroadcastChannel<MediaProviderWorkerToMainThreadBroadcastSchema>(
-        BroadcastChannelName.MediaProvider,
-      );
-
-    const startResolverFiber =
-      yield* mainThreadToWorkerChannel.registerResolver("start", (input) =>
+    const startResolverFiber = yield* broadcastChannel.registerResolver(
+      "start",
+      (input) =>
         startMediaProviderResolver({
-          broadcastChannel: broadcastChannelToMainThread,
+          broadcastChannel: broadcastChannel,
           input,
           workerStateRef,
         }),
-      );
+    );
 
-    const stopResolverFiber = yield* mainThreadToWorkerChannel.registerResolver(
+    const stopResolverFiber = yield* broadcastChannel.registerResolver(
       "stop",
       (_input) => Effect.succeed(() => {}),
     );

@@ -3,7 +3,7 @@ import {
   type FolderMetadata,
   type FileMetadata,
   FileBasedProviderError,
-  type MediaProviderWorkerToMainThreadBroadcastSchema,
+  type MediaProviderBroadcastSchema,
   type ProviderMetadata,
   ProviderError,
   type BroadcastChannel,
@@ -21,7 +21,7 @@ import {
 type SyncFileBasedProviderInput = {
   metadata: ProviderMetadata;
   provider: FileBasedProvider;
-  broadcastChannel: BroadcastChannel<MediaProviderWorkerToMainThreadBroadcastSchema>;
+  broadcastChannel: BroadcastChannel<MediaProviderBroadcastSchema["worker"]>;
   metadataProvider: MetadataProvider;
   rootFolder: FolderMetadata;
 };

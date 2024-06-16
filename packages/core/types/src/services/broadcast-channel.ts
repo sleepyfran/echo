@@ -1,5 +1,5 @@
 import { Context, Effect, Fiber } from "effect";
-import type { Schema } from "../broadcast";
+import type { MediaProviderBroadcastSchema, Schema } from "../broadcast";
 
 /**
  * A typed broadcast channel that allows for sending requests and receiving
@@ -11,7 +11,7 @@ export type BroadcastChannel<TSchema extends Schema> = {
    * Sends a message to the channel for the specified action and input. It will
    * not wait for a response, and will not return any value.
    */
-  send<TActionId extends keyof TSchema>(
+  send<TActionId extends keyof TSchema["actions"]>(
     actionId: TActionId,
     input: TSchema[TActionId],
   ): Effect.Effect<void>;
@@ -21,10 +21,10 @@ export type BroadcastChannel<TSchema extends Schema> = {
    * the background. Returns an effect that produces a fiber that can be used
    * to interrupt the resolver, essentially stopping the processing of messages.
    */
-  registerResolver<TActionId extends keyof TSchema, TRequirements>(
+  registerResolver<TActionId extends keyof TSchema["resolvers"], TRequirements>(
     actionId: TActionId,
     resolver: (
-      input: TSchema[TActionId],
+      input: TSchema["resolvers"][TActionId],
     ) => Effect.Effect<void, never, TRequirements>,
   ): Effect.Effect<Fiber.RuntimeFiber<void>, never, TRequirements>;
 };
@@ -38,16 +38,23 @@ export enum BroadcastChannelName {
 }
 
 /**
- * A factory that can create new instances of a typed broadcast channel for
- * a given schema.
+ * A broadcast channel that can be used from the main thread to communicate
+ * with a media provider worker.
  */
-export class BroadcastChannelFactory extends Context.Tag(
-  "BroadcastChannelFactory",
+export class MediaProviderMainThreadBroadcastChannel extends Context.Tag(
+  "@echo/core-types/MediaProviderMainThreadBroadcastChannelFactory",
 )<
-  BroadcastChannelFactory,
-  {
-    readonly create: <TSchema extends Schema>(
-      channelName: BroadcastChannelName,
-    ) => Effect.Effect<BroadcastChannel<TSchema>, never>;
-  }
+  MediaProviderMainThreadBroadcastChannel,
+  BroadcastChannel<MediaProviderBroadcastSchema["mainThread"]>
+>() {}
+
+/**
+ * A broadcast channel that can be used from a media provider worker to
+ * communicate with the main thread.
+ */
+export class MediaProviderWorkerBroadcastChannel extends Context.Tag(
+  "@echo/core-types/MediaProviderWorkerBroadcastChannelFactory",
+)<
+  MediaProviderWorkerBroadcastChannel,
+  BroadcastChannel<MediaProviderBroadcastSchema["worker"]>
 >() {}
