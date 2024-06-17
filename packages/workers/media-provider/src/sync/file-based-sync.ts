@@ -135,6 +135,11 @@ const resolveMetadataFromStream = (
             metadataProvider.trackMetadataFromReadableStream(stream, file),
           ),
           Effect.map((metadata) => ({ metadata, file })),
+          Effect.tapError((error) =>
+            Effect.logError(
+              `Failed to process file ${file.name} with error: ${error}`,
+            ),
+          ),
           Effect.either /* We don't want to fail the whole stream in case we
                          can't process one element, instead collect both
                          successes and errors into the stream so that we can
