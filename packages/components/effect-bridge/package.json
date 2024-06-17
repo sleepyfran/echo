@@ -1,12 +1,14 @@
 {
-  "name": "@echo/components-{{dashCase name}}",
+  "name": "@echo/components-effect-bridge",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "effect": "^3.2.8"
+  },
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22"

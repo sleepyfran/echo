@@ -12,9 +12,14 @@ import {
   useEffectCallback,
   useEffectTs,
   useOnMountEffect,
-} from "./effect-bridge-hooks";
+} from "@echo/components-effect-bridge";
+import {
+  useProviderStateSubscriber,
+  providerStateAtom,
+} from "@echo/components-state";
 import { Effect, Fiber, Match } from "effect";
 import { LazyLoadedProvider, MainLive } from "@echo/infrastructure-bootstrap";
+import { useAtom } from "jotai";
 
 const retrieveLazyLoader = Effect.gen(function* () {
   return yield* LazyLoadedProvider;
@@ -22,19 +27,25 @@ const retrieveLazyLoader = Effect.gen(function* () {
 
 export const App = () => {
   const [state, matcher] = useOnMountEffect(retrieveLazyLoader);
+  useProviderStateSubscriber();
 
-  return matcher.pipe(
-    Match.tag("initial", () => <h1>Initializing Echo...</h1>),
-    Match.tag("success", ({ result: lazyLoader }) => (
-      <MainScreen lazyLoader={lazyLoader} />
-    )),
-    Match.tag("failure", () => (
-      <h1 style={{ color: "red" }}>
-        Something went wrong initializing echo... Maybe report a bug :)
-      </h1>
-    )),
-    Match.exhaustive,
-  )(state);
+  return (
+    <div>
+      {matcher.pipe(
+        Match.tag("initial", () => <h1>Initializing Echo...</h1>),
+        Match.tag("success", ({ result: lazyLoader }) => (
+          <MainScreen lazyLoader={lazyLoader} />
+        )),
+        Match.tag("failure", () => (
+          <h1 style={{ color: "red" }}>
+            Something went wrong initializing echo... Maybe report a bug :)
+          </h1>
+        )),
+        Match.exhaustive,
+      )(state)}
+      <ProviderStatus />
+    </div>
+  );
 };
 
 const MainScreen = ({ lazyLoader }: { lazyLoader: LazyLoadedProvider }) => {
@@ -219,4 +230,19 @@ const FolderSelector = ({
     )),
     Match.exhaustive,
   )(selectRootState);
+};
+
+const ProviderStatus = () => {
+  const [providerState] = useAtom(providerStateAtom);
+
+  return (
+    <div>
+      {providerState.map(([providerId, providerState]) => (
+        <div key={providerId}>
+          <h1>{providerId}</h1>
+          <pre>{JSON.stringify(providerState, null, 2)}</pre>
+        </div>
+      ))}
+    </div>
+  );
 };
