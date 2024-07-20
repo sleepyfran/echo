@@ -8,7 +8,7 @@ import {
   type StringKeyOf,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable } from "dexie";
-import { Effect, Layer, Ref } from "effect";
+import { Effect, Layer, Option, Ref } from "effect";
 
 /**
  * Implementation of the Database service using Dexie.js.
@@ -45,18 +45,40 @@ const createTable = <
   addMany: (records) =>
     Effect.gen(function* () {
       const table = db[tableName] as DexieTable<TSchema>;
-      return yield* Effect.promise(() => table.bulkAdd(records));
+      return yield* Effect.promise(() =>
+        table.bulkAdd(records, { allKeys: true }),
+      ).pipe(Effect.map((keys) => keys.length));
+    }),
+  putMany: (records) =>
+    Effect.gen(function* () {
+      const table = db[tableName] as DexieTable<TSchema>;
+      return yield* Effect.promise(() =>
+        table.bulkPut(records, { allKeys: true }),
+      ).pipe(Effect.map((keys) => keys.length));
     }),
   byId: (id) =>
     Effect.gen(function* () {
       const table = db[tableName];
-      return yield* Effect.tryPromise<TSchema>(
+      return yield* Effect.promise<TSchema>(
         () =>
           table
             .where("id")
             .equals(id)
             .first() as PromiseLike<TSchema> /* Big "trust me, bro", but trust me, bro. */,
-      ).pipe(Effect.option);
+      ).pipe(Effect.map(Option.fromNullable));
+    }),
+  byField: (field, value) =>
+    Effect.gen(function* () {
+      const table = db[tableName];
+      const normalizedFilter = normalizeForComparison(value);
+
+      return yield* Effect.promise<TSchema>(
+        () =>
+          table
+            .where(field as string)
+            .equals(normalizedFilter)
+            .first() as PromiseLike<TSchema> /* Another big "trust me, bro", but trust me, bro. */,
+      ).pipe(Effect.map(Option.fromNullable));
     }),
   filtered: ({ fieldOrFields, filter, limit = 100 }) =>
     Effect.gen(function* () {
@@ -75,7 +97,7 @@ const createTable = <
             .limit(limit)
             .toArray() as PromiseLike<
             TSchema[]
-          > /* Another big "trust me, bro", but trust me, bro. */,
+          > /* Yet another big "trust me, bro", but trust me, bro. */,
       );
     }),
 });
@@ -109,7 +131,7 @@ class DexieDatabase extends Dexie {
 
     this.version(1).stores({
       artists: "id, name",
-      tracks: "id, name",
+      tracks: "id",
     });
   }
 }

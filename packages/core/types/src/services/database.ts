@@ -51,14 +51,29 @@ export type Table<
   readonly addOne: (record: TSchema) => Effect.Effect<void>;
 
   /**
-   * Adds the given records to the table.
+   * Adds the given records to the table and returns the number of records
+   * added.
    */
-  readonly addMany: (records: TSchema[]) => Effect.Effect<void>;
+  readonly addMany: (records: TSchema[]) => Effect.Effect<number>;
+
+  /**
+   * Adds or updates the given record in the table. Returns the number of
+   * records added or updated.
+   */
+  readonly putMany: (records: TSchema[]) => Effect.Effect<number>;
 
   /**
    * Retrieves a specific record from the table by its ID.
    */
   readonly byId: (id: TSchema["id"]) => Effect.Effect<Option.Option<TSchema>>;
+
+  /**
+   * Retrieves a specific record from the table by a specific field.
+   */
+  readonly byField: <TField extends StringKeyOf<TSchema>>(
+    field: TField,
+    value: string,
+  ) => Effect.Effect<Option.Option<TSchema>>;
 
   /**
    * Retrieves a subset of records from the table that match the given filter

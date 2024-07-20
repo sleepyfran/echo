@@ -9,9 +9,13 @@ import {
   type BroadcastChannel,
   type MetadataProvider,
   type TrackMetadata,
+  type Crypto,
   MetadataProviderError,
+  type Database,
+  Artist,
+  Track,
 } from "@echo/core-types";
-import { Effect, Match, Schedule, Stream } from "effect";
+import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { isSupportedAudioFile } from "@echo/core-files";
 import {
   DownloadError,
@@ -23,6 +27,8 @@ type SyncFileBasedProviderInput = {
   provider: FileBasedProvider;
   broadcastChannel: BroadcastChannel<MediaProviderBroadcastSchema["worker"]>;
   metadataProvider: MetadataProvider;
+  database: Database;
+  crypto: Crypto;
   rootFolder: FolderMetadata;
 };
 
@@ -32,6 +38,8 @@ export const syncFileBasedProvider = ({
   metadataProvider,
   provider,
   rootFolder,
+  database,
+  crypto,
 }: SyncFileBasedProviderInput) =>
   Effect.gen(function* () {
     yield* Effect.log(`Starting sync for provider ${metadata.id}`);
@@ -51,7 +59,12 @@ export const syncFileBasedProvider = ({
       supportedContentStream,
     );
 
-    // TODO: Save to database.
+    const normalizedData = yield* normalizeData(
+      { database, crypto },
+      processed,
+    );
+
+    yield* saveToDatabase({ database }, normalizedData);
 
     return yield* broadcastChannel.send("reportStatus", {
       metadata,
@@ -59,7 +72,7 @@ export const syncFileBasedProvider = ({
         _tag: "synced",
         lastSyncedAt: new Date(),
         filesWithError: errors.length,
-        syncedFiles: processed.length,
+        syncedFiles: normalizedData.tracks.length,
       },
     });
   }).pipe(
@@ -166,3 +179,90 @@ const resolveMetadataFromStream = (
         ),
     ),
   );
+
+/**
+ * Normalizes the data retrieved from the metadata to make sure that we don't
+ * add multiple artists with the same name and that we won't have any tracks
+ * without an artist.
+ * @returns An object with all the unique artists and tracks that were retrieved.
+ */
+const normalizeData = (
+  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  successes: { metadata: TrackMetadata; file: FileMetadata }[],
+) =>
+  Stream.fromIterable(successes).pipe(
+    Stream.runFoldEffect(
+      { artists: [] as Artist[], tracks: [] as Track[] },
+      (accumulator, { metadata }) =>
+        Effect.gen(function* () {
+          const mainArtistName = metadata.artists?.[0] ?? "Unknown Artist";
+          const artist = yield* tryRetrieveOrCreateArtist(
+            { database, crypto },
+            mainArtistName,
+          );
+
+          // TODO: Save the file! Otherwise, this is useless.
+          const track = yield* createTrack({ crypto }, artist.id, metadata);
+
+          return {
+            artists: [...accumulator.artists, artist],
+            tracks: [...accumulator.tracks, track],
+          };
+        }),
+    ),
+  );
+
+const saveToDatabase = (
+  { database }: Pick<SyncFileBasedProviderInput, "database">,
+  { artists, tracks }: { artists: Artist[]; tracks: Track[] },
+) =>
+  Effect.gen(function* () {
+    const artistTable = yield* database.table("artists");
+    const trackTable = yield* database.table("tracks");
+
+    yield* artistTable.putMany(artists);
+    yield* trackTable.putMany(tracks);
+  });
+
+const tryRetrieveOrCreateArtist = (
+  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  artistName: string,
+): Effect.Effect<Artist> =>
+  Effect.gen(function* () {
+    const artistTable = yield* database.table("artists");
+    const existingArtist = yield* artistTable.byField("name", artistName);
+
+    return Option.isNone(existingArtist)
+      ? yield* createArtist({ crypto }, artistName)
+      : existingArtist.value;
+  });
+
+const createArtist = (
+  { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
+  name: string,
+): Effect.Effect<Artist> =>
+  Effect.gen(function* () {
+    const id = yield* crypto.generateUuid;
+    return {
+      id,
+      name,
+      imageUrl: Option.some("https://example.com/image.jpg"),
+    };
+  });
+
+const createTrack = (
+  { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
+  artistId: Artist["id"],
+  metadata: TrackMetadata,
+): Effect.Effect<Track> =>
+  Effect.gen(function* () {
+    const id = yield* crypto.generateUuid;
+
+    return {
+      id,
+      mainArtistId: artistId,
+      secondaryArtistIds: [] /* TODO: Implement this */,
+      name: metadata.title ?? "Unknown Title",
+      trackNumber: metadata.trackNumber ?? 1,
+    };
+  });

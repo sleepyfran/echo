@@ -4,6 +4,8 @@ import {
   type BroadcastChannel,
   MetadataProvider,
   type MediaProviderBroadcastSchema,
+  Database,
+  Crypto,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/infrastructure-bootstrap";
 import { Effect, Match, Ref } from "effect";
@@ -57,6 +59,8 @@ export const startMediaProviderResolver = ({
     const { createMediaProvider } = yield* lazyLoader.load(input.metadata);
     const mediaProvider = createMediaProvider(input.authInfo);
     const metadataProvider = yield* MetadataProvider;
+    const database = yield* Database;
+    const crypto = yield* Crypto;
 
     const runtimeFiber = yield* Match.type<Input>().pipe(
       Match.tag("file-based", (input) =>
@@ -67,6 +71,8 @@ export const startMediaProviderResolver = ({
             metadataProvider,
             provider: mediaProvider,
             rootFolder: input.rootFolder,
+            database,
+            crypto,
           }),
         ),
       ),
