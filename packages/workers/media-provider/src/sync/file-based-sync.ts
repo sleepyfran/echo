@@ -14,6 +14,7 @@ import {
   type Database,
   Artist,
   Track,
+  Album,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { isSupportedAudioFile } from "@echo/core-files";
@@ -192,7 +193,7 @@ const normalizeData = (
 ) =>
   Stream.fromIterable(successes).pipe(
     Stream.runFoldEffect(
-      { artists: [] as Artist[], tracks: [] as Track[] },
+      { albums: [] as Album[], artists: [] as Artist[], tracks: [] as Track[] },
       (accumulator, { metadata }) =>
         Effect.gen(function* () {
           const mainArtistName = metadata.artists?.[0] ?? "Unknown Artist";
@@ -201,10 +202,22 @@ const normalizeData = (
             mainArtistName,
           );
 
+          const album = yield* tryRetrieveOrCreateAlbum(
+            { database, crypto },
+            artist.id,
+            metadata.album ?? "Unknown Album",
+          );
+
           // TODO: Save the file! Otherwise, this is useless.
-          const track = yield* createTrack({ crypto }, artist.id, metadata);
+          const track = yield* tryRetrieveOrCreateTrack(
+            { crypto, database },
+            artist.id,
+            album.id,
+            metadata,
+          );
 
           return {
+            albums: [...accumulator.albums, album],
             artists: [...accumulator.artists, artist],
             tracks: [...accumulator.tracks, track],
           };
@@ -214,12 +227,18 @@ const normalizeData = (
 
 const saveToDatabase = (
   { database }: Pick<SyncFileBasedProviderInput, "database">,
-  { artists, tracks }: { artists: Artist[]; tracks: Track[] },
+  {
+    albums,
+    artists,
+    tracks,
+  }: { albums: Album[]; artists: Artist[]; tracks: Track[] },
 ) =>
   Effect.gen(function* () {
+    const albumsTable = yield* database.table("albums");
     const artistTable = yield* database.table("artists");
     const trackTable = yield* database.table("tracks");
 
+    yield* albumsTable.putMany(albums);
     yield* artistTable.putMany(artists);
     yield* trackTable.putMany(tracks);
   });
@@ -237,6 +256,42 @@ const tryRetrieveOrCreateArtist = (
       : existingArtist.value;
   });
 
+const tryRetrieveOrCreateAlbum = (
+  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  artistId: Artist["id"],
+  albumName: string,
+): Effect.Effect<Album> =>
+  Effect.gen(function* () {
+    const albumTable = yield* database.table("albums");
+    const existingAlbum = yield* albumTable.byFields([
+      ["name", albumName],
+      ["artistId", artistId],
+    ]);
+
+    return Option.isNone(existingAlbum)
+      ? yield* createAlbum({ crypto }, albumName, artistId)
+      : existingAlbum.value;
+  });
+
+const tryRetrieveOrCreateTrack = (
+  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  artistId: Artist["id"],
+  albumId: Album["id"],
+  metadata: TrackMetadata,
+): Effect.Effect<Track> =>
+  Effect.gen(function* () {
+    const trackTable = yield* database.table("tracks");
+    const existingTrack = yield* trackTable.byFields([
+      ["name", metadata?.title || "Unknown Title"],
+      ["mainArtistId", artistId],
+      ["albumId", albumId],
+    ]);
+
+    return Option.isNone(existingTrack)
+      ? yield* createTrack({ crypto }, artistId, albumId, metadata)
+      : existingTrack.value;
+  });
+
 const createArtist = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   name: string,
@@ -250,9 +305,25 @@ const createArtist = (
     };
   });
 
+const createAlbum = (
+  { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
+  name: string,
+  artistId: Artist["id"],
+): Effect.Effect<Album> =>
+  Effect.gen(function* () {
+    const id = yield* crypto.generateUuid;
+    return {
+      id,
+      name,
+      artistId,
+      imageUrl: Option.some("https://example.com/image.jpg"),
+    };
+  });
+
 const createTrack = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   artistId: Artist["id"],
+  albumId: Album["id"],
   metadata: TrackMetadata,
 ): Effect.Effect<Track> =>
   Effect.gen(function* () {
@@ -261,6 +332,7 @@ const createTrack = (
     return {
       id,
       mainArtistId: artistId,
+      albumId,
       secondaryArtistIds: [] /* TODO: Implement this */,
       name: metadata.title ?? "Unknown Title",
       trackNumber: metadata.trackNumber ?? 1,

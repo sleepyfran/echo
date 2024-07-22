@@ -1,6 +1,7 @@
 import * as S from "@effect/schema/Schema";
 import { GenericId } from "./common";
 import { ArtistId } from "./artist";
+import { AlbumId } from "./album";
 
 /**
  * Wrapper around a string to represent a track id.
@@ -32,6 +33,11 @@ export const Track = S.Struct({
    * The main artist is not included in this list.
    */
   secondaryArtistIds: S.Array(ArtistId),
+
+  /**
+   * Link to the ID of the album that the track belongs to.
+   */
+  albumId: AlbumId,
 
   /**
    * Name of the track.

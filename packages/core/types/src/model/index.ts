@@ -1,4 +1,5 @@
 export * from "./app-config";
+export * from "./album";
 export * from "./artist";
 export * from "./authentication";
 export * from "./common";

@@ -6,6 +6,7 @@ import {
   type Tables,
   type Table,
   type StringKeyOf,
+  Album,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable } from "dexie";
 import { Effect, Layer, Option, Ref } from "effect";
@@ -29,6 +30,12 @@ export const DexieDatabaseLive = Layer.effect(
     });
   }),
 );
+
+const catchToDefaultAndLog = (error: unknown) =>
+  Effect.gen(function* () {
+    yield* Effect.logError(error);
+    return null;
+  });
 
 const createTable = <
   TSchemaKey extends keyof Tables,
@@ -59,33 +66,55 @@ const createTable = <
   byId: (id) =>
     Effect.gen(function* () {
       const table = db[tableName];
-      return yield* Effect.promise<TSchema>(
+      return yield* Effect.tryPromise<TSchema>(
         () =>
-          table
-            .where("id")
-            .equals(id)
-            .first() as PromiseLike<TSchema> /* Big "trust me, bro", but trust me, bro. */,
-      ).pipe(Effect.map(Option.fromNullable));
+          table.get({
+            id,
+          }) as PromiseLike<TSchema> /* Big "trust me, bro", but trust me, bro. */,
+      ).pipe(
+        Effect.catchAllCause(catchToDefaultAndLog),
+        Effect.map(Option.fromNullable),
+      );
     }),
   byField: (field, value) =>
     Effect.gen(function* () {
       const table = db[tableName];
       const normalizedFilter = normalizeForComparison(value);
 
-      return yield* Effect.promise<TSchema>(
+      return yield* Effect.tryPromise<TSchema>(
         () =>
-          table
-            .where(field as string)
-            .equals(normalizedFilter)
-            .first() as PromiseLike<TSchema> /* Another big "trust me, bro", but trust me, bro. */,
-      ).pipe(Effect.map(Option.fromNullable));
+          table.get({
+            [field]: normalizedFilter,
+          }) as PromiseLike<TSchema> /* Another big "trust me, bro", but trust me, bro. */,
+      ).pipe(
+        Effect.catchAllCause(catchToDefaultAndLog),
+        Effect.map(Option.fromNullable),
+      );
+    }),
+  byFields: (fieldWithValues) =>
+    Effect.gen(function* () {
+      const table = db[tableName];
+      const normalizedFilters = fieldWithValues.map(([field, value]) => [
+        field,
+        normalizeForComparison(value),
+      ]);
+
+      return yield* Effect.tryPromise<TSchema>(
+        () =>
+          table.get(
+            normalizedFilters,
+          ) as PromiseLike<TSchema> /* Yet another big "trust me, bro", but trust me, bro. */,
+      ).pipe(
+        Effect.catchAllCause(catchToDefaultAndLog),
+        Effect.map(Option.fromNullable),
+      );
     }),
   filtered: ({ fieldOrFields, filter, limit = 100 }) =>
     Effect.gen(function* () {
       const table = db[tableName];
       const normalizedFilter = normalizeForComparison(filter);
 
-      return yield* Effect.promise<TSchema[]>(
+      return yield* Effect.tryPromise<TSchema[]>(
         () =>
           table
             .filter((tableRow) =>
@@ -98,6 +127,9 @@ const createTable = <
             .toArray() as PromiseLike<
             TSchema[]
           > /* Yet another big "trust me, bro", but trust me, bro. */,
+      ).pipe(
+        Effect.catchAllCause(catchToDefaultAndLog),
+        Effect.map((res) => res ?? []),
       );
     }),
 });
@@ -123,6 +155,7 @@ const normalizedFieldValues = <
  * outside of this package.
  */
 class DexieDatabase extends Dexie {
+  albums!: DexieTable<Album>;
   artists!: DexieTable<Artist>;
   tracks!: DexieTable<Track>;
 
@@ -130,8 +163,9 @@ class DexieDatabase extends Dexie {
     super("echo");
 
     this.version(1).stores({
+      albums: "id, name, artistId",
       artists: "id, name",
-      tracks: "id",
+      tracks: "id, mainArtistId, albumId",
     });
   }
 }

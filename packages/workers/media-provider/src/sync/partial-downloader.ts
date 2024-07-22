@@ -16,7 +16,7 @@ export enum DownloadError {
 export const partiallyDownloadIntoStream = (
   file: FileMetadata,
   byteRangeStart = 0,
-  byteRangeEnd = 1000,
+  byteRangeEnd = 10000,
 ) =>
   Effect.tryPromise({
     try: () =>

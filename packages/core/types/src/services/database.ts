@@ -1,11 +1,12 @@
 import { Context, Effect, Option } from "effect";
-import type { Artist, Track } from "../model";
+import type { Album, Artist, Track } from "../model";
 
 /**
  * Keys for all the available tables in the database with their associated
  * data type.
  */
 export type Tables = {
+  albums: Album;
   artists: Artist;
   tracks: Track;
 };
@@ -73,6 +74,13 @@ export type Table<
   readonly byField: <TField extends StringKeyOf<TSchema>>(
     field: TField,
     value: string,
+  ) => Effect.Effect<Option.Option<TSchema>>;
+
+  /**
+   * Retrieves a specific record from the table by the given fields.
+   */
+  readonly byFields: <TField extends StringKeyOf<TSchema>>(
+    fieldWithValues: [TField, string][],
   ) => Effect.Effect<Option.Option<TSchema>>;
 
   /**
