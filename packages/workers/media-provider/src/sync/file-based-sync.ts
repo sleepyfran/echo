@@ -12,9 +12,15 @@ import {
   type Crypto,
   MetadataProviderError,
   type Database,
-  Artist,
-  Track,
-  Album,
+  type Artist,
+  type Track,
+  type Album,
+  ArtistId,
+  AlbumId,
+  TrackId,
+  type StreamingSource,
+  GenericId,
+  FileBasedProviderId,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { isSupportedAudioFile } from "@echo/core-files";
@@ -31,6 +37,13 @@ type SyncFileBasedProviderInput = {
   database: Database;
   crypto: Crypto;
   rootFolder: FolderMetadata;
+};
+
+type SyncState = {
+  artists: Artist[];
+  albums: Album[];
+  streamingSources: StreamingSource[];
+  tracks: Track[];
 };
 
 export const syncFileBasedProvider = ({
@@ -193,8 +206,13 @@ const normalizeData = (
 ) =>
   Stream.fromIterable(successes).pipe(
     Stream.runFoldEffect(
-      { albums: [] as Album[], artists: [] as Artist[], tracks: [] as Track[] },
-      (accumulator, { metadata }) =>
+      {
+        albums: [],
+        artists: [],
+        streamingSources: [],
+        tracks: [],
+      } as SyncState,
+      (accumulator, { metadata, file }) =>
         Effect.gen(function* () {
           const mainArtistName = metadata.artists?.[0] ?? "Unknown Artist";
           const artist = yield* tryRetrieveOrCreateArtist(
@@ -208,7 +226,6 @@ const normalizeData = (
             metadata.album ?? "Unknown Album",
           );
 
-          // TODO: Save the file! Otherwise, this is useless.
           const track = yield* tryRetrieveOrCreateTrack(
             { crypto, database },
             artist.id,
@@ -216,9 +233,19 @@ const normalizeData = (
             metadata,
           );
 
+          const streamingSource = yield* tryRetrieveOrCreateStreamingSource(
+            { crypto, database },
+            track.id,
+            file.downloadUrl,
+          );
+
           return {
             albums: [...accumulator.albums, album],
             artists: [...accumulator.artists, artist],
+            streamingSources: [
+              ...accumulator.streamingSources,
+              streamingSource,
+            ],
             tracks: [...accumulator.tracks, track],
           };
         }),
@@ -227,19 +254,17 @@ const normalizeData = (
 
 const saveToDatabase = (
   { database }: Pick<SyncFileBasedProviderInput, "database">,
-  {
-    albums,
-    artists,
-    tracks,
-  }: { albums: Album[]; artists: Artist[]; tracks: Track[] },
+  { albums, artists, streamingSources, tracks }: SyncState,
 ) =>
   Effect.gen(function* () {
     const albumsTable = yield* database.table("albums");
     const artistTable = yield* database.table("artists");
+    const streamingSourcesTable = yield* database.table("streamingSources");
     const trackTable = yield* database.table("tracks");
 
     yield* albumsTable.putMany(albums);
     yield* artistTable.putMany(artists);
+    yield* streamingSourcesTable.putMany(streamingSources);
     yield* trackTable.putMany(tracks);
   });
 
@@ -292,14 +317,32 @@ const tryRetrieveOrCreateTrack = (
       : existingTrack.value;
   });
 
+const tryRetrieveOrCreateStreamingSource = (
+  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  trackId: Track["id"],
+  url: string,
+): Effect.Effect<StreamingSource> =>
+  Effect.gen(function* () {
+    const streamingSourceTable = yield* database.table("streamingSources");
+    const existingSource = yield* streamingSourceTable.byField(
+      "trackId",
+      trackId,
+    );
+
+    return Option.isNone(existingSource)
+      ? yield* createStreamingSource({ crypto }, trackId, url)
+      : existingSource.value;
+  });
+
 const createArtist = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   name: string,
 ): Effect.Effect<Artist> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
+
     return {
-      id,
+      id: ArtistId(id),
       name,
       imageUrl: Option.some("https://example.com/image.jpg"),
     };
@@ -312,8 +355,9 @@ const createAlbum = (
 ): Effect.Effect<Album> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
+
     return {
-      id,
+      id: AlbumId(id),
       name,
       artistId,
       imageUrl: Option.some("https://example.com/image.jpg"),
@@ -330,11 +374,30 @@ const createTrack = (
     const id = yield* crypto.generateUuid;
 
     return {
-      id,
+      id: TrackId(id),
       mainArtistId: artistId,
       albumId,
       secondaryArtistIds: [] /* TODO: Implement this */,
       name: metadata.title ?? "Unknown Title",
       trackNumber: metadata.trackNumber ?? 1,
+    };
+  });
+
+const createStreamingSource = (
+  { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
+  trackId: Track["id"],
+  url: string,
+): Effect.Effect<StreamingSource> =>
+  Effect.gen(function* () {
+    const id = yield* crypto.generateUuid;
+
+    return {
+      id: GenericId(id),
+      trackId,
+      resource: {
+        type: "file",
+        provider: FileBasedProviderId.OneDrive /* TODO: Take from metadata. */,
+        uri: url,
+      },
     };
   });

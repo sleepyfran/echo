@@ -1,5 +1,5 @@
 import { Context, Effect, Option } from "effect";
-import type { Album, Artist, Track } from "../model";
+import type { Album, Artist, StreamingSource, Track } from "../model";
 
 /**
  * Keys for all the available tables in the database with their associated
@@ -8,6 +8,7 @@ import type { Album, Artist, Track } from "../model";
 export type Tables = {
   albums: Album;
   artists: Artist;
+  streamingSources: StreamingSource;
   tracks: Track;
 };
 

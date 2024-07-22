@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 import {
-  ProviderId,
+  FileBasedProviderId,
   AppConfig,
   type ProviderMetadata,
   ProviderFactory,
@@ -31,7 +31,7 @@ export const LazyLoadedProvider = Context.GenericTag<LazyLoadedProvider>(
 const lazyLoadFromMetadata = (
   metadata: ProviderMetadata,
 ): Effect.Effect<Layer.Layer<ProviderFactory, never, AppConfig>> => {
-  if (metadata.id === ProviderId.OneDrive) {
+  if (metadata.id === FileBasedProviderId.OneDrive) {
     return Effect.promise(async () => {
       const { OneDriveProviderFactoryLive } = await import(
         "@echo/infrastructure-onedrive-provider"

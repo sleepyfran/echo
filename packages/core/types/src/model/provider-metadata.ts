@@ -1,10 +1,21 @@
 /**
- * ID of the provider that the metadata is for.
+ * ID of a file-based provider.
  */
-export enum ProviderId {
+export enum FileBasedProviderId {
   OneDrive = "onedrive",
+}
+
+/**
+ * ID of an API-based provider.
+ */
+export enum ApiBasedProviderId {
   Spotify = "spotify",
 }
+
+/**
+ * ID of the provider that the metadata is for.
+ */
+export type ProviderId = FileBasedProviderId | ApiBasedProviderId;
 
 /**
  * Defines whether the provider connects to the data via a file system (e.g. OneDrive)
@@ -28,7 +39,7 @@ export type ProviderMetadata = {
  * Metadata of the OneDrive provider.
  */
 export const OneDriveProviderMetadata: ProviderMetadata = {
-  id: ProviderId.OneDrive,
+  id: FileBasedProviderId.OneDrive,
   type: ProviderType.FileBased,
 };
 
@@ -36,7 +47,7 @@ export const OneDriveProviderMetadata: ProviderMetadata = {
  * Metadata of the Spotify provider.
  */
 export const SpotifyProviderMetadata: ProviderMetadata = {
-  id: ProviderId.Spotify,
+  id: ApiBasedProviderId.Spotify,
   type: ProviderType.ApiBased,
 };
 

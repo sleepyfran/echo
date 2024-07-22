@@ -6,7 +6,8 @@ import {
   type Tables,
   type Table,
   type StringKeyOf,
-  Album,
+  type Album,
+  type StreamingSource,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable } from "dexie";
 import { Effect, Layer, Option, Ref } from "effect";
@@ -70,7 +71,7 @@ const createTable = <
         () =>
           table.get({
             id,
-          }) as PromiseLike<TSchema> /* Big "trust me, bro", but trust me, bro. */,
+          }) as unknown as PromiseLike<TSchema>,
       ).pipe(
         Effect.catchAllCause(catchToDefaultAndLog),
         Effect.map(Option.fromNullable),
@@ -85,7 +86,7 @@ const createTable = <
         () =>
           table.get({
             [field]: normalizedFilter,
-          }) as PromiseLike<TSchema> /* Another big "trust me, bro", but trust me, bro. */,
+          }) as unknown as PromiseLike<TSchema>,
       ).pipe(
         Effect.catchAllCause(catchToDefaultAndLog),
         Effect.map(Option.fromNullable),
@@ -100,10 +101,7 @@ const createTable = <
       ]);
 
       return yield* Effect.tryPromise<TSchema>(
-        () =>
-          table.get(
-            normalizedFilters,
-          ) as PromiseLike<TSchema> /* Yet another big "trust me, bro", but trust me, bro. */,
+        () => table.get(normalizedFilters) as unknown as PromiseLike<TSchema>,
       ).pipe(
         Effect.catchAllCause(catchToDefaultAndLog),
         Effect.map(Option.fromNullable),
@@ -124,9 +122,7 @@ const createTable = <
               ).some((value) => value.includes(normalizedFilter)),
             )
             .limit(limit)
-            .toArray() as PromiseLike<
-            TSchema[]
-          > /* Yet another big "trust me, bro", but trust me, bro. */,
+            .toArray() as unknown as PromiseLike<TSchema[]>,
       ).pipe(
         Effect.catchAllCause(catchToDefaultAndLog),
         Effect.map((res) => res ?? []),
@@ -157,6 +153,7 @@ const normalizedFieldValues = <
 class DexieDatabase extends Dexie {
   albums!: DexieTable<Album>;
   artists!: DexieTable<Artist>;
+  streamingSources!: DexieTable<StreamingSource>;
   tracks!: DexieTable<Track>;
 
   constructor() {
@@ -165,6 +162,7 @@ class DexieDatabase extends Dexie {
     this.version(1).stores({
       albums: "id, name, artistId",
       artists: "id, name",
+      streamingSources: "id, trackId",
       tracks: "id, mainArtistId, albumId",
     });
   }
