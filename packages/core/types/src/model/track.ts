@@ -1,12 +1,23 @@
 import type { ArtistId } from "./artist";
 import type { AlbumId } from "./album";
 import { Brand } from "effect";
+import type {
+  ApiBasedProviderId,
+  FileBasedProviderId,
+} from "./provider-metadata";
 
 /**
  * Wrapper around a string to represent a track id.
  */
 export type TrackId = string & Brand.Brand<"TrackId">;
 export const TrackId = Brand.nominal<TrackId>();
+
+/**
+ * Represents how a resource can be consumed.
+ */
+export type StreamingResource =
+  | { type: "file"; provider: FileBasedProviderId; uri: string }
+  | { type: "api"; provider: ApiBasedProviderId };
 
 /**
  * Represents a playable track in the user's library.
@@ -48,6 +59,12 @@ export type Track = {
    * determine the order of tracks in an album. It must be greater than zero.
    */
   trackNumber: number;
+
+  /**
+   * Resource that the track can be consumed from, with details on how to
+   * consume and from which platform.
+   */
+  resource: StreamingResource;
 
   /**
    * Duration of the track in milliseconds. It must be greater than zero.

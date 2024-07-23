@@ -5,5 +5,4 @@ export * from "./authentication";
 export * from "./common";
 export * from "./file-system";
 export * from "./provider-metadata";
-export * from "./streaming-source";
 export * from "./track";

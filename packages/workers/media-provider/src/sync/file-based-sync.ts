@@ -18,8 +18,6 @@ import {
   ArtistId,
   AlbumId,
   TrackId,
-  type StreamingSource,
-  GenericId,
   FileBasedProviderId,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
@@ -42,7 +40,6 @@ type SyncFileBasedProviderInput = {
 type SyncState = {
   artists: Artist[];
   albums: Album[];
-  streamingSources: StreamingSource[];
   tracks: Track[];
 };
 
@@ -231,21 +228,12 @@ const normalizeData = (
             artist.id,
             album.id,
             metadata,
-          );
-
-          const streamingSource = yield* tryRetrieveOrCreateStreamingSource(
-            { crypto, database },
-            track.id,
-            file.downloadUrl,
+            file,
           );
 
           return {
             albums: [...accumulator.albums, album],
             artists: [...accumulator.artists, artist],
-            streamingSources: [
-              ...accumulator.streamingSources,
-              streamingSource,
-            ],
             tracks: [...accumulator.tracks, track],
           };
         }),
@@ -254,17 +242,15 @@ const normalizeData = (
 
 const saveToDatabase = (
   { database }: Pick<SyncFileBasedProviderInput, "database">,
-  { albums, artists, streamingSources, tracks }: SyncState,
+  { albums, artists, tracks }: SyncState,
 ) =>
   Effect.gen(function* () {
     const albumsTable = yield* database.table("albums");
     const artistTable = yield* database.table("artists");
-    const streamingSourcesTable = yield* database.table("streamingSources");
     const trackTable = yield* database.table("tracks");
 
     yield* albumsTable.putMany(albums);
     yield* artistTable.putMany(artists);
-    yield* streamingSourcesTable.putMany(streamingSources);
     yield* trackTable.putMany(tracks);
   });
 
@@ -303,6 +289,7 @@ const tryRetrieveOrCreateTrack = (
   artistId: Artist["id"],
   albumId: Album["id"],
   metadata: TrackMetadata,
+  file: FileMetadata,
 ): Effect.Effect<Track> =>
   Effect.gen(function* () {
     const trackTable = yield* database.table("tracks");
@@ -313,25 +300,8 @@ const tryRetrieveOrCreateTrack = (
     ]);
 
     return Option.isNone(existingTrack)
-      ? yield* createTrack({ crypto }, artistId, albumId, metadata)
+      ? yield* createTrack({ crypto }, artistId, albumId, metadata, file)
       : existingTrack.value;
-  });
-
-const tryRetrieveOrCreateStreamingSource = (
-  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
-  trackId: Track["id"],
-  url: string,
-): Effect.Effect<StreamingSource> =>
-  Effect.gen(function* () {
-    const streamingSourceTable = yield* database.table("streamingSources");
-    const existingSource = yield* streamingSourceTable.byField(
-      "trackId",
-      trackId,
-    );
-
-    return Option.isNone(existingSource)
-      ? yield* createStreamingSource({ crypto }, trackId, url)
-      : existingSource.value;
   });
 
 const createArtist = (
@@ -369,6 +339,7 @@ const createTrack = (
   artistId: Artist["id"],
   albumId: Album["id"],
   metadata: TrackMetadata,
+  file: FileMetadata,
 ): Effect.Effect<Track> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
@@ -380,24 +351,10 @@ const createTrack = (
       secondaryArtistIds: [] /* TODO: Implement this */,
       name: metadata.title ?? "Unknown Title",
       trackNumber: metadata.trackNumber ?? 1,
-    };
-  });
-
-const createStreamingSource = (
-  { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
-  trackId: Track["id"],
-  url: string,
-): Effect.Effect<StreamingSource> =>
-  Effect.gen(function* () {
-    const id = yield* crypto.generateUuid;
-
-    return {
-      id: GenericId(id),
-      trackId,
       resource: {
         type: "file",
         provider: FileBasedProviderId.OneDrive /* TODO: Take from metadata. */,
-        uri: url,
+        uri: file.downloadUrl,
       },
     };
   });

@@ -7,7 +7,6 @@ import {
   type Table,
   type StringKeyOf,
   type Album,
-  type StreamingSource,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable } from "dexie";
 import { Effect, Layer, Option, Ref } from "effect";
@@ -153,7 +152,6 @@ const normalizedFieldValues = <
 class DexieDatabase extends Dexie {
   albums!: DexieTable<Album>;
   artists!: DexieTable<Artist>;
-  streamingSources!: DexieTable<StreamingSource>;
   tracks!: DexieTable<Track>;
 
   constructor() {
@@ -162,7 +160,6 @@ class DexieDatabase extends Dexie {
     this.version(1).stores({
       albums: "id, name, artistId",
       artists: "id, name",
-      streamingSources: "id, trackId",
       tracks: "id, mainArtistId, albumId",
     });
   }
