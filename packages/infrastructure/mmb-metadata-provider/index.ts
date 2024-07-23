@@ -6,7 +6,7 @@ import {
 import { Effect, Layer } from "effect";
 import { Buffer } from "buffer";
 import process from "process";
-import { parseReadableStream } from "music-metadata-browser";
+import { parseWebStream } from "music-metadata";
 
 // Polyfills needed for `music-metadata-browser` to work.
 globalThis.Buffer = Buffer;
@@ -24,7 +24,7 @@ const mmbMetadataProvider = MetadataProvider.of({
   trackMetadataFromReadableStream: (stream, file) =>
     Effect.tryPromise({
       try: () =>
-        parseReadableStream(stream, {
+        parseWebStream(stream, {
           mimeType: file.mimeType ?? "",
           size: file.byteSize,
         }),

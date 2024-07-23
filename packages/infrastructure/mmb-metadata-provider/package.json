@@ -2,7 +2,7 @@
   "name": "@echo/infrastructure-mmb-metadata-provider",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the MmbMetadataProvider related infrastructure",
+  "description": "Implements the metadata provider interface using the music-metadata (previously music-metadata-browser, hence the mmb naming) library",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -12,7 +12,7 @@
     "@echo/core-types": "^1.0.0",
     "buffer": "^6.0.3",
     "effect": "^3.2.8",
-    "music-metadata-browser": "^2.5.10",
+    "music-metadata": "^10.0.0",
     "process": "^0.11.10"
   }
 }
