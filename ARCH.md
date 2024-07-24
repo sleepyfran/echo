@@ -40,7 +40,7 @@ This repository is a monorepo organized with the following structure:
 Overall the app uses effect for pretty much everything. The `core-types` package
 defines the interfaces for the services, most of the definitions are just effects
 when they are operations with no input parameters or functions that return effects
-when they do have an input. Examples of this are the [Authentication interface](./packages/core/types/src/services/authentication.ts) or the [MediaProvider interface](./packages/core/types/src/services/provider.ts).
+when they do have an input. Examples of this are the [Authentication interface](./packages/core/types/src/services/authentication.ts) or the [MediaProvider interface](./packages/core/types/src/services/mediaProvider.ts).
 
 ## Dependency injection
 

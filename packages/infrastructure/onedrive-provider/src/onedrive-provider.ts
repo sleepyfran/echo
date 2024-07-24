@@ -1,4 +1,4 @@
-import { ProviderFactory } from "@echo/core-types";
+import { MediaProviderFactory } from "@echo/core-types";
 import { Effect, Layer } from "effect";
 import { MsalAuthentication } from "./msal-authentication";
 import { Client, type ClientOptions } from "@microsoft/microsoft-graph-client";
@@ -13,7 +13,7 @@ import { createListFolder } from "./apis/list-folder.graph-api";
  * provider.
  */
 export const OneDriveProviderLive = Layer.effect(
-  ProviderFactory,
+  MediaProviderFactory,
   Effect.gen(function* () {
     const msalAuth = yield* MsalAuthentication;
 

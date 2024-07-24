@@ -3,7 +3,7 @@ import {
   FileBasedProviderId,
   AppConfig,
   type ProviderMetadata,
-  ProviderFactory,
+  MediaProviderFactory,
   type Authentication,
 } from "@echo/core-types";
 
@@ -14,7 +14,7 @@ export type LazyLoadedProvider = {
   readonly load: (metadata: ProviderMetadata) => Effect.Effect<{
     metadata: ProviderMetadata;
     authentication: Authentication;
-    createMediaProvider: ProviderFactory["createMediaProvider"];
+    createMediaProvider: MediaProviderFactory["createMediaProvider"];
   }>;
 };
 
@@ -30,7 +30,7 @@ export const LazyLoadedProvider = Context.GenericTag<LazyLoadedProvider>(
  */
 const lazyLoadFromMetadata = (
   metadata: ProviderMetadata,
-): Effect.Effect<Layer.Layer<ProviderFactory, never, AppConfig>> => {
+): Effect.Effect<Layer.Layer<MediaProviderFactory, never, AppConfig>> => {
   if (metadata.id === FileBasedProviderId.OneDrive) {
     return Effect.promise(async () => {
       const { OneDriveProviderFactoryLive } = await import(
@@ -47,7 +47,7 @@ const lazyLoadFromMetadata = (
 
 const createLazyLoadedProvider = (metadata: ProviderMetadata) =>
   Effect.gen(function* () {
-    const providerFactory = yield* ProviderFactory;
+    const providerFactory = yield* MediaProviderFactory;
     const authentication = yield* providerFactory.authenticationProvider;
 
     return {

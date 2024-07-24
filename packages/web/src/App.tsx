@@ -3,7 +3,7 @@ import {
   MediaProviderMainThreadBroadcastChannel,
   type Authentication,
   type AuthenticationInfo,
-  type Provider,
+  type MediaProvider,
   type ProviderMetadata,
   type FolderMetadata,
 } from "@echo/core-types";
@@ -94,7 +94,7 @@ const ProviderAuthenticator = ({
 }: {
   metadata: ProviderMetadata;
   authentication: Authentication;
-  createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
+  createMediaProvider: (authInfo: AuthenticationInfo) => MediaProvider;
 }) => {
   const [connectToProvider, connectState, matcher] = useEffectTs(
     authentication.connect,
@@ -128,7 +128,7 @@ const SelectRoot = ({
 }: {
   authInfo: AuthenticationInfo;
   metadata: ProviderMetadata;
-  createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
+  createMediaProvider: (authInfo: AuthenticationInfo) => MediaProvider;
 }) => {
   const mediaProvider = useMemo(
     () => createMediaProvider(authInfo),

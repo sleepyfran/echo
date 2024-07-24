@@ -31,14 +31,14 @@ export type FileBasedProvider = {
 /**
  * Defines all types of providers that are available in the app.
  */
-export type Provider = FileBasedProvider;
+export type MediaProvider = FileBasedProvider;
 
 /**
  * A factory that can provide an instance to the authentication provider that
  * pairs with this media provider, and can create a new instance of the media
  * provider given the authentication info.
  */
-export type ProviderFactory = {
+export type MediaProviderFactory = {
   /**
    * Returns an instance of the authentication provider that pairs with this
    * media provider.
@@ -48,9 +48,9 @@ export type ProviderFactory = {
   /**
    * Creates a new instance of the underlying provider.
    */
-  readonly createMediaProvider: (authInfo: AuthenticationInfo) => Provider;
+  readonly createMediaProvider: (authInfo: AuthenticationInfo) => MediaProvider;
 };
 
-export const ProviderFactory = Context.GenericTag<ProviderFactory>(
+export const MediaProviderFactory = Context.GenericTag<MediaProviderFactory>(
   "@echo/core-types/ProviderFactory",
 );
