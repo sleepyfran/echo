@@ -1,14 +1,18 @@
-import { Context, Effect, Option } from "effect";
-import type { Album, Artist, Track } from "../model";
+import { Context, Effect, Option, Stream } from "effect";
+import type {
+  DatabaseAlbum,
+  DatabaseArtist,
+  DatabaseTrack,
+} from "./database-models.ts";
 
 /**
  * Keys for all the available tables in the database with their associated
  * data type.
  */
 export type Tables = {
-  albums: Album;
-  artists: Artist;
-  tracks: Track;
+  albums: DatabaseAlbum;
+  artists: DatabaseArtist;
+  tracks: DatabaseTrack;
 };
 
 /**
@@ -104,4 +108,9 @@ export type Table<
      */
     limit?: number;
   }) => Effect.Effect<TSchema[]>;
+
+  /**
+   * Streams all records from the table.
+   */
+  readonly observe: () => Effect.Effect<Stream.Stream<TSchema>>;
 };

@@ -1,8 +1,8 @@
 {
-  "name": "@echo/infrastructure-{{dashCase name}}",
+  "name": "@echo/infrastructure-library",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the {{properCase name}} related infrastructure",
+  "description": "Implementation of the library service that uses the underlying database mechanism",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

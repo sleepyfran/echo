@@ -1,15 +1,15 @@
 import { normalizeForComparison } from "@echo/core-strings";
 import {
-  type Artist,
+  type DatabaseArtist,
   Database,
-  type Track,
+  type DatabaseTrack,
   type Tables,
   type Table,
   type StringKeyOf,
-  type Album,
+  type DatabaseAlbum,
 } from "@echo/core-types";
-import Dexie, { type Table as DexieTable } from "dexie";
-import { Effect, Layer, Option, Ref } from "effect";
+import Dexie, { type Table as DexieTable, liveQuery } from "dexie";
+import { Effect, Layer, Option, PubSub, Ref, Stream } from "effect";
 
 /**
  * Implementation of the Database service using Dexie.js.
@@ -127,6 +127,24 @@ const createTable = <
         Effect.map((res) => res ?? []),
       );
     }),
+  observe: () =>
+    Effect.gen(function* () {
+      const table = db[tableName];
+
+      const pubsub = yield* PubSub.sliding<TSchema>(500);
+
+      const subscription = liveQuery(
+        () => table.toArray() as unknown as Promise<TSchema[]>,
+      ).subscribe(
+        (items) => Effect.runPromise(pubsub.publishAll(items)), // next
+        () => Effect.runPromise(pubsub.shutdown), // error
+        () => Effect.runPromise(pubsub.shutdown), // complete
+      );
+
+      return Stream.fromPubSub(pubsub).pipe(
+        Stream.ensuring(Effect.sync(subscription.unsubscribe)),
+      );
+    }),
 });
 
 /**
@@ -150,9 +168,9 @@ const normalizedFieldValues = <
  * outside of this package.
  */
 class DexieDatabase extends Dexie {
-  albums!: DexieTable<Album>;
-  artists!: DexieTable<Artist>;
-  tracks!: DexieTable<Track>;
+  albums!: DexieTable<DatabaseAlbum>;
+  artists!: DexieTable<DatabaseArtist>;
+  tracks!: DexieTable<DatabaseTrack>;
 
   constructor() {
     super("echo");

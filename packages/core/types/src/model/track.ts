@@ -1,5 +1,5 @@
-import type { ArtistId } from "./artist";
-import type { AlbumId } from "./album";
+import type { Artist } from "./artist";
+import type { Album } from "./album";
 import { Brand } from "effect";
 import type {
   ApiBasedProviderId,
@@ -33,21 +33,21 @@ export type Track = {
   id: TrackId;
 
   /**
-   * Link to the ID of the artist that created the track.
+   * Main artist that created the track.
    */
-  mainArtistId: ArtistId;
+  mainArtist: Artist;
 
   /**
-   * List of IDs of artists that contributed to the track but are not the main
+   * List of artists that contributed to the track but are not the main
    * artist. This can include featured artists, producers, and other contributors.
    * The main artist is not included in this list.
    */
-  secondaryArtistIds: ArtistId[];
+  secondaryArtists: Artist[];
 
   /**
-   * Link to the ID of the album that the track belongs to.
+   * Album that the track belongs to.
    */
-  albumId: AlbumId;
+  album: Album;
 
   /**
    * Name of the track.

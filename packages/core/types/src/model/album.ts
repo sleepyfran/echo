@@ -1,5 +1,5 @@
 import { Brand, Option } from "effect";
-import type { ArtistId } from "./artist";
+import type { Artist } from "./artist";
 
 /**
  * Wrapper around a string to represent an album id.
@@ -21,9 +21,9 @@ export type Album = {
   id: AlbumId;
 
   /**
-   * Unique identifier for the artist of the album.
+   * Artist of the album.
    */
-  artistId: ArtistId;
+  artist: Artist;
 
   /**
    * Name of the album.

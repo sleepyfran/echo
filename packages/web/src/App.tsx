@@ -1,6 +1,7 @@
 import {
   AvailableProviders,
   MediaProviderMainThreadBroadcastChannel,
+  Library,
   type Authentication,
   type AuthenticationInfo,
   type MediaProvider,
@@ -12,6 +13,7 @@ import {
   useEffectCallback,
   useEffectTs,
   useOnMountEffect,
+  useStream,
 } from "@echo/components-effect-bridge";
 import {
   useProviderStateSubscriber,
@@ -44,6 +46,7 @@ export const App = () => {
         Match.exhaustive,
       )(state)}
       <ProviderStatus />
+      <UserLibrary />
     </div>
   );
 };
@@ -245,4 +248,28 @@ const ProviderStatus = () => {
       ))}
     </div>
   );
+};
+
+const observeLibrary = Effect.gen(function* () {
+  const library = yield* Library;
+  return yield* library.observeAlbums();
+}).pipe(Effect.provide(MainLive));
+
+const UserLibrary = () => {
+  const [albumStream, matcher] = useStream(observeLibrary);
+
+  return matcher.pipe(
+    Match.tag("empty", () => <h1>Nothing in your library</h1>),
+    Match.tag("items", ({ items }) =>
+      items.map((album) => (
+        <div key={album.id}>
+          <h1>{album.name}</h1>
+          <p>{album.artist.name}</p>
+          <hr />
+        </div>
+      )),
+    ),
+    Match.tag("failure", () => <h1>Failed to load library</h1>),
+    Match.exhaustive,
+  )(albumStream);
 };

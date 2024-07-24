@@ -5,6 +5,7 @@ import {
 } from "@echo/infrastructure-broadcast-channel";
 import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
 import { DexieDatabaseLive } from "@echo/infrastructure-dexie-database";
+import { LibraryLive } from "@echo/infrastructure-library";
 import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provider";
 import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";
@@ -17,6 +18,7 @@ export const MainLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
   Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
+  Layer.provideMerge(LibraryLive),
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(AppConfigLive),
 );

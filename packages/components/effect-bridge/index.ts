@@ -1,4 +1,4 @@
-import { Cause, Effect, Exit, Match } from "effect";
+import { Cause, Effect, Exit, Match, Stream } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type RunEffectCallback = () => void;
@@ -142,4 +142,62 @@ export const useOnMountEffect = <TResult, TError>(
   }, [runEffect]);
 
   return [state, matcher];
+};
+
+/**
+ * Represents the possible states of a stream.
+ */
+type StreamResultState<TResult, TError> =
+  | { _tag: "empty" }
+  | { _tag: "items"; items: TResult[] }
+  | { _tag: "failure"; error: TError | string };
+
+/**
+ * Runs the given Effect (from effect-ts, not the React concept) and subscribes
+ * to the returned stream when the component mounts, returning back a union of
+ * possible states based on the result of the stream returned by the effect.
+ * @param streamEffect The effect that returns a stream to subscribe to.
+ * @returns A union of possible states based on the result of the stream.
+ */
+export const useStream = <TResult, TError>(
+  streamEffect: Effect.Effect<Stream.Stream<TResult, TError>>,
+): [
+  StreamResultState<TResult, TError>,
+  ReturnType<typeof Match.type<StreamResultState<TResult, TError>>>,
+] => {
+  const [result, setResult] = useState<TResult[]>([]);
+  const [error, setError] = useState<TError | undefined>(undefined);
+  const [streamEffectState, matcher] = useOnMountEffect(streamEffect);
+
+  const streamMatcherRef = useRef(
+    Match.type<StreamResultState<TResult, TError>>(),
+  );
+
+  useEffect(() => {
+    Effect.runPromise(
+      matcher.pipe(
+        Match.tag("initial", () => Effect.void),
+        Match.tag("success", (stream) =>
+          stream.result.pipe(
+            Stream.runForEachChunk((albums) =>
+              Effect.sync(() => setResult((prev) => [...prev, ...albums])),
+            ),
+          ),
+        ),
+        Match.tag("failure", ({ error }) =>
+          Effect.sync(() => setError(error as TError)),
+        ),
+        Match.exhaustive,
+      )(streamEffectState),
+    );
+  }, [streamEffectState, matcher]);
+
+  return [
+    error
+      ? { _tag: "failure", error }
+      : result.length === 0
+        ? { _tag: "empty" }
+        : { _tag: "items", items: result },
+    streamMatcherRef.current,
+  ];
 };

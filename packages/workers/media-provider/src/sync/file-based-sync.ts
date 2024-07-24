@@ -12,9 +12,9 @@ import {
   type Crypto,
   MetadataProviderError,
   type Database,
-  type Artist,
-  type Track,
-  type Album,
+  type DatabaseArtist,
+  type DatabaseTrack,
+  type DatabaseAlbum,
   ArtistId,
   AlbumId,
   TrackId,
@@ -38,9 +38,9 @@ type SyncFileBasedProviderInput = {
 };
 
 type SyncState = {
-  albums: Map<string, Album>;
-  artists: Map<string, Artist>;
-  tracks: Track[];
+  albums: Map<string, DatabaseAlbum>;
+  artists: Map<string, DatabaseArtist>;
+  tracks: DatabaseTrack[];
 };
 
 export const syncFileBasedProvider = ({
@@ -258,8 +258,8 @@ const saveToDatabase = (
 const tryRetrieveOrCreateArtist = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
   artistName: string,
-  processedArtists: Map<string, Artist>,
-): Effect.Effect<Artist> =>
+  processedArtists: Map<string, DatabaseArtist>,
+): Effect.Effect<DatabaseArtist> =>
   Effect.gen(function* () {
     const artistTable = yield* database.table("artists");
 
@@ -280,10 +280,10 @@ const tryRetrieveOrCreateArtist = (
 
 const tryRetrieveOrCreateAlbum = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
-  artistId: Artist["id"],
+  artistId: DatabaseArtist["id"],
   albumName: string,
-  processedAlbums: Map<string, Album>,
-): Effect.Effect<Album> =>
+  processedAlbums: Map<string, DatabaseAlbum>,
+): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const albumTable = yield* database.table("albums");
     const existingAlbum = yield* albumTable
@@ -306,11 +306,11 @@ const tryRetrieveOrCreateAlbum = (
 
 const tryRetrieveOrCreateTrack = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
-  artistId: Artist["id"],
-  albumId: Album["id"],
+  artistId: DatabaseArtist["id"],
+  albumId: DatabaseAlbum["id"],
   metadata: TrackMetadata,
   file: FileMetadata,
-): Effect.Effect<Track> =>
+): Effect.Effect<DatabaseTrack> =>
   Effect.gen(function* () {
     const trackTable = yield* database.table("tracks");
     const existingTrack = yield* trackTable.byFields([
@@ -327,7 +327,7 @@ const tryRetrieveOrCreateTrack = (
 const createArtist = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   name: string,
-): Effect.Effect<Artist> =>
+): Effect.Effect<DatabaseArtist> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
 
@@ -341,8 +341,8 @@ const createArtist = (
 const createAlbum = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   name: string,
-  artistId: Artist["id"],
-): Effect.Effect<Album> =>
+  artistId: DatabaseArtist["id"],
+): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
 
@@ -356,11 +356,11 @@ const createAlbum = (
 
 const createTrack = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
-  artistId: Artist["id"],
-  albumId: Album["id"],
+  artistId: DatabaseArtist["id"],
+  albumId: DatabaseAlbum["id"],
   metadata: TrackMetadata,
   file: FileMetadata,
-): Effect.Effect<Track> =>
+): Effect.Effect<DatabaseTrack> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
 
