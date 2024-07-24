@@ -38,8 +38,8 @@ type SyncFileBasedProviderInput = {
 };
 
 type SyncState = {
-  artists: Artist[];
-  albums: Album[];
+  albums: Map<string, Album>;
+  artists: Map<string, Artist>;
   tracks: Track[];
 };
 
@@ -204,9 +204,8 @@ const normalizeData = (
   Stream.fromIterable(successes).pipe(
     Stream.runFoldEffect(
       {
-        albums: [],
-        artists: [],
-        streamingSources: [],
+        albums: new Map(),
+        artists: new Map(),
         tracks: [],
       } as SyncState,
       (accumulator, { metadata, file }) =>
@@ -215,12 +214,14 @@ const normalizeData = (
           const artist = yield* tryRetrieveOrCreateArtist(
             { database, crypto },
             mainArtistName,
+            accumulator.artists,
           );
 
           const album = yield* tryRetrieveOrCreateAlbum(
             { database, crypto },
             artist.id,
             metadata.album ?? "Unknown Album",
+            accumulator.albums,
           );
 
           const track = yield* tryRetrieveOrCreateTrack(
@@ -232,8 +233,8 @@ const normalizeData = (
           );
 
           return {
-            albums: [...accumulator.albums, album],
-            artists: [...accumulator.artists, artist],
+            albums: new Map([...accumulator.albums, [album.name, album]]),
+            artists: new Map([...accumulator.artists, [artist.name, artist]]),
             tracks: [...accumulator.tracks, track],
           };
         }),
@@ -249,18 +250,28 @@ const saveToDatabase = (
     const artistTable = yield* database.table("artists");
     const trackTable = yield* database.table("tracks");
 
-    yield* albumsTable.putMany(albums);
-    yield* artistTable.putMany(artists);
+    yield* albumsTable.putMany(Array.from(albums.values()));
+    yield* artistTable.putMany(Array.from(artists.values()));
     yield* trackTable.putMany(tracks);
   });
 
 const tryRetrieveOrCreateArtist = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
   artistName: string,
+  processedArtists: Map<string, Artist>,
 ): Effect.Effect<Artist> =>
   Effect.gen(function* () {
     const artistTable = yield* database.table("artists");
-    const existingArtist = yield* artistTable.byField("name", artistName);
+
+    const existingArtist = yield* artistTable
+      .byField("name", artistName)
+      .pipe(
+        Effect.map(
+          Option.orElse(() =>
+            Option.fromNullable(processedArtists.get(artistName)),
+          ),
+        ),
+      );
 
     return Option.isNone(existingArtist)
       ? yield* createArtist({ crypto }, artistName)
@@ -271,13 +282,22 @@ const tryRetrieveOrCreateAlbum = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
   artistId: Artist["id"],
   albumName: string,
+  processedAlbums: Map<string, Album>,
 ): Effect.Effect<Album> =>
   Effect.gen(function* () {
     const albumTable = yield* database.table("albums");
-    const existingAlbum = yield* albumTable.byFields([
-      ["name", albumName],
-      ["artistId", artistId],
-    ]);
+    const existingAlbum = yield* albumTable
+      .byFields([
+        ["name", albumName],
+        ["artistId", artistId],
+      ])
+      .pipe(
+        Effect.map(
+          Option.orElse(() =>
+            Option.fromNullable(processedAlbums.get(albumName)),
+          ),
+        ),
+      );
 
     return Option.isNone(existingAlbum)
       ? yield* createAlbum({ crypto }, albumName, artistId)
