@@ -16,6 +16,7 @@ export const TrackId = Brand.nominal<TrackId>();
  * Represents how a resource can be consumed.
  */
 export type StreamingResource =
+  // TODO: Do not store URIs. They seem to expire after some time. Instead save the track ID and the provider ID.
   | { type: "file"; provider: FileBasedProviderId; uri: string }
   | { type: "api"; provider: ApiBasedProviderId };
 

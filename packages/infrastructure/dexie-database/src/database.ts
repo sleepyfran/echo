@@ -5,7 +5,6 @@ import {
   type DatabaseTrack,
   type Tables,
   type Table,
-  type StringKeyOf,
   type DatabaseAlbum,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable, liveQuery } from "dexie";
@@ -76,49 +75,24 @@ const createTable = <
         Effect.map(Option.fromNullable),
       );
     }),
-  byField: (field, value) =>
+  filtered: ({ filter, limit = 100 }) =>
     Effect.gen(function* () {
       const table = db[tableName];
-      const normalizedFilter = normalizeForComparison(value);
-
-      return yield* Effect.tryPromise<TSchema>(
-        () =>
-          table.get({
-            [field]: normalizedFilter,
-          }) as unknown as PromiseLike<TSchema>,
-      ).pipe(
-        Effect.catchAllCause(catchToDefaultAndLog),
-        Effect.map(Option.fromNullable),
-      );
-    }),
-  byFields: (fieldWithValues) =>
-    Effect.gen(function* () {
-      const table = db[tableName];
-      const normalizedFilters = fieldWithValues.map(([field, value]) => [
-        field,
-        normalizeForComparison(value),
-      ]);
-
-      return yield* Effect.tryPromise<TSchema>(
-        () => table.get(normalizedFilters) as unknown as PromiseLike<TSchema>,
-      ).pipe(
-        Effect.catchAllCause(catchToDefaultAndLog),
-        Effect.map(Option.fromNullable),
-      );
-    }),
-  filtered: ({ fieldOrFields, filter, limit = 100 }) =>
-    Effect.gen(function* () {
-      const table = db[tableName];
-      const normalizedFilter = normalizeForComparison(filter);
 
       return yield* Effect.tryPromise<TSchema[]>(
         () =>
           table
             .filter((tableRow) =>
-              normalizedFieldValues<TSchemaKey, TSchema>(
-                tableRow as TSchema,
-                fieldOrFields,
-              ).some((value) => value.includes(normalizedFilter)),
+              Object.keys(filter).some((key) => {
+                const schemaTable = tableRow as TSchema;
+                return normalizeForComparison(
+                  schemaTable[key as keyof TSchema] as string,
+                ).includes(
+                  normalizeForComparison(
+                    filter[key as keyof typeof filter] as string,
+                  ),
+                );
+              }),
             )
             .limit(limit)
             .toArray() as unknown as PromiseLike<TSchema[]>,
@@ -146,22 +120,6 @@ const createTable = <
       );
     }),
 });
-
-/**
- * Returns the normalized values of the given fields in the given table row.
- */
-const normalizedFieldValues = <
-  TSchemaKey extends keyof Tables,
-  TSchema extends Tables[TSchemaKey],
->(
-  tableRow: TSchema,
-  filterFields: StringKeyOf<TSchema> | StringKeyOf<TSchema>[],
-): string[] => {
-  const keys = Array.isArray(filterFields) ? filterFields : [filterFields];
-  return keys.map((key) => {
-    return normalizeForComparison(tableRow[key] as string);
-  });
-};
 
 /**
  * Internal class that interfaces with Dexie. Should NOT be exposed nor used

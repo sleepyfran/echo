@@ -21,6 +21,7 @@ import {
   FileBasedProviderId,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
+import { head } from "effect/Array";
 import { isSupportedAudioFile } from "@echo/core-files";
 import {
   DownloadError,
@@ -264,8 +265,12 @@ const tryRetrieveOrCreateArtist = (
     const artistTable = yield* database.table("artists");
 
     const existingArtist = yield* artistTable
-      .byField("name", artistName)
+      .filtered({
+        filter: { name: artistName },
+        limit: 1,
+      })
       .pipe(
+        Effect.map(head),
         Effect.map(
           Option.orElse(() =>
             Option.fromNullable(processedArtists.get(artistName)),
@@ -287,11 +292,12 @@ const tryRetrieveOrCreateAlbum = (
   Effect.gen(function* () {
     const albumTable = yield* database.table("albums");
     const existingAlbum = yield* albumTable
-      .byFields([
-        ["name", albumName],
-        ["artistId", artistId],
-      ])
+      .filtered({
+        filter: { name: albumName, artistId },
+        limit: 1,
+      })
       .pipe(
+        Effect.map(head),
         Effect.map(
           Option.orElse(() =>
             Option.fromNullable(processedAlbums.get(albumName)),
@@ -313,11 +319,16 @@ const tryRetrieveOrCreateTrack = (
 ): Effect.Effect<DatabaseTrack> =>
   Effect.gen(function* () {
     const trackTable = yield* database.table("tracks");
-    const existingTrack = yield* trackTable.byFields([
-      ["name", metadata?.title || "Unknown Title"],
-      ["mainArtistId", artistId],
-      ["albumId", albumId],
-    ]);
+    const existingTrack = yield* trackTable
+      .filtered({
+        filter: {
+          name: metadata.title ?? "Unknown Title",
+          mainArtistId: artistId,
+          albumId,
+        },
+        limit: 1,
+      })
+      .pipe(Effect.map(head));
 
     return Option.isNone(existingTrack)
       ? yield* createTrack({ crypto }, artistId, albumId, metadata, file)

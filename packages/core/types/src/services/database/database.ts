@@ -73,34 +73,14 @@ export type Table<
   readonly byId: (id: TSchema["id"]) => Effect.Effect<Option.Option<TSchema>>;
 
   /**
-   * Retrieves a specific record from the table by a specific field.
-   */
-  readonly byField: <TField extends StringKeyOf<TSchema>>(
-    field: TField,
-    value: string,
-  ) => Effect.Effect<Option.Option<TSchema>>;
-
-  /**
-   * Retrieves a specific record from the table by the given fields.
-   */
-  readonly byFields: <TField extends StringKeyOf<TSchema>>(
-    fieldWithValues: [TField, string][],
-  ) => Effect.Effect<Option.Option<TSchema>>;
-
-  /**
    * Retrieves a subset of records from the table that match the given filter
    * in a stream.
    */
   readonly filtered: (opts: {
     /**
-     * Field or fields by which to filter the records.
-     */
-    fieldOrFields: StringKeyOf<TSchema> | StringKeyOf<TSchema>[];
-
-    /**
      * Value to filter the records by.
      */
-    filter: string;
+    filter: { [K in StringKeyOf<TSchema>]?: TSchema[K] };
 
     /**
      * Maximum number of records to return. If not specified, the default will be

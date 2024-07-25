@@ -3,6 +3,7 @@ import {
   Database,
   Library,
   NonExistingArtistReferenced,
+  type Track,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Stream } from "effect";
 
@@ -19,12 +20,18 @@ export const LibraryLive = Layer.effect(
         Effect.gen(function* () {
           const albumsTable = yield* database.table("albums");
           const artistsTable = yield* database.table("artists");
+          const tracksTable = yield* database.table("tracks");
           const allAlbums = yield* albumsTable.observe();
 
           return allAlbums.pipe(
             Stream.mapEffect((album) =>
               Effect.gen(function* () {
                 const artist = yield* artistsTable.byId(album.artistId);
+                const tracks = yield* tracksTable.filtered({
+                  filter: {
+                    albumId: album.id,
+                  },
+                });
 
                 if (Option.isNone(artist)) {
                   return yield* Effect.fail(
@@ -32,7 +39,21 @@ export const LibraryLive = Layer.effect(
                   );
                 }
 
-                return { ...album, artist: artist.value } as Album;
+                return [
+                  {
+                    ...album,
+                    artist: artist.value,
+                  },
+                  tracks.map((track) => ({
+                    ...track,
+                    album: {
+                      ...album,
+                      artist: artist.value,
+                    },
+                    mainArtist: artist.value,
+                    secondaryArtists: [],
+                  })),
+                ] as [Album, Track[]];
               }),
             ),
           );
