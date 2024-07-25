@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "ci": "yarn typecheck && yarn lint && yarn format",
     "dev": "yarn workspace @echo/web vite",
     "build": "yarn workspace @echo/web tsc && vite build",
     "format": "prettier --check \"packages/**/*.{ts, tsx}\"",
