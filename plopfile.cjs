@@ -1,6 +1,7 @@
 const addComponentGenerator = require("./tools/plop-templates/components/generator.cjs");
 const addCoreGenerator = require("./tools/plop-templates/core/generator.cjs");
 const addInfrastructureGenerator = require("./tools/plop-templates/infrastructure/generator.cjs");
+const addServiceGenerator = require("./tools/plop-templates/services/generator.cjs");
 const addWorkerGenerator = require("./tools/plop-templates/workers/generator.cjs");
 
 /**
@@ -11,5 +12,6 @@ module.exports = function (plop) {
   plop.setGenerator("component", addComponentGenerator);
   plop.setGenerator("core", addCoreGenerator);
   plop.setGenerator("infrastructure", addInfrastructureGenerator);
+  plop.setGenerator("service", addServiceGenerator);
   plop.setGenerator("worker", addWorkerGenerator);
 };
