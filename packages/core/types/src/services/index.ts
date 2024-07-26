@@ -5,3 +5,4 @@ export * from "./database";
 export * from "./library";
 export * from "./metadata-provider";
 export * from "./mediaProvider";
+export * from "./player";

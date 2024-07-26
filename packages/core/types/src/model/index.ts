@@ -4,5 +4,6 @@ export * from "./artist";
 export * from "./authentication";
 export * from "./common";
 export * from "./file-system";
+export * from "./player-state";
 export * from "./provider-metadata";
 export * from "./track";

@@ -5,7 +5,7 @@ import {
   type ProviderMetadata,
   type ProviderStatus,
 } from "@echo/core-types";
-import { MainLive } from "@echo/infrastructure-bootstrap";
+import { MainLive } from "@echo/services-bootstrap";
 import { Effect, Fiber } from "effect";
 import { atom, useAtom } from "jotai";
 import { useCallback, useRef } from "react";

@@ -5,7 +5,7 @@ import {
 } from "@echo/infrastructure-broadcast-channel";
 import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
 import { DexieDatabaseLive } from "@echo/infrastructure-dexie-database";
-import { LibraryLive } from "@echo/infrastructure-library";
+import { LibraryLive } from "@echo/services-library";
 import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provider";
 import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";

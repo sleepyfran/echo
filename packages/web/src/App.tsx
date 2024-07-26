@@ -21,7 +21,7 @@ import {
   providerStateAtom,
 } from "@echo/components-state";
 import { Effect, Fiber, Match } from "effect";
-import { LazyLoadedProvider, MainLive } from "@echo/infrastructure-bootstrap";
+import { LazyLoadedProvider, MainLive } from "@echo/services-bootstrap";
 import { useAtom } from "jotai";
 
 const retrieveLazyLoader = Effect.gen(function* () {

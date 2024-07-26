@@ -1,4 +1,4 @@
-import { WorkerLive } from "@echo/infrastructure-bootstrap";
+import { WorkerLive } from "@echo/services-bootstrap";
 import { Effect, Match, Ref, Stream } from "effect";
 import * as S from "@effect/schema/Schema";
 import { InitMessage, init } from "./init";

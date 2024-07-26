@@ -22,7 +22,7 @@ export type LazyLoadedProvider = {
  * Tag to identify the lazy loaded provider service.
  */
 export const LazyLoadedProvider = Context.GenericTag<LazyLoadedProvider>(
-  "@echo/infrastructure-bootstrap/LazyLoadedProvider",
+  "@echo/services-bootstrap/LazyLoadedProvider",
 );
 
 /**

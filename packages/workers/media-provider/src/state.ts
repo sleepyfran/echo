@@ -16,7 +16,6 @@ export type WorkerState = {
 /**
  * Tag that can provide a ref to the current worker state.
  */
-export class WorkerStateRef extends Context.Tag("")<
-  WorkerStateRef,
-  Ref.Ref<WorkerState>
->() {}
+export class WorkerStateRef extends Context.Tag(
+  "@echo/workers-media-provider/WorkerStateRef",
+)<WorkerStateRef, Ref.Ref<WorkerState>>() {}

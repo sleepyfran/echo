@@ -7,7 +7,7 @@ import {
   Database,
   Crypto,
 } from "@echo/core-types";
-import { LazyLoadedProvider } from "@echo/infrastructure-bootstrap";
+import { LazyLoadedProvider } from "@echo/services-bootstrap";
 import { Effect, Match, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";

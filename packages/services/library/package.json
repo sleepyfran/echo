@@ -1,5 +1,5 @@
 {
-  "name": "@echo/infrastructure-library",
+  "name": "@echo/services-library",
   "private": true,
   "version": "1.0.0",
   "description": "Implementation of the library service that uses the underlying database mechanism",

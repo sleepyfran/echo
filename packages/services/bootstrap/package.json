@@ -1,8 +1,8 @@
 {
-  "name": "@echo/infrastructure-bootstrap",
+  "name": "@echo/services-bootstrap",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the Bootstrap related infrastructure",
+  "description": "Orchestrates the initialization of the layers for the application and workers",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -13,7 +13,7 @@
     "@echo/infrastructure-broadcast-channel": "^1.0.0",
     "@echo/infrastructure-browser-crypto": "^1.0.0",
     "@echo/infrastructure-dexie-database": "^1.0.0",
-    "@echo/infrastructure-library": "^1.0.0",
+    "@echo/services-library": "^1.0.0",
     "@echo/infrastructure-mmb-metadata-provider": "^1.0.0",
     "@echo/infrastructure-onedrive-provider": "^1.0.0",
     "@echo/workers-media-provider": "^1.0.0",

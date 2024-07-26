@@ -41,6 +41,7 @@
     "packages/components/*",
     "packages/core/*",
     "packages/infrastructure/*",
+    "packages/services/*",
     "packages/workflows/*",
     "packages/workers/*"
   ]

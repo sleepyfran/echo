@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { initializeWorkers } from "@echo/infrastructure-bootstrap";
+import { initializeWorkers } from "@echo/services-bootstrap";
 
 initializeWorkers();
 
