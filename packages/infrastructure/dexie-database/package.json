@@ -12,6 +12,6 @@
     "@echo/core-strings": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "dexie": "^4.0.7",
-    "effect": "^3.2.8"
+    "effect": "^3.5.8"
   }
 }

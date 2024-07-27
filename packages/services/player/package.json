@@ -1,8 +1,8 @@
 {
-  "name": "@echo/infrastructure-browser-crypto",
+  "name": "@echo/services-player",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the BrowserCrypto related infrastructure",
+  "description": "Contains the implementation for the Player service",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

@@ -9,6 +9,7 @@ import { LibraryLive } from "@echo/services-library";
 import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provider";
 import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";
+import { PlayerLive } from "@echo/services-player";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
@@ -17,6 +18,7 @@ import { AppConfigLive } from "./app-config";
 export const MainLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
   Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
   Layer.provideMerge(BrowserCryptoLive),
+  Layer.provideMerge(PlayerLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LibraryLive),
   Layer.provideMerge(DexieDatabaseLive),

@@ -13,7 +13,7 @@
     "@echo/core-dates": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
-    "effect": "^3.2.8"
+    "effect": "^3.5.8"
   },
   "devDependencies": {
     "@microsoft/microsoft-graph-types": "^2.40.0"

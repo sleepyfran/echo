@@ -16,6 +16,6 @@
     "@echo/infrastructure-browser-crypto": "^1.0.0",
     "@echo/services-bootstrap": "^1.0.0",
     "@effect/schema": "^0.67.18",
-    "effect": "^3.2.8"
+    "effect": "^3.5.8"
   }
 }

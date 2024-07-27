@@ -1,4 +1,4 @@
-import { Cause, Effect, Exit, Match, Stream } from "effect";
+import { Cause, Effect, Exit, Match, Sink, Stream } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type RunEffectCallback = () => void;
@@ -179,8 +179,12 @@ export const useStream = <TResult, TError>(
         Match.tag("initial", () => Effect.void),
         Match.tag("success", (stream) =>
           stream.result.pipe(
-            Stream.runForEachChunk((albums) =>
-              Effect.sync(() => setResult((prev) => [...prev, ...albums])),
+            Stream.run(
+              Sink.forEach((item) =>
+                Effect.sync(() => {
+                  setResult((current) => [...current, item]);
+                }),
+              ),
             ),
           ),
         ),
@@ -189,7 +193,9 @@ export const useStream = <TResult, TError>(
         ),
         Match.exhaustive,
       )(streamEffectState),
-    );
+    ).then(() => {
+      console.log("Stream effect completed");
+    });
   }, [streamEffectState, matcher]);
 
   return [
