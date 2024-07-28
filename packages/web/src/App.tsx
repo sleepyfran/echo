@@ -23,61 +23,46 @@ import {
 import { Effect, Fiber, Match } from "effect";
 import { LazyLoadedProvider, MainLive } from "@echo/services-bootstrap";
 import { useAtom } from "jotai";
+import { Rx } from "@effect-rx/rx";
+import { useRx } from "@effect-rx/rx-react";
 
-const retrieveLazyLoader = Effect.gen(function* () {
-  return yield* LazyLoadedProvider;
-}).pipe(Effect.provide(MainLive));
+const mainRuntime = Rx.runtime(MainLive);
+const loadProvider = mainRuntime.fn((metadata: ProviderMetadata) =>
+  Effect.gen(function* () {
+    const provider = yield* LazyLoadedProvider;
+    return yield* provider.load(metadata);
+  }),
+);
+const useProviderLoader = () => useRx(loadProvider);
 
 export const App = () => {
-  const [state, matcher] = useOnMountEffect(retrieveLazyLoader);
+  const [loadStatus, loadProvider] = useProviderLoader();
   useProviderStateSubscriber();
-
-  return (
-    <div>
-      {matcher.pipe(
-        Match.tag("initial", () => <h1>Initializing Echo...</h1>),
-        Match.tag("success", ({ result: lazyLoader }) => (
-          <MainScreen lazyLoader={lazyLoader} />
-        )),
-        Match.tag("failure", () => (
-          <h1 style={{ color: "red" }}>
-            Something went wrong initializing echo... Maybe report a bug :)
-          </h1>
-        )),
-        Match.exhaustive,
-      )(state)}
-      <ProviderStatus />
-      <UserLibrary />
-    </div>
-  );
-};
-
-const MainScreen = ({ lazyLoader }: { lazyLoader: LazyLoadedProvider }) => {
-  const [loadProvider, addProviderStatus, matcher] = useEffectCallback(
-    lazyLoader.load,
-  );
 
   const onProviderSelected = useCallback(
     (metadata: ProviderMetadata) => loadProvider(metadata),
     [loadProvider],
   );
 
-  return matcher.pipe(
-    Match.tag("initial", () => (
+  return Match.value(loadStatus).pipe(
+    Match.tag("Initial", () => (
       <ProviderSelector onProviderSelected={onProviderSelected} />
     )),
-    Match.tag("success", ({ result }) => (
-      <ProviderAuthenticator
-        metadata={result.metadata}
-        authentication={result.authentication}
-        createMediaProvider={result.createMediaProvider}
-      />
-    )),
-    Match.tag("failure", () => (
+    Match.tag(
+      "Success",
+      ({ value: { metadata, authentication, createMediaProvider } }) => (
+        <ProviderAuthenticator
+          metadata={metadata}
+          authentication={authentication}
+          createMediaProvider={createMediaProvider}
+        />
+      ),
+    ),
+    Match.tag("Failure", () => (
       <div style={{ color: "red" }}>Failed to load provider.</div>
     )),
     Match.exhaustive,
-  )(addProviderStatus);
+  );
 };
 
 const ProviderSelector = ({
