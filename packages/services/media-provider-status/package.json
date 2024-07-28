@@ -1,19 +1,15 @@
 {
-  "name": "@echo/components-state",
+  "name": "@echo/services-media-provider-status",
   "private": true,
   "version": "1.0.0",
+  "description": "Contains the implementation for the MediaProviderStatus service",
+  "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/components-effect-bridge": "^1.0.0",
     "@echo/core-types": "^1.0.0",
-    "@echo/services-bootstrap": "^1.0.0",
-    "effect": "^3.5.8",
-    "jotai": "^2.8.3"
-  },
-  "devDependencies": {
-    "react": "^18.2.0"
+    "effect": "^3.2.8"
   }
 }

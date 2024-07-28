@@ -6,3 +6,4 @@ export * from "./library";
 export * from "./metadata-provider";
 export * from "./mediaProvider";
 export * from "./player";
+export * from "./provider-status";

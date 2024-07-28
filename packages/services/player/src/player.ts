@@ -6,6 +6,7 @@ const PlayerLiveWithState = Layer.effect(
   Player,
   Effect.gen(function* () {
     const state = yield* PlayerStateRef;
+    // TODO: Remove all this and switch to subscription ref.
     const statePubSub = yield* PubSub.dropping<PlayerState>({
       capacity: 1,
       replay: 1,

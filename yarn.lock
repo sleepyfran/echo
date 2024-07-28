@@ -21,7 +21,7 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@effect-rx/rx-react@0.30.11":
+"@effect-rx/rx-react@0.30.11", "@effect-rx/rx-react@^0.30.11":
   version "0.30.11"
   resolved "https://registry.yarnpkg.com/@effect-rx/rx-react/-/rx-react-0.30.11.tgz#af1638e4505acba7c9a30f8a8dd43b99944eccaf"
   integrity sha512-Z0HwvrJbzgUvpjgMS5qH2+4dYL0oYKbsx2UJ9S7b1iV8ZippJnLf//FsOqDjzUdXKNLuW1L/h+as70o7DLDrgw==
@@ -1075,7 +1075,7 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
-effect@^3.5.8:
+effect@^3.2.8, effect@^3.5.8:
   version "3.5.8"
   resolved "https://registry.yarnpkg.com/effect/-/effect-3.5.8.tgz#63098d38f538facd4d8b0ca8b81717395c33f694"
   integrity sha512-gGrRH3BgsUrfOXx4vbD4puRS+/IyK7JiERhuKnjVYurTVDj3J+lPI7raJB9/AAKr59SGEiV7+Sy59/Q/Vfo5mQ==
@@ -2082,11 +2082,6 @@ isobject@^3.0.0, isobject@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-3.0.1.tgz#4e431e92b11a9731636aa1f9c8d1ccbcfdab78df"
   integrity sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==
-
-jotai@^2.8.3:
-  version "2.8.3"
-  resolved "https://registry.yarnpkg.com/jotai/-/jotai-2.8.3.tgz#21b50c89c9ee2d24e694158b925bade1f38641d7"
-  integrity sha512-pR4plVvdbzB6zyt7VLLHPMAkcRSKhRIvZKd+qkifQLa3CEziEo1uwZjePj4acTmQrboiISBlYSdCz3gWcr1Nkg==
 
 "js-tokens@^3.0.0 || ^4.0.0":
   version "4.0.0"

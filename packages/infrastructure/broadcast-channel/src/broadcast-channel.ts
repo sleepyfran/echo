@@ -56,7 +56,7 @@ const createBroadcastChannel = <TSchema extends Schema>(
           });
         }),
       registerResolver: (actionId, resolver) =>
-        Effect.fork(
+        Effect.forkDaemon(
           Effect.gen(function* () {
             const channel = yield* _broadcastChannel.get;
 
