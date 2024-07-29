@@ -1,0 +1,21 @@
+{
+  "name": "@echo/components-library",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "@echo/services-bootstrap": "^1.0.0",
+    "@echo/services-library": "^1.0.0",
+    "@effect-rx/rx": "^0.33.8",
+    "@effect-rx/rx-react": "^0.30.11",
+    "effect": "^3.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22"
+  }
+}

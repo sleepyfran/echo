@@ -6,9 +6,10 @@ import {
   type Tables,
   type Table,
   type DatabaseAlbum,
+  DatabaseObserveError,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable, liveQuery } from "dexie";
-import { Effect, Layer, Option, PubSub, Ref, Stream } from "effect";
+import { Effect, Layer, Option, Ref, Stream } from "effect";
 
 /**
  * Implementation of the Database service using Dexie.js.
@@ -102,22 +103,20 @@ const createTable = <
       );
     }),
   observe: () =>
-    Effect.gen(function* () {
+    Effect.sync(() => {
       const table = db[tableName];
+      return Stream.async((emit) => {
+        const subscription = liveQuery(
+          () => table.toArray() as unknown as Promise<TSchema[]>,
+        ).subscribe(
+          (items) => emit.single(items),
+          (error) =>
+            emit.fail(new DatabaseObserveError(tableName, error as unknown)),
+          () => emit.end(),
+        );
 
-      const pubsub = yield* PubSub.sliding<TSchema>(500);
-
-      const subscription = liveQuery(
-        () => table.toArray() as unknown as Promise<TSchema[]>,
-      ).subscribe(
-        (items) => Effect.runPromise(pubsub.publishAll(items)), // next
-        () => Effect.runPromise(pubsub.shutdown), // error
-        () => Effect.runPromise(pubsub.shutdown), // complete
-      );
-
-      return Stream.fromPubSub(pubsub).pipe(
-        Stream.ensuring(Effect.sync(subscription.unsubscribe)),
-      );
+        return Effect.sync(subscription.unsubscribe);
+      });
     }),
 });
 

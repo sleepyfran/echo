@@ -1,5 +1,5 @@
-import { Context, Effect, Stream } from "effect";
-import type { Album, ArtistId, Track } from "../model";
+import { Effect, Stream } from "effect";
+import type { Album, ArtistId } from "../model";
 
 /**
  * Error that is thrown when an album references an artist that does not exist.
@@ -15,16 +15,19 @@ export class NonExistingArtistReferenced extends Error {
 /**
  * Service that provides access to the user's library.
  */
-export type Library = {
+export type ILibrary = {
   /**
    * Returns a stream of albums that are currently stored in the database.
    */
   readonly observeAlbums: () => Effect.Effect<
-    Stream.Stream<[Album, Track[]], NonExistingArtistReferenced>
+    Stream.Stream<Album[], NonExistingArtistReferenced>
   >;
 };
 
 /**
  * Tag to identify the library service.
  */
-export const Library = Context.GenericTag<Library>("@echo/core-types/Library");
+export class Library extends Effect.Tag("@echo/core-types/Library")<
+  Library,
+  ILibrary
+>() {}

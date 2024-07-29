@@ -1,9 +1,7 @@
 import {
-  type Album,
   Database,
   Library,
   NonExistingArtistReferenced,
-  type Track,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Stream } from "effect";
 
@@ -24,37 +22,39 @@ export const LibraryLive = Layer.effect(
           const allAlbums = yield* albumsTable.observe();
 
           return allAlbums.pipe(
-            Stream.mapEffect((album) =>
-              Effect.gen(function* () {
-                const artist = yield* artistsTable.byId(album.artistId);
-                const tracks = yield* tracksTable.filtered({
-                  filter: {
-                    albumId: album.id,
-                  },
-                });
+            Stream.mapEffect((albums) =>
+              Effect.all(
+                albums.map((album) =>
+                  Effect.gen(function* () {
+                    const artist = yield* artistsTable.byId(album.artistId);
+                    const tracks = yield* tracksTable.filtered({
+                      filter: {
+                        albumId: album.id,
+                      },
+                    });
 
-                if (Option.isNone(artist)) {
-                  return yield* Effect.fail(
-                    new NonExistingArtistReferenced(album.name, album.artistId),
-                  );
-                }
+                    if (Option.isNone(artist)) {
+                      return yield* Effect.fail(
+                        new NonExistingArtistReferenced(
+                          album.name,
+                          album.artistId,
+                        ),
+                      );
+                    }
 
-                return [
-                  {
-                    ...album,
-                    artist: artist.value,
-                  },
-                  tracks.map((track) => ({
-                    ...track,
-                    album: {
+                    return {
                       ...album,
                       artist: artist.value,
-                    },
-                    mainArtist: artist.value,
-                    secondaryArtists: [],
-                  })),
-                ] as [Album, Track[]];
-              }),
+                      tracks: tracks.map((track) => ({
+                        ...track,
+                        albumId: album.id,
+                        mainArtist: artist.value,
+                        secondaryArtists: [],
+                      })),
+                    };
+                  }),
+                ),
+              ),
             ),
           );
         }),

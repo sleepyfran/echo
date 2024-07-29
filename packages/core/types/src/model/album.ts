@@ -1,5 +1,6 @@
 import { Brand, Option } from "effect";
 import type { Artist } from "./artist";
+import type { Track } from "./track";
 
 /**
  * Wrapper around a string to represent an album id.
@@ -29,6 +30,11 @@ export type Album = {
    * Name of the album.
    */
   name: string;
+
+  /**
+   * All tracks that are part of the album.
+   */
+  tracks: Track[];
 
   /**
    * URL to an image of the album. This is typically the album's cover art on a

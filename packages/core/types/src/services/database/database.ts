@@ -6,6 +6,18 @@ import type {
 } from "./database-models.ts";
 
 /**
+ * Error that is thrown when the database raises an unexpected error while
+ * observing a table.
+ */
+export class DatabaseObserveError extends Error {
+  constructor(tableName: string, error: unknown) {
+    super(
+      `Database raised an unexpected error while observing the ${tableName} table. Error: ${JSON.stringify(error)}`,
+    );
+  }
+}
+
+/**
  * Keys for all the available tables in the database with their associated
  * data type.
  */
@@ -92,5 +104,7 @@ export type Table<
   /**
    * Streams all records from the table.
    */
-  readonly observe: () => Effect.Effect<Stream.Stream<TSchema>>;
+  readonly observe: () => Effect.Effect<
+    Stream.Stream<TSchema[], DatabaseObserveError>
+  >;
 };
