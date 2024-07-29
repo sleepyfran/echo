@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import {
   FileBasedProviderId,
   AppConfig,
@@ -10,7 +10,7 @@ import {
 /**
  * Service that can lazily load a media provider.
  */
-export type LazyLoadedProvider = {
+export type ILazyLoadedProvider = {
   readonly load: (metadata: ProviderMetadata) => Effect.Effect<{
     metadata: ProviderMetadata;
     authentication: Authentication;
@@ -21,9 +21,9 @@ export type LazyLoadedProvider = {
 /**
  * Tag to identify the lazy loaded provider service.
  */
-export const LazyLoadedProvider = Context.GenericTag<LazyLoadedProvider>(
+export class LazyLoadedProvider extends Effect.Tag(
   "@echo/services-bootstrap/LazyLoadedProvider",
-);
+)<LazyLoadedProvider, ILazyLoadedProvider>() {}
 
 /**
  * Lazy loads a media provider based on the metadata provided.

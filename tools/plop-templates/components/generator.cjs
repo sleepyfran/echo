@@ -32,5 +32,10 @@ module.exports = {
       path: "packages/components/{{dashCase name}}/tsconfig.json",
       templateFile: `${__dirname}/template/tsconfig.json.hbs`,
     },
+    {
+      type: "add",
+      path: "packages/components/{{dashCase name}}/src/vite-env.d.ts",
+      templateFile: `${__dirname}/template/vite-env.d.ts.hbs`,
+    },
   ],
 };

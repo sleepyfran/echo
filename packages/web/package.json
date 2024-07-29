@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/components-effect-bridge": "^1.0.0",
+    "@echo/components-add-provider": "^1.0.0",
     "@echo/components-provider-status": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap": "^1.0.0",

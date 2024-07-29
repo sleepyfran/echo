@@ -1,5 +1,5 @@
 {
-  "name": "@echo/components-effect-bridge",
+  "name": "@echo/components-add-provider",
   "private": true,
   "version": "1.0.0",
   "scripts": {
@@ -7,7 +7,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "^3.5.8"
+    "@echo/core-types": "^1.0.0",
+    "@echo/services-bootstrap": "^1.0.0",
+    "@effect-rx/rx": "^0.33.8",
+    "@effect-rx/rx-react": "^0.30.11",
+    "effect": "^3.2.8"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
