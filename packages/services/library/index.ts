@@ -45,12 +45,14 @@ export const LibraryLive = Layer.effect(
                     return {
                       ...album,
                       artist: artist.value,
-                      tracks: tracks.map((track) => ({
-                        ...track,
-                        albumId: album.id,
-                        mainArtist: artist.value,
-                        secondaryArtists: [],
-                      })),
+                      tracks: tracks
+                        .sort((a, b) => a.trackNumber - b.trackNumber)
+                        .map((track) => ({
+                          ...track,
+                          albumId: album.id,
+                          mainArtist: artist.value,
+                          secondaryArtists: [],
+                        })),
                     };
                   }),
                 ),
