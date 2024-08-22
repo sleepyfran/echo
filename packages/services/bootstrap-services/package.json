@@ -1,7 +1,9 @@
 {
-  "name": "@echo/components-add-provider",
+  "name": "@echo/services-bootstrap-services",
   "private": true,
   "version": "1.0.0",
+  "description": "Exposes a shared service layer that includes services that should only be initialized once",
+  "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit"
@@ -9,13 +11,8 @@
   "dependencies": {
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap": "^1.0.0",
-    "@echo/services-bootstrap-services": "^1.0.0",
-    "@effect-rx/rx": "^0.33.8",
-    "@effect-rx/rx-react": "^0.30.11",
+    "@echo/services-active-media-provider-cache": "^1.0.0",
+    "@echo/services-media-provider-status": "^1.0.0",
     "effect": "^3.2.8"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22"
   }
 }

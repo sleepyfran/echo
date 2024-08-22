@@ -1,13 +1,10 @@
-import { MediaProviderStatusLive } from "@echo/services-media-provider-status";
-import { MainLive } from "@echo/services-bootstrap";
+import { AppLive } from "@echo/services-bootstrap-services";
 import { Rx } from "@effect-rx/rx";
-import { Layer, Match } from "effect";
+import { Match } from "effect";
 import { useRxValue } from "@effect-rx/rx-react";
 import { MediaProviderStatus } from "@echo/core-types";
 
-const runtime = Rx.runtime(
-  MediaProviderStatusLive.pipe(Layer.provide(MainLive)),
-);
+const runtime = Rx.runtime(AppLive);
 
 const providerStatus = runtime.subscriptionRef(MediaProviderStatus.observe);
 

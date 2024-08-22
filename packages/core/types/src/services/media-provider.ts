@@ -3,12 +3,24 @@ import type {
   AuthenticationInfo,
   FolderMetadata,
   FolderContentMetadata,
+  FileId,
 } from "../model";
 import type { Authentication } from "./authentication";
 import { Context } from "effect";
 
 export enum FileBasedProviderError {
   NotFound = "not-found",
+}
+
+/**
+ * Error raised when a file or item that was asked to be played was not found.
+ */
+export class PlayNotFoundError extends Error {
+  static readonly _tag = "PlayError";
+
+  constructor() {
+    super();
+  }
 }
 
 /**
@@ -26,12 +38,45 @@ export type FileBasedProvider = {
   readonly listFolder: (
     folder: FolderMetadata,
   ) => Effect<FolderContentMetadata, FileBasedProviderError>;
+
+  /**
+   * Retrieves the URL to access a file given its ID.
+   */
+  readonly fileUrlById: (fileId: FileId) => Effect<URL, FileBasedProviderError>;
 };
 
 /**
  * Defines all types of providers that are available in the app.
  */
 export type MediaProvider = FileBasedProvider;
+
+/**
+ * A media player that can play files from a file-based provider.
+ */
+export type FileBasedMediaPlayer = {
+  /**
+   * Attempts to stream the given file via a file-based media player.
+   */
+  readonly playFile: (file: URL) => Effect<void, PlayNotFoundError>;
+};
+
+/**
+ * Defines all types of media players that are available in the app.
+ */
+export type MediaPlayer = FileBasedMediaPlayer;
+
+/**
+ * A factory that can create a new instance of the media player.
+ */
+export type MediaPlayerFactory = {
+  /**
+   * Creates a new instance of the media player based on the given authentication
+   * info.
+   */
+  readonly createMediaPlayer: (
+    authInfo: AuthenticationInfo,
+  ) => Effect<MediaPlayer>;
+};
 
 /**
  * A factory that can provide an instance to the authentication provider that
@@ -53,4 +98,8 @@ export type MediaProviderFactory = {
 
 export const MediaProviderFactory = Context.GenericTag<MediaProviderFactory>(
   "@echo/core-types/ProviderFactory",
+);
+
+export const MediaPlayerFactory = Context.GenericTag<MediaPlayerFactory>(
+  "@echo/core-types/MediaPlayerFactory",
 );

@@ -1,21 +1,36 @@
 import {
+  ActiveMediaProviderCache,
   AvailableProviders,
   MediaProviderMainThreadBroadcastChannel,
   type Authentication,
   type AuthenticationInfo,
   type FolderMetadata,
+  type MediaPlayer,
   type MediaProvider,
   type ProviderMetadata,
 } from "@echo/core-types";
-import { LazyLoadedProvider, MainLive } from "@echo/services-bootstrap";
+import { LazyLoadedProvider } from "@echo/services-bootstrap";
+import { AppLive } from "@echo/services-bootstrap-services";
+import { LazyLoadedMediaPlayer } from "@echo/services-bootstrap/src/loaders";
 import { Rx } from "@effect-rx/rx";
 import { useRx } from "@effect-rx/rx-react";
 import { Effect, Match } from "effect";
 import { useCallback, useEffect, useMemo } from "react";
 
-const runtime = Rx.runtime(MainLive);
-const loadProviderFn = runtime.fn((metadata: ProviderMetadata) =>
-  LazyLoadedProvider.load(metadata),
+const runtime = Rx.runtime(AppLive);
+const loadProviderFn = runtime.fn(LazyLoadedProvider.load);
+const loadMediaPlayerFn = runtime.fn(
+  ({
+    metadata,
+    authInfo,
+  }: {
+    metadata: ProviderMetadata;
+    authInfo: AuthenticationInfo;
+  }) =>
+    Effect.gen(function* () {
+      const { createMediaPlayer } = yield* LazyLoadedMediaPlayer.load(metadata);
+      return yield* createMediaPlayer(authInfo);
+    }),
 );
 
 export const AddProvider = () => {
@@ -105,6 +120,18 @@ const listRootFn = runtime.fn(
   (mediaProvider: MediaProvider) => mediaProvider.listRoot,
 );
 
+const addMediaProviderToCacheFn = runtime.fn(
+  ({
+    metadata,
+    provider,
+    player,
+  }: {
+    metadata: ProviderMetadata;
+    provider: MediaProvider;
+    player: MediaPlayer;
+  }) => ActiveMediaProviderCache.add(metadata, provider, player),
+);
+
 const SelectRoot = ({
   authInfo,
   metadata,
@@ -114,16 +141,34 @@ const SelectRoot = ({
   metadata: ProviderMetadata;
   createMediaProvider: (authInfo: AuthenticationInfo) => MediaProvider;
 }) => {
+  const [mediaPlayerStatus, createMediaPlayer] = useRx(loadMediaPlayerFn);
+
   const mediaProvider = useMemo(
     () => createMediaProvider(authInfo),
     [createMediaProvider, authInfo],
   );
 
   const [listStatus, listRoot] = useRx(listRootFn);
+  const [, addMediaProviderToCache] = useRx(addMediaProviderToCacheFn);
 
   useEffect(() => {
     listRoot(mediaProvider);
-  });
+    createMediaPlayer({ metadata, authInfo });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // TODO: Refactor this mess somehow?
+  useEffect(() => {
+    Match.value(mediaPlayerStatus).pipe(
+      Match.tag("Success", ({ value: player }) => {
+        addMediaProviderToCache({
+          metadata,
+          provider: mediaProvider,
+          player,
+        });
+      }),
+    );
+  }, [mediaPlayerStatus, mediaProvider, metadata, addMediaProviderToCache]);
 
   return (
     <div>

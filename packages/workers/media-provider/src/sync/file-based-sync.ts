@@ -385,7 +385,7 @@ const createTrack = (
       resource: {
         type: "file",
         provider: FileBasedProviderId.OneDrive /* TODO: Take from metadata. */,
-        uri: file.downloadUrl,
+        fileId: file.id,
       },
     };
   });

@@ -1,11 +1,11 @@
 import { Effect, Layer } from "effect";
 import {
   FileBasedProviderId,
-  AppConfig,
   type ProviderMetadata,
   MediaProviderFactory,
   type Authentication,
 } from "@echo/core-types";
+import { AppConfigLive } from "../app-config";
 
 /**
  * Service that can lazily load a media provider.
@@ -30,13 +30,13 @@ export class LazyLoadedProvider extends Effect.Tag(
  */
 const lazyLoadFromMetadata = (
   metadata: ProviderMetadata,
-): Effect.Effect<Layer.Layer<MediaProviderFactory, never, AppConfig>> => {
+): Effect.Effect<Layer.Layer<MediaProviderFactory, never, never>> => {
   if (metadata.id === FileBasedProviderId.OneDrive) {
     return Effect.promise(async () => {
       const { OneDriveProviderFactoryLive } = await import(
         "@echo/infrastructure-onedrive-provider"
       );
-      return OneDriveProviderFactoryLive;
+      return OneDriveProviderFactoryLive.pipe(Layer.provide(AppConfigLive));
     });
   }
 
@@ -60,21 +60,17 @@ const createLazyLoadedProvider = (metadata: ProviderMetadata) =>
 /**
  * A layer that can lazily load a media provider based on the metadata provided.
  */
-export const LazyLoadedProviderLive = Layer.effect(
+export const LazyLoadedProviderLive = Layer.succeed(
   LazyLoadedProvider,
-  Effect.gen(function* () {
-    const appConfig = yield* AppConfig;
+  LazyLoadedProvider.of({
+    load: (metadata) =>
+      Effect.gen(function* () {
+        const providerFactory = yield* lazyLoadFromMetadata(metadata);
 
-    return LazyLoadedProvider.of({
-      load: (metadata) =>
-        Effect.gen(function* () {
-          const providerFactory = yield* lazyLoadFromMetadata(metadata);
-
-          return yield* Effect.provide(
-            createLazyLoadedProvider(metadata),
-            providerFactory,
-          );
-        }).pipe(Effect.provideService(AppConfig, appConfig)),
-    });
+        return yield* Effect.provide(
+          createLazyLoadedProvider(metadata),
+          providerFactory,
+        );
+      }),
   }),
 );

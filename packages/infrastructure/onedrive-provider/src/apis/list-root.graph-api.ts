@@ -1,6 +1,10 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
-import { FileBasedProviderError, type FolderMetadata } from "@echo/core-types";
+import {
+  FileBasedProviderError,
+  FolderId,
+  type FolderMetadata,
+} from "@echo/core-types";
 import type { CollectionResult } from "./types.ts";
 import { Effect } from "effect";
 
@@ -30,7 +34,7 @@ export const createListRoot = (
         return item.folder
           ? {
               _tag: "folder" as const,
-              id: item.id,
+              id: FolderId(item.id),
               name: item.name,
             }
           : [];

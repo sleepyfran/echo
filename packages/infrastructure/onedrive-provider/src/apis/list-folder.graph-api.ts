@@ -4,6 +4,8 @@ import {
   FileBasedProviderError,
   type FolderMetadata,
   type FolderContentMetadata,
+  FolderId,
+  FileId,
 } from "@echo/core-types";
 import type { CollectionResult } from "./types.ts";
 import { Effect } from "effect";
@@ -37,13 +39,13 @@ export const createListFolder =
           return item.folder
             ? {
                 _tag: "folder" as const,
-                id: item.id,
+                id: FolderId(item.id),
                 name: item.name,
               }
             : item.file && item["@microsoft.graph.downloadUrl"]
               ? {
                   _tag: "file" as const,
-                  id: item.id,
+                  id: FileId(item.id),
                   name: item.name,
                   byteSize: item.size ?? 0,
                   mimeType: item.file.mimeType ?? undefined,

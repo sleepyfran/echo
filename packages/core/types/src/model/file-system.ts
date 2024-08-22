@@ -1,9 +1,23 @@
+import { Brand } from "effect";
+
+/**
+ * A unique identifier for a folder in a media provider's file system.
+ */
+export type FolderId = string & Brand.Brand<"FolderId">;
+export const FolderId = Brand.nominal<FolderId>();
+
+/**
+ * A unique identifier for a file in a media provider's file system.
+ */
+export type FileId = string & Brand.Brand<"FileId">;
+export const FileId = Brand.nominal<FileId>();
+
 /**
  * Defines a folder in a media provider's file system.
  */
 export type FolderMetadata = {
   _tag: "folder";
-  id: string;
+  id: FolderId;
   name: string;
 };
 
@@ -12,7 +26,7 @@ export type FolderMetadata = {
  */
 export type FileMetadata = {
   _tag: "file";
-  id: string;
+  id: FileId;
   name: string;
   byteSize: number;
   mimeType: string | undefined;

@@ -1,38 +1,30 @@
-import { Library, type Track } from "@echo/core-types";
-import { MainLive } from "@echo/services-bootstrap";
+import { Library, Player } from "@echo/core-types";
+import { AppLive } from "@echo/services-bootstrap-services";
 import { Rx } from "@effect-rx/rx";
 import { Layer, Stream } from "effect";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import { LibraryLive } from "@echo/services-library";
-import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
+import { PlayerLive } from "@echo/services-player";
+import { useRx, useRxSuspenseSuccess } from "@effect-rx/rx-react";
 
-const runtime = Rx.runtime(LibraryLive.pipe(Layer.provide(MainLive)));
+const runtime = Rx.runtime(
+  Layer.mergeAll(LibraryLive, PlayerLive).pipe(Layer.provide(AppLive)),
+);
 const observeLibrary = runtime.rx(Stream.unwrap(Library.observeAlbums()));
+const playAlbumFn = runtime.fn(Player.playAlbum);
 
 const UserLibrary = () => {
-  const [src, setSrc] = useState<string | undefined>(undefined);
   const albums = useRxSuspenseSuccess(observeLibrary).value;
-
-  const playFirstTrack = (tracks: Track[]) => {
-    const track = tracks[0];
-    switch (track.resource.type) {
-      case "file":
-        setSrc(track.resource.uri);
-        break;
-      case "api":
-        break;
-    }
-  };
+  const [, playAlbum] = useRx(playAlbumFn);
 
   return (
     <div>
       <br />
-      <audio src={src} autoPlay controls />
       {albums.map((album) => (
         <div key={album.id}>
           <h3>{album.name}</h3>
           <p>{album.artist.name}</p>
-          <button onClick={() => playFirstTrack(album.tracks)}>Play</button>
+          <button onClick={() => playAlbum(album)}>Play</button>
           <hr />
         </div>
       ))}

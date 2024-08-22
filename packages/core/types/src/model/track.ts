@@ -5,6 +5,7 @@ import type {
   ApiBasedProviderId,
   FileBasedProviderId,
 } from "./provider-metadata";
+import type { FileId } from "./file-system";
 
 /**
  * Wrapper around a string to represent a track id.
@@ -17,7 +18,7 @@ export const TrackId = Brand.nominal<TrackId>();
  */
 export type StreamingResource =
   // TODO: Do not store URIs. They seem to expire after some time. Instead save the track ID and the provider ID.
-  | { type: "file"; provider: FileBasedProviderId; uri: string }
+  | { type: "file"; provider: FileBasedProviderId; fileId: FileId }
   | { type: "api"; provider: ApiBasedProviderId };
 
 /**

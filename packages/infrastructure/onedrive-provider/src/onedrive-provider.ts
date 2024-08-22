@@ -4,6 +4,7 @@ import { MsalAuthentication } from "./msal-authentication";
 import { Client, type ClientOptions } from "@microsoft/microsoft-graph-client";
 import { createListRoot } from "./apis/list-root.graph-api";
 import { createListFolder } from "./apis/list-folder.graph-api";
+import { createFileUrlById } from "./apis/file-url-by-id.graph-api";
 
 /**
  * Implementation of the OneDrive provider that uses MSAL for authentication and
@@ -17,7 +18,7 @@ export const OneDriveProviderLive = Layer.effect(
   Effect.gen(function* () {
     const msalAuth = yield* MsalAuthentication;
 
-    return {
+    return MediaProviderFactory.of({
       authenticationProvider: Effect.succeed(msalAuth),
       createMediaProvider: (authInfo) => {
         const options: ClientOptions = {
@@ -31,8 +32,9 @@ export const OneDriveProviderLive = Layer.effect(
         return {
           listRoot: createListRoot(client),
           listFolder: createListFolder(client),
+          fileUrlById: createFileUrlById(client),
         };
       },
-    };
+    });
   }),
 );
