@@ -242,7 +242,7 @@ const FolderSelector = ({
         </button>
       )),
     ),
-    Match.tag("Success", () => <h1>Done-o! Check the console :^)</h1>),
+    Match.tag("Success", () => <h1>Done!</h1>),
     Match.tag("Failure", () => (
       <h1 style={{ color: "red" }}>
         Uh, oh! Something went wrong. Check the console :(
