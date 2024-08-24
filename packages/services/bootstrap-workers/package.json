@@ -1,0 +1,16 @@
+{
+  "name": "@echo/services-bootstrap-workers",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the implementation for the BootstrapWorkers service",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "@echo/workers-media-provider": "^1.0.0",
+    "effect": "^3.6.5"
+  }
+}
