@@ -13,6 +13,6 @@
     "@echo/services-bootstrap": "^1.0.0",
     "@echo/services-active-media-provider-cache": "^1.0.0",
     "@echo/services-media-provider-status": "^1.0.0",
-    "effect": "^3.2.8"
+    "effect": "^3.6.5"
   }
 }

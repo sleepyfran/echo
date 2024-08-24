@@ -17,6 +17,6 @@
     "@echo/infrastructure-html-audio-media-player": "^1.0.0",
     "@echo/infrastructure-onedrive-provider": "^1.0.0",
     "@echo/workers-media-provider": "^1.0.0",
-    "effect": "^3.5.8"
+    "effect": "^3.6.5"
   }
 }

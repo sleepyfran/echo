@@ -1,2 +1,6 @@
 export { MainLive, WorkerLive } from "./src/layers";
-export { LazyLoadedProvider, initializeWorkers } from "./src/loaders";
+export {
+  LazyLoadedProvider,
+  initializeWorkers,
+  LazyLoadedMediaPlayer,
+} from "./src/loaders";

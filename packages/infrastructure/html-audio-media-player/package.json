@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
-    "effect": "^3.2.8"
+    "effect": "^3.6.5"
   }
 }

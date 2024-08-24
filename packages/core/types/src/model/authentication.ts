@@ -8,7 +8,7 @@ export const AuthenticationInfoSchema = S.Struct({
   /**
    * Token that can be used to authenticate the user.
    */
-  accessToken: S.String.pipe(S.nonEmpty()),
+  accessToken: S.String.pipe(S.nonEmptyString()),
 
   /**
    * Date in which the token expires.

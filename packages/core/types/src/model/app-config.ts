@@ -12,13 +12,13 @@ export const AppConfigSchema = Schema.Struct({
     /**
      * The client ID of the application registered in Azure AD.
      */
-    clientId: Schema.String.pipe(Schema.nonEmpty()),
+    clientId: Schema.String.pipe(Schema.nonEmptyString()),
 
     /**
      * The redirect URI of the application registered in Azure AD.
      */
     redirectUri: Schema.String.pipe(
-      Schema.nonEmpty(),
+      Schema.nonEmptyString(),
       Schema.filter(
         (url) => url.startsWith("http://") || url.startsWith("https://"),
       ),

@@ -1,8 +1,8 @@
 {
-  "name": "@echo/infrastructure-browser-crypto",
+  "name": "@echo/services-add-provider-workflow",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the BrowserCrypto related infrastructure",
+  "description": "Contains the implementation of the add provider workflow using a state machine",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
+    "@echo/services-bootstrap": "^1.0.0",
+    "@effect/experimental": "^0.23.4",
     "effect": "^3.6.5"
   }
 }
