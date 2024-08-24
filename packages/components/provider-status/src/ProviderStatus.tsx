@@ -1,10 +1,10 @@
-import { AppLive } from "@echo/services-bootstrap-services";
+import { MainLive } from "@echo/services-bootstrap";
 import { Rx } from "@effect-rx/rx";
 import { Match } from "effect";
 import { useRxValue } from "@effect-rx/rx-react";
 import { MediaProviderStatus } from "@echo/core-types";
 
-const runtime = Rx.runtime(AppLive);
+const runtime = Rx.runtime(MainLive);
 
 const providerStatus = runtime.subscriptionRef(MediaProviderStatus.observe);
 

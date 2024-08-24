@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
-    "@echo/services-bootstrap-services": "^1.0.0",
+    "@echo/services-bootstrap": "^1.0.0",
     "@echo/services-library": "^1.0.0",
     "@echo/services-player": "^1.0.0",
     "@effect-rx/rx": "^0.33.8",

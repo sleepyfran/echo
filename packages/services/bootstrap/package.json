@@ -16,6 +16,8 @@
     "@echo/infrastructure-mmb-metadata-provider": "^1.0.0",
     "@echo/infrastructure-html-audio-media-player": "^1.0.0",
     "@echo/infrastructure-onedrive-provider": "^1.0.0",
+    "@echo/services-active-media-provider-cache": "^1.0.0",
+    "@echo/services-media-provider-status": "^1.0.0",
     "@echo/workers-media-provider": "^1.0.0",
     "effect": "^3.6.5"
   }

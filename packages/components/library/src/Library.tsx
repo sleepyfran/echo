@@ -1,5 +1,5 @@
 import { Library, Player } from "@echo/core-types";
-import { AppLive } from "@echo/services-bootstrap-services";
+import { MainLive } from "@echo/services-bootstrap";
 import { Rx } from "@effect-rx/rx";
 import { Layer, Stream } from "effect";
 import { Suspense } from "react";
@@ -8,7 +8,7 @@ import { PlayerLive } from "@echo/services-player";
 import { useRx, useRxSuspenseSuccess } from "@effect-rx/rx-react";
 
 const runtime = Rx.runtime(
-  Layer.mergeAll(LibraryLive, PlayerLive).pipe(Layer.provide(AppLive)),
+  Layer.mergeAll(LibraryLive, PlayerLive).pipe(Layer.provide(MainLive)),
 );
 const observeLibrary = runtime.rx(Stream.unwrap(Library.observeAlbums()));
 const playAlbumFn = runtime.fn(Player.playAlbum);

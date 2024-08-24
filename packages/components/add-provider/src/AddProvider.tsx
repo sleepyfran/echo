@@ -5,14 +5,14 @@ import {
   type ProviderMetadata,
 } from "@echo/core-types";
 import { AddProviderWorkflowLive } from "@echo/services-add-provider-workflow";
-import { AppLive } from "@echo/services-bootstrap-services";
+import { MainLive } from "@echo/services-bootstrap";
 import { Rx } from "@effect-rx/rx";
 import { useRx } from "@effect-rx/rx-react";
 import { Layer, Match } from "effect";
 import { useCallback } from "react";
 
 const runtime = Rx.runtime(
-  AddProviderWorkflowLive.pipe(Layer.provide(AppLive)),
+  AddProviderWorkflowLive.pipe(Layer.provide(MainLive)),
 );
 const loadProviderFn = runtime.fn(AddProviderWorkflow.loadProvider);
 const connectToProviderFn = runtime.fn(AddProviderWorkflow.connectToProvider);

@@ -9,16 +9,20 @@ import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provi
 import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";
 import { LazyLoadedMediaPlayerLive } from "./loaders/player";
+import { ActiveMediaProviderCacheLive } from "@echo/services-active-media-provider-cache";
+import { MediaProviderStatusLive } from "@echo/services-media-provider-status";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
  * main thread (web-app).
  */
-export const MainLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
+export const MainLive = ActiveMediaProviderCacheLive.pipe(
+  Layer.provideMerge(MediaProviderStatusLive),
+  Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
   Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
-  Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
+  Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(AppConfigLive),
   Layer.provide(Logger.pretty),
