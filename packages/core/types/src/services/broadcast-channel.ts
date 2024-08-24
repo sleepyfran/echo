@@ -13,7 +13,7 @@ export type BroadcastChannel<TSchema extends Schema> = {
    */
   send<TActionId extends keyof TSchema["actions"]>(
     actionId: TActionId,
-    input: TSchema[TActionId],
+    input: TSchema["actions"][TActionId],
   ): Effect.Effect<void>;
 
   /**
