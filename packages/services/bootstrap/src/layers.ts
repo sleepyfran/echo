@@ -1,4 +1,4 @@
-import { Layer } from "effect";
+import { Layer, Logger } from "effect";
 import {
   MediaProviderMainThreadBroadcastChannelLive,
   MediaProviderWorkerBroadcastChannelLive,
@@ -21,6 +21,7 @@ export const MainLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(AppConfigLive),
+  Layer.provide(Logger.pretty),
 );
 
 /**
@@ -34,4 +35,5 @@ export const WorkerLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(MmbMetadataProviderLive),
   Layer.provideMerge(AppConfigLive),
+  Layer.provide(Logger.pretty),
 );
