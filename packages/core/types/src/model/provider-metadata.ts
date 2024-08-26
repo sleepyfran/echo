@@ -1,3 +1,6 @@
+import type { AuthenticationInfo } from "./authentication";
+import type { FolderMetadata } from "./file-system";
+
 /**
  * ID of a file-based provider.
  */
@@ -88,3 +91,28 @@ export type ProviderStatus =
     }
   | { _tag: "errored"; error: ProviderError }
   | { _tag: "stopped" };
+
+/**
+ * Defines the parameters required to start a file-based provider.
+ */
+type FileBasedStartArgs = {
+  _tag: "file-based";
+  metadata: ProviderMetadata;
+  authInfo: AuthenticationInfo;
+  rootFolder: FolderMetadata;
+};
+
+/**
+ * Defines the parameters required to start an API-based provider.
+ */
+type ApiBasedStartArgs = {
+  _tag: "api-based";
+  metadata: ProviderMetadata;
+  authInfo: AuthenticationInfo;
+};
+
+/**
+ * Defines the parameters required to start a provider, which can be either file-based
+ * or API-based.
+ */
+export type ProviderStartArgs = FileBasedStartArgs | ApiBasedStartArgs;

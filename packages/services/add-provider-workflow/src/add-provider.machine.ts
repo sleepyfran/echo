@@ -3,6 +3,7 @@ import * as Machine from "@effect/experimental/Machine";
 import {
   ActiveMediaProviderCache,
   AddProviderWorkflow,
+  LocalStorage,
   MediaProviderMainThreadBroadcastChannel,
   type Authentication,
   type AuthenticationError,
@@ -65,11 +66,10 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
       const state = previousState ?? { _tag: "Idle" };
 
       const activeMediaProviderCache = yield* ActiveMediaProviderCache;
-
+      const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
       const providerLazyLoader = yield* LazyLoadedProvider;
       const mediaPlayerLazyLoader = yield* LazyLoadedMediaPlayer;
-
-      const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
+      const localStorage = yield* LocalStorage;
 
       return Machine.procedures.make(state).pipe(
         /*
@@ -158,12 +158,18 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                 return [{}, state];
               }
 
-              yield* broadcastChannel.send("start", {
-                _tag: "file-based",
+              const startArgs = {
+                _tag: "file-based" as const,
                 metadata: state.providerMetadata,
-                rootFolder: request.rootFolder,
                 authInfo: state.authInfo,
-              });
+                rootFolder: request.rootFolder,
+              };
+              yield* broadcastChannel.send("start", startArgs);
+              yield* localStorage.set(
+                "media-provider-start-args",
+                state.providerMetadata.id,
+                startArgs,
+              );
 
               return [{}, { _tag: "Done" as const }];
             }),

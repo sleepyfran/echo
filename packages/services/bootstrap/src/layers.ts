@@ -11,6 +11,7 @@ import { AppConfigLive } from "./app-config";
 import { LazyLoadedMediaPlayerLive } from "./loaders/player";
 import { ActiveMediaProviderCacheLive } from "@echo/services-active-media-provider-cache";
 import { MediaProviderStatusLive } from "@echo/services-media-provider-status";
+import { BrowserLocalStorageLive } from "@echo/infrastructure-browser-local-storage";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
@@ -22,6 +23,7 @@ export const MainLive = ActiveMediaProviderCacheLive.pipe(
   Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
+  Layer.provideMerge(BrowserLocalStorageLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(AppConfigLive),

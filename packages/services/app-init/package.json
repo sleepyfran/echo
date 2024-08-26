@@ -1,0 +1,17 @@
+{
+  "name": "@echo/services-app-init",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the implementation for the AppInit service",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-auth": "^1.0.0",
+    "@echo/core-types": "^1.0.0",
+    "@echo/services-bootstrap": "^1.0.0",
+    "effect": "^3.6.5"
+  }
+}
