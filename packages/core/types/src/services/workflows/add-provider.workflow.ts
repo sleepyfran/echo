@@ -15,6 +15,7 @@ export type Empty = Record<string, never>;
  * Workflow that orchestrates the process of adding a new provider to the application.
  */
 export type IAddProviderWorkflow = {
+  readonly activeProviders: Effect.Effect<ProviderMetadata[]>;
   readonly loadProvider: (metadata: ProviderMetadata) => Effect.Effect<Empty>;
   readonly connectToProvider: () => Effect.Effect<
     FolderMetadata[],

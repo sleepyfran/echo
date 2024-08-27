@@ -182,8 +182,12 @@ export const AddProviderWorkflowLive = Layer.scoped(
   AddProviderWorkflow,
   Effect.gen(function* () {
     const actor = yield* Machine.boot(addProviderWorkflow);
+    const activeMediaProviderCache = yield* ActiveMediaProviderCache;
 
     return {
+      activeProviders: activeMediaProviderCache.getAll.pipe(
+        Effect.map((providers) => providers.map((p) => p.metadata)),
+      ),
       loadProvider: (metadata) => actor.send(new LoadProvider({ metadata })),
       connectToProvider: () => actor.send(new ConnectToProvider({})),
       selectRoot: (rootFolder) => actor.send(new SelectRoot({ rootFolder })),

@@ -56,6 +56,10 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
           });
         }),
       ),
+    getAll: Effect.gen(function* () {
+      const providerMap = yield* Ref.get(providerByIdRef);
+      return Array.from(providerMap.values());
+    }),
   });
 });
 

@@ -39,6 +39,17 @@ export type IActiveMediaProviderCache = {
       player: MediaPlayer;
     }>
   >;
+
+  /**
+   * Returns all currently active media providers.
+   */
+  readonly getAll: Effect.Effect<
+    {
+      metadata: ProviderMetadata;
+      provider: MediaProvider;
+      player: MediaPlayer;
+    }[]
+  >;
 };
 
 /**

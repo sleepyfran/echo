@@ -9,45 +9,61 @@ import { MainLive } from "@echo/services-bootstrap";
 import { Rx } from "@effect-rx/rx";
 import { useRx } from "@effect-rx/rx-react";
 import { Layer, Match } from "effect";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 const runtime = Rx.runtime(
   AddProviderWorkflowLive.pipe(Layer.provide(MainLive)),
 );
+const activeProvidersFn = runtime.fn(() => AddProviderWorkflow.activeProviders);
 const loadProviderFn = runtime.fn(AddProviderWorkflow.loadProvider);
 const connectToProviderFn = runtime.fn(AddProviderWorkflow.connectToProvider);
 const selectRootFn = runtime.fn(AddProviderWorkflow.selectRoot);
 
 export const AddProvider = () => {
+  const [activeProvidersStatus, loadActiveProviders] = useRx(activeProvidersFn);
   const [loadStatus, loadProvider] = useRx(loadProviderFn);
+
+  useEffect(loadActiveProviders, [loadActiveProviders]);
 
   const onProviderSelected = useCallback(
     (metadata: ProviderMetadata) => loadProvider(metadata),
     [loadProvider],
   );
 
-  return (
-    <div>
-      {Match.value(loadStatus).pipe(
+  return Match.value(activeProvidersStatus).pipe(
+    Match.tag("Initial", () => <h1>Loading...</h1>),
+    Match.tag("Success", ({ value: activeProviders }) =>
+      Match.value(loadStatus).pipe(
         Match.tag("Initial", () => (
-          <ProviderSelector onProviderSelected={onProviderSelected} />
+          <ProviderSelector
+            currentlyActiveProviders={activeProviders}
+            onProviderSelected={onProviderSelected}
+          />
         )),
         Match.tag("Success", () => <ProviderAuthenticator />),
         Match.tag("Failure", () => (
           <div style={{ color: "red" }}>Failed to load provider.</div>
         )),
         Match.exhaustive,
-      )}
-    </div>
+      ),
+    ),
+    Match.tag("Failure", (error) => (
+      <div>Failed to retrieve current providers: {JSON.stringify(error)}</div>
+    )),
+    Match.exhaustive,
   );
 };
 
 const ProviderSelector = ({
+  currentlyActiveProviders,
   onProviderSelected,
 }: {
+  currentlyActiveProviders: ProviderMetadata[];
   onProviderSelected: (metadata: ProviderMetadata) => void;
 }) =>
-  AvailableProviders.map((metadata) => (
+  AvailableProviders.filter(
+    (m) => !currentlyActiveProviders.some((p) => p.id === m.id),
+  ).map((metadata) => (
     <button key={metadata.id} onClick={() => onProviderSelected(metadata)}>
       {metadata.id}
     </button>
