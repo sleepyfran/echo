@@ -12,4 +12,13 @@ export type Authentication = {
    * Implements the authentication flow for a specific provider.
    */
   connect: Effect<AuthenticationInfo, AuthenticationError>;
+
+  /**
+   * Attempts to silently authenticate the user with the cached credentials,
+   * if available. If the credentials are not available, the service will run
+   * the connect flow.
+   */
+  connectSilent: (
+    cachedCredentials: AuthenticationInfo,
+  ) => Effect<AuthenticationInfo, AuthenticationError>;
 };

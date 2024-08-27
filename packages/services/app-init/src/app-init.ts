@@ -1,10 +1,8 @@
-import { isValidToken } from "@echo/core-auth";
 import {
   AppInit,
   AvailableProviders,
   LocalStorage,
   MediaPlayerFactory,
-  MediaProviderFactory,
   MediaProviderMainThreadBroadcastChannel,
   type ProviderStartArgs,
   type BroadcastChannel,
@@ -18,6 +16,7 @@ import {
   LazyLoadedMediaPlayer,
   LazyLoadedProvider,
 } from "@echo/services-bootstrap";
+import type { ILoadedProvider } from "@echo/services-bootstrap/src/loaders/provider";
 import { Effect, Layer, Option } from "effect";
 
 const make = Effect.gen(function* () {
@@ -46,11 +45,11 @@ const make = Effect.gen(function* () {
 
             return yield* reinitializeProvider(
               providerStartArgs.value,
-              providerFactory.createMediaProvider,
+              providerFactory,
               mediaPlayerFactory.createMediaPlayer,
               broadcastChannel,
               activeMediaProviderCache,
-            );
+            ).pipe(Effect.orElseSucceed(() => {}));
           }),
         ),
       );
@@ -76,7 +75,7 @@ const retrieveProviderArgs = (
 
 const reinitializeProvider = (
   startArgs: ProviderStartArgs,
-  createMediaProvider: MediaProviderFactory["createMediaProvider"],
+  providerFactory: ILoadedProvider,
   createMediaPlayer: MediaPlayerFactory["createMediaPlayer"],
   broadcastChannel: BroadcastChannel<
     MediaProviderBroadcastSchema["mainThread"]
@@ -84,22 +83,28 @@ const reinitializeProvider = (
   activeMediaProviderCache: IActiveMediaProviderCache,
 ) =>
   Effect.gen(function* () {
-    // TODO: This should attempt to refresh the token if it's expired.
-    // TODO: Instead of ignoring the initialization with a warning, we should notify the user.
-    if (!isValidToken(startArgs.authInfo)) {
-      yield* Effect.logWarning(
-        `The retrieved token for ${startArgs.metadata.id} is invalid, ignoring initialization.`,
+    const authResult = yield* providerFactory.authentication
+      .connectSilent(startArgs.authInfo)
+      .pipe(
+        Effect.tapError((error) =>
+          Effect.logWarning(
+            `Failed to silently authenticate with ${startArgs.metadata.id}, ignoring cached credentials. Error: ${error}`,
+          ),
+        ),
       );
-    }
 
-    const mediaProvider = createMediaProvider(startArgs.authInfo);
-    const mediaPlayer = yield* createMediaPlayer(startArgs.authInfo);
+    const mediaProvider = providerFactory.createMediaProvider(authResult);
+    const mediaPlayer = yield* createMediaPlayer(authResult);
 
     yield* broadcastChannel.send("start", startArgs);
     yield* activeMediaProviderCache.add(
       startArgs.metadata,
       mediaProvider,
       mediaPlayer,
+    );
+
+    yield* Effect.log(
+      `Successfully reinitialized ${startArgs.metadata.id} provider`,
     );
   });
 

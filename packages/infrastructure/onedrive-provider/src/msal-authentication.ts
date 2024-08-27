@@ -1,9 +1,15 @@
-import { PublicClientApplication } from "@azure/msal-browser";
+import {
+  InteractionRequiredAuthError,
+  PublicClientApplication,
+  type AuthenticationResult as MsalAuthenticationResult,
+} from "@azure/msal-browser";
 import { addHours } from "@echo/core-dates";
 import {
   AppConfig,
   type Authentication,
   AuthenticationError,
+  type AuthenticationInfo,
+  ProviderSpecificAuthenticationInfo,
 } from "@echo/core-types";
 import { Context, Effect, Layer, Ref } from "effect";
 
@@ -33,29 +39,78 @@ export const MsalAuthenticationLive = Layer.effect(
       }),
     );
 
-    return MsalAuthentication.of({
-      connect: Effect.gen(function* () {
+    const authRequest = { scopes: [...appConfig.graph.scopes] };
+
+    const handleResponse = (
+      authResult: MsalAuthenticationResult | null,
+    ): Effect.Effect<AuthenticationInfo, AuthenticationError> =>
+      Effect.gen(function* () {
+        if (authResult) {
+          return {
+            accessToken: authResult.accessToken,
+            expiresOn: authResult.expiresOn ?? addHours(new Date(), 2),
+            providerSpecific: ProviderSpecificAuthenticationInfo.make({
+              account: authResult.account,
+            }),
+          };
+        }
+
+        return yield* Effect.fail(AuthenticationError.Unknown);
+      });
+
+    const connect = Effect.gen(function* () {
+      const app = yield* msalAppRef.get;
+
+      yield* Effect.tryPromise({
+        try: () => app.initialize(),
+        catch: () => AuthenticationError.Unknown,
+      });
+
+      const authResult = yield* Effect.tryPromise({
+        try: () => app.loginPopup(authRequest),
+        catch: () => AuthenticationError.Unknown,
+      });
+
+      return yield* handleResponse(authResult);
+    });
+
+    const connectSilent = (cachedCredentials: AuthenticationInfo) =>
+      Effect.gen(function* () {
         const app = yield* msalAppRef.get;
+
+        if (cachedCredentials.providerSpecific._tag !== "MSAL") {
+          return yield* Effect.fail(AuthenticationError.WrongCredentials);
+        }
 
         yield* Effect.tryPromise({
           try: () => app.initialize(),
           catch: () => AuthenticationError.Unknown,
         });
 
-        const authResult = yield* Effect.tryPromise({
-          try: () => app.loginPopup({ scopes: [...appConfig.graph.scopes] }),
-          catch: () => AuthenticationError.Unknown,
-        });
+        return yield* Effect.tryPromise({
+          try: () =>
+            app.acquireTokenSilent({
+              ...authRequest,
+              account: cachedCredentials.providerSpecific.account,
+            }),
+          catch: (e) => {
+            console.error(e);
+            return e instanceof InteractionRequiredAuthError
+              ? AuthenticationError.InteractionRequired
+              : AuthenticationError.Unknown;
+          },
+        }).pipe(
+          Effect.tapError((e) =>
+            Effect.logError(`Error while connecting silently: ${e}`),
+          ),
+          Effect.flatMap(handleResponse),
+          Effect.orElse(() => connect),
+        );
+      });
 
-        if (authResult) {
-          return {
-            accessToken: authResult.accessToken,
-            expiresOn: authResult.expiresOn ?? addHours(new Date(), 2),
-          };
-        }
-
-        return yield* Effect.fail(AuthenticationError.Unknown);
-      }),
+    return MsalAuthentication.of({
+      connect,
+      connectSilent,
     });
   }),
 );

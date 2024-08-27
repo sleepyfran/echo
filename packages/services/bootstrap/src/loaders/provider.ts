@@ -8,14 +8,19 @@ import {
 import { AppConfigLive } from "../app-config";
 
 /**
+ * Represents the available data for a loaded provider.
+ */
+export type ILoadedProvider = {
+  metadata: ProviderMetadata;
+  authentication: Authentication;
+  createMediaProvider: MediaProviderFactory["createMediaProvider"];
+};
+
+/**
  * Service that can lazily load a media provider.
  */
 export type ILazyLoadedProvider = {
-  readonly load: (metadata: ProviderMetadata) => Effect.Effect<{
-    metadata: ProviderMetadata;
-    authentication: Authentication;
-    createMediaProvider: MediaProviderFactory["createMediaProvider"];
-  }>;
+  readonly load: (metadata: ProviderMetadata) => Effect.Effect<ILoadedProvider>;
 };
 
 /**
