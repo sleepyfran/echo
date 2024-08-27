@@ -30,6 +30,10 @@ const make = Effect.gen(function* () {
     init: Effect.gen(function* () {
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 
+      yield* Effect.log(
+        `Re-initializing ${allProviderStates.length} providers on startup`,
+      );
+
       return yield* Effect.all(
         allProviderStates.map((providerStartArgs) =>
           Effect.gen(function* () {

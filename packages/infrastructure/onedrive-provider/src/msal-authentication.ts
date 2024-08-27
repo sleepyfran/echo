@@ -36,6 +36,11 @@ export const MsalAuthenticationLive = Layer.effect(
           clientId: appConfig.graph.clientId,
           redirectUri: appConfig.graph.redirectUri,
         },
+        cache: {
+          cacheLocation: "localStorage",
+          temporaryCacheLocation: "sessionStorage",
+          storeAuthStateInCookie: true,
+        },
       }),
     );
 
@@ -67,7 +72,7 @@ export const MsalAuthenticationLive = Layer.effect(
       });
 
       const authResult = yield* Effect.tryPromise({
-        try: () => app.loginPopup(authRequest),
+        try: () => app.acquireTokenPopup(authRequest),
         catch: () => AuthenticationError.Unknown,
       });
 
@@ -79,6 +84,9 @@ export const MsalAuthenticationLive = Layer.effect(
         const app = yield* msalAppRef.get;
 
         if (cachedCredentials.providerSpecific._tag !== "MSAL") {
+          yield* Effect.logError(
+            "Cached credentials are not MSAL-specific, cannot connect silently",
+          );
           return yield* Effect.fail(AuthenticationError.WrongCredentials);
         }
 
@@ -100,6 +108,11 @@ export const MsalAuthenticationLive = Layer.effect(
               : AuthenticationError.Unknown;
           },
         }).pipe(
+          Effect.tap((authInfo) =>
+            Effect.log(
+              `Successfully connected silently using MSAL, new token expiration ${authInfo.expiresOn}`,
+            ),
+          ),
           Effect.tapError((e) =>
             Effect.logError(`Error while connecting silently: ${e}`),
           ),
