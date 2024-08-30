@@ -1,1 +1,1 @@
-export * from "./src/ProviderStatus";
+export * from "./src/provider-status";

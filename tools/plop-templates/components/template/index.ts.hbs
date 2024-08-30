@@ -1,1 +1,18 @@
-export * from "./src/{{ properCase name }}";
+import { LitElement, html } from "lit";
+import { customElement } from "lit/decorators.js";
+
+/**
+ * Description of what the {{properCase name}} component does.
+ */
+@customElement("{{dashCase name}}")
+export class {{pascalCase name}} extends LitElement {
+  render() {
+    return html`<h1>{{pascalCase name}}</h1>`;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "{{dashCase name}}": {{pascalCase name}};
+  }
+}

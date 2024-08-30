@@ -1,1 +1,1 @@
-export * from "./src/AddProvider";
+export * from "./src/add-provider";

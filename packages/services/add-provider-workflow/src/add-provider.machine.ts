@@ -3,6 +3,7 @@ import * as Machine from "@effect/experimental/Machine";
 import {
   ActiveMediaProviderCache,
   AddProviderWorkflow,
+  AvailableProviders,
   LocalStorage,
   MediaProviderMainThreadBroadcastChannel,
   type Authentication,
@@ -21,7 +22,7 @@ import {
 } from "@echo/services-bootstrap";
 
 class LoadProvider extends Request.TaggedClass("LoadProvider")<
-  Empty,
+  ProviderMetadata,
   never,
   {
     readonly metadata: ProviderMetadata;
@@ -81,7 +82,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
           ({ state, request }) =>
             Effect.gen(function* () {
               if (state._tag !== "Idle") {
-                return [{}, state];
+                return [request.metadata, state];
               }
 
               const providerFactory = yield* providerLazyLoader.load(
@@ -92,7 +93,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
               );
 
               return [
-                {},
+                request.metadata,
                 {
                   _tag: "WaitingForConnection" as const,
                   loadedProvider: {
@@ -185,8 +186,13 @@ export const AddProviderWorkflowLive = Layer.scoped(
     const activeMediaProviderCache = yield* ActiveMediaProviderCache;
 
     return {
-      activeProviders: activeMediaProviderCache.getAll.pipe(
+      availableProviders: activeMediaProviderCache.getAll.pipe(
         Effect.map((providers) => providers.map((p) => p.metadata)),
+        Effect.map((allActiveProviders) =>
+          AvailableProviders.filter(
+            (provider) => !allActiveProviders.some((p) => p.id === provider.id),
+          ),
+        ),
       ),
       loadProvider: (metadata) => actor.send(new LoadProvider({ metadata })),
       connectToProvider: () => actor.send(new ConnectToProvider({})),

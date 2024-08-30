@@ -4,13 +4,13 @@ module.exports = {
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:react-hooks/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript",
+    "plugin:wc/recommended",
+    "plugin:lit/recommended",
   ],
   ignorePatterns: ["dist", ".eslintrc.cjs"],
   parser: "@typescript-eslint/parser",
-  plugins: ["react-refresh"],
   settings: {
     "import/extensions": [".ts", ".tsx"],
     "import/resolver": {
@@ -19,10 +19,6 @@ module.exports = {
     },
   },
   rules: {
-    "react-refresh/only-export-components": [
-      "warn",
-      { allowConstantExport: true },
-    ],
     "@typescript-eslint/no-unused-vars": [
       "error",
       {

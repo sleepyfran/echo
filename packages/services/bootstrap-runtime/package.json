@@ -1,22 +1,18 @@
 {
-  "name": "@echo/components-library",
+  "name": "@echo/services-bootstrap-runtime",
   "private": true,
   "version": "1.0.0",
+  "description": "Contains the implementation for the BootstrapRuntime service",
+  "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
+    "@echo/services-add-provider-workflow": "^1.0.0",
+    "@echo/services-app-init": "^1.0.0",
     "@echo/services-bootstrap": "^1.0.0",
-    "@echo/services-library": "^1.0.0",
-    "@echo/services-player": "^1.0.0",
-    "@effect-rx/rx": "^0.33.8",
-    "@effect-rx/rx-react": "^0.30.11",
     "effect": "^3.6.5"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22"
   }
 }

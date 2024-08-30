@@ -16,20 +16,17 @@
   },
   "dependencies": {
     "@effect/schema": "^0.71.1",
-    "effect": "^3.6.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "effect": "^3.6.5"
   },
   "devDependencies": {
     "@rollup/plugin-inject": "^5.0.5",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.6",
+    "eslint-plugin-lit": "^1.14.0",
+    "eslint-plugin-wc": "^2.1.1",
     "husky": "~9.0.11",
     "plop": "^4.0.1",
     "prettier": "^3.2.5",

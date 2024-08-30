@@ -1,5 +1,5 @@
 {
-  "name": "@echo/components-{{dashCase name}}",
+  "name": "@echo/components-shared-controllers",
   "private": true,
   "version": "1.0.0",
   "scripts": {
