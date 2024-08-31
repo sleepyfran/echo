@@ -52,7 +52,7 @@ type OutputEffect<A, E> = Effect.Effect<
  * and exposes a render method that renders maps the different states of the
  * stream to a renderer.
  */
-export class StreamEffectController<A, E> implements ReactiveController {
+export class StreamConsumer<A, E> implements ReactiveController {
   private host: ReactiveControllerHost;
   private _status: StreamStatus<A, E> = { _tag: "Initial" };
 

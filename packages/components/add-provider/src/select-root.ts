@@ -1,4 +1,4 @@
-import { EffectFnController } from "@echo/components-shared-controllers/src/effect-fn.controller";
+import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { AddProviderWorkflow, type FolderMetadata } from "@echo/core-types";
 import { LitElement, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -22,7 +22,7 @@ export class SelectRoot extends LitElement {
   @property({ type: Array })
   availableFolders: FolderMetadata[] = [];
 
-  private _selectRoot = new EffectFnController(
+  private _selectRoot = new EffectFn(
     this,
     (rootFolder: FolderMetadata) => AddProviderWorkflow.selectRoot(rootFolder),
     {

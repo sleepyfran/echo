@@ -1,4 +1,4 @@
-import { EffectFnController } from "@echo/components-shared-controllers/src/effect-fn.controller";
+import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import {
   AddProviderWorkflow,
   type FolderMetadata,
@@ -36,7 +36,7 @@ export class ProviderLoader extends LitElement {
   @property({ type: Array })
   availableProviders: ProviderMetadata[] = [];
 
-  private _loadProvider = new EffectFnController(
+  private _loadProvider = new EffectFn(
     this,
     (metadata: ProviderMetadata) => AddProviderWorkflow.loadProvider(metadata),
     {
@@ -46,7 +46,7 @@ export class ProviderLoader extends LitElement {
     },
   );
 
-  private _connectToProvider = new EffectFnController(
+  private _connectToProvider = new EffectFn(
     this,
     () => AddProviderWorkflow.connectToProvider,
     {

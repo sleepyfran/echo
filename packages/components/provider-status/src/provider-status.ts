@@ -1,5 +1,5 @@
 import { MediaProviderStatus } from "@echo/core-types";
-import { StreamEffectController } from "@echo/components-shared-controllers";
+import { StreamConsumer } from "@echo/components-shared-controllers";
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
@@ -9,7 +9,7 @@ import { map } from "lit/directives/map.js";
  */
 @customElement("provider-status")
 export class ProviderStatus extends LitElement {
-  private _providerStatus = new StreamEffectController(
+  private _providerStatus = new StreamConsumer(
     this,
     MediaProviderStatus.observe,
   );

@@ -16,7 +16,7 @@ type StreamStatus<A, E> =
  * Controller that takes a function that produces an effect and exposes a
  * method to execute the effect and render the different states of the effect.
  */
-export class EffectFnController<P, A, E> implements ReactiveController {
+export class EffectFn<P, A, E> implements ReactiveController {
   private host: ReactiveControllerHost;
   private _status: StreamStatus<A, E> = { _tag: "Initial" };
 

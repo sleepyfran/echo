@@ -1,5 +1,5 @@
-import { StreamEffectController } from "@echo/components-shared-controllers";
-import { EffectFnController } from "@echo/components-shared-controllers/src/effect-fn.controller";
+import { StreamConsumer } from "@echo/components-shared-controllers";
+import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { Library, Player } from "@echo/core-types";
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
@@ -11,8 +11,8 @@ import { map } from "lit/directives/map.js";
  */
 @customElement("user-library")
 export class UserLibrary extends LitElement {
-  private _library = new StreamEffectController(this, Library.observeAlbums);
-  private _playAlbum = new EffectFnController(this, Player.playAlbum);
+  private _library = new StreamConsumer(this, Library.observeAlbums);
+  private _playAlbum = new EffectFn(this, Player.playAlbum);
 
   render() {
     return this._library.render({

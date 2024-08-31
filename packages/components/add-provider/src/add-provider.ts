@@ -9,7 +9,7 @@ import type { ProviderLoadedEvent } from "./provider-loader";
 import "@echo/components-provider-status";
 import "./provider-loader";
 import "./select-root";
-import { EffectController } from "@echo/components-shared-controllers";
+import { EffectConsumer } from "@echo/components-shared-controllers";
 import { Match } from "effect";
 
 type ProviderStatus =
@@ -30,7 +30,7 @@ export class AddProvider extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
 
-    new EffectController(this, AddProviderWorkflow.availableProviders, {
+    new EffectConsumer(this, AddProviderWorkflow.availableProviders, {
       complete: (availableProviders) => {
         this._providerStatus = {
           _tag: "ProvidersLoaded",
