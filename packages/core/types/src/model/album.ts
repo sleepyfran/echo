@@ -1,4 +1,4 @@
-import { Brand, Option } from "effect";
+import { Brand } from "effect";
 import type { Artist } from "./artist";
 import type { Track } from "./track";
 
@@ -37,8 +37,8 @@ export type Album = {
   tracks: Track[];
 
   /**
-   * URL to an image of the album. This is typically the album's cover art on a
-   * third-party service. If none is available, this field is omitted.
+   * Cover art of the album, encoded in base64. If the cover art is not
+   * available, this field is `undefined`.
    */
-  imageUrl: Option.Option<string>;
+  base64EmbeddedCover: string | undefined;
 };

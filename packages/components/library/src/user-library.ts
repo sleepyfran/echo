@@ -24,6 +24,15 @@ export class UserLibrary extends LitElement {
             albums,
             (album) => html`
               <div key="{album.id}">
+                ${album.base64EmbeddedCover &&
+                html`
+                  <img
+                    src="data:image/png;base64, ${album.base64EmbeddedCover}"
+                    height="100"
+                    width="100"
+                    alt="Album cover"
+                  />
+                `}
                 <h3>${album.name}</h3>
                 <p>${album.artist.name}</p>
                 <button @click=${() => this._playAlbum.run(album)}>Play</button>

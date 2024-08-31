@@ -51,13 +51,9 @@ export type TrackMetadata = {
   genre?: string[] | undefined;
 
   /**
-   * Format and buffer with the embedded cover art.
-   * TODO: Re-add without dependency on buffer.
+   * Base64 encoded cover image embedded in the audio file.
    */
-  // embeddedCoverArt?:  | undefined{
-  //   format: string;
-  //   data: Buffer;
-  // };
+  base64EmbeddedCover?: string | undefined;
 
   /**
    * Keywords to reflect the mood of the audio, e.g. 'Romantic' or 'Sad'

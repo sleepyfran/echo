@@ -106,7 +106,7 @@ export const syncFileBasedProvider = ({
 
 const partiallyDownloadFile = (file: FileMetadata) =>
   // TODO: Implement retry with a bigger partial range if metadata is undefined.
-  partiallyDownloadIntoStream(file, 0, 10000).pipe(
+  partiallyDownloadIntoStream(file, 0, 500000).pipe(
     Effect.map((stream) => [stream, file] as const),
     Effect.retry({
       times: 3,
@@ -222,6 +222,7 @@ const normalizeData = (
             { database, crypto },
             artist.id,
             metadata.album ?? "Unknown Album",
+            metadata.base64EmbeddedCover,
             accumulator.albums,
           );
 
@@ -287,6 +288,7 @@ const tryRetrieveOrCreateAlbum = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
   artistId: DatabaseArtist["id"],
   albumName: string,
+  base64Cover: string | undefined,
   processedAlbums: Map<string, DatabaseAlbum>,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
@@ -306,7 +308,7 @@ const tryRetrieveOrCreateAlbum = (
       );
 
     return Option.isNone(existingAlbum)
-      ? yield* createAlbum({ crypto }, albumName, artistId)
+      ? yield* createAlbum({ crypto }, albumName, artistId, base64Cover)
       : existingAlbum.value;
   });
 
@@ -353,6 +355,7 @@ const createAlbum = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   name: string,
   artistId: DatabaseArtist["id"],
+  base64Cover: string | undefined,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
@@ -361,7 +364,7 @@ const createAlbum = (
       id: AlbumId(id),
       name,
       artistId,
-      imageUrl: Option.some("https://example.com/image.jpg"),
+      base64EmbeddedCover: base64Cover,
     };
   });
 
