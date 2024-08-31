@@ -1,6 +1,5 @@
+import { EffectFnController } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { AddProviderWorkflow, type FolderMetadata } from "@echo/core-types";
-import { getOrCreateRuntime } from "@echo/services-bootstrap-runtime";
-import { Task } from "@lit/task";
 import { LitElement, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
@@ -23,23 +22,13 @@ export class SelectRoot extends LitElement {
   @property({ type: Array })
   availableFolders: FolderMetadata[] = [];
 
-  private _selectRoot = new Task(this, {
-    task: ([rootFolder]: [FolderMetadata]) =>
-      getOrCreateRuntime().runPromise(
-        AddProviderWorkflow.selectRoot(rootFolder),
-      ),
-    autoRun: false,
-  });
-
-  // @ts-expect-error "Task executes automatically"
-  private _notifyProviderStarted = new Task(this, {
-    args: () => [this._selectRoot.value],
-    task: ([completed]) => {
-      if (completed !== undefined) {
-        this.dispatchEvent(new ProviderStartedEvent());
-      }
+  private _selectRoot = new EffectFnController(
+    this,
+    (rootFolder: FolderMetadata) => AddProviderWorkflow.selectRoot(rootFolder),
+    {
+      complete: () => this.dispatchEvent(new ProviderStartedEvent()),
     },
-  });
+  );
 
   render() {
     return this._selectRoot.render({
@@ -47,7 +36,7 @@ export class SelectRoot extends LitElement {
         <h1>Select a root folder:</h1>
         ${this.availableFolders.map(
           (folder) =>
-            html`<button @click=${() => this._selectRoot.run([folder])}>
+            html`<button @click=${() => this._selectRoot.run(folder)}>
               ${folder.name}
             </button>`,
         )}

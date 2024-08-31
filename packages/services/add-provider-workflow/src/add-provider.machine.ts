@@ -195,7 +195,7 @@ export const AddProviderWorkflowLive = Layer.scoped(
         ),
       ),
       loadProvider: (metadata) => actor.send(new LoadProvider({ metadata })),
-      connectToProvider: () => actor.send(new ConnectToProvider({})),
+      connectToProvider: actor.send(new ConnectToProvider({})),
       selectRoot: (rootFolder) => actor.send(new SelectRoot({ rootFolder })),
     };
   }),

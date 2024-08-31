@@ -1,9 +1,8 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { initializeWorkers } from "@echo/services-bootstrap-workers";
-import { getOrCreateRuntime } from "@echo/services-bootstrap-runtime";
-import { Task } from "@lit/task";
 import { AppInit } from "@echo/core-types";
+import { EffectController } from "@echo/components-shared-controllers";
 import "@echo/components-add-provider";
 
 initializeWorkers();
@@ -13,13 +12,10 @@ initializeWorkers();
  */
 @customElement("app-root")
 export class MyElement extends LitElement {
-  private _initTask = new Task(this, {
-    task: () => getOrCreateRuntime().runPromise(AppInit.init),
-    args: () => [],
-  });
+  private _init = new EffectController(this, AppInit.init);
 
   render() {
-    return this._initTask.render({
+    return this._init.render({
       initial: () => html`<h1>Initializing Echo...</h1>`,
       complete: () => html`
         <div>

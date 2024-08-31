@@ -19,7 +19,7 @@ export type IAddProviderWorkflow = {
   readonly loadProvider: (
     metadata: ProviderMetadata,
   ) => Effect.Effect<ProviderMetadata>;
-  readonly connectToProvider: () => Effect.Effect<
+  readonly connectToProvider: Effect.Effect<
     FolderMetadata[],
     AuthenticationError | FileBasedProviderError
   >;
