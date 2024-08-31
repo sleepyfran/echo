@@ -4,6 +4,7 @@ import { initializeWorkers } from "@echo/services-bootstrap-workers";
 import { AppInit } from "@echo/core-types";
 import { EffectController } from "@echo/components-shared-controllers";
 import "@echo/components-add-provider";
+import "@echo/components-library";
 
 initializeWorkers();
 
@@ -20,8 +21,7 @@ export class MyElement extends LitElement {
       complete: () => html`
         <div>
           <add-provider></add-provider>
-          <!-- <user-library /> -->
-          <!-- <provider-status /> -->
+          <user-library></user-library>
         </div>
       `,
       error: () =>

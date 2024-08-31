@@ -41,6 +41,12 @@ const isSubscriptionRef = <A, E>(
 ): streamOrRef is SubscriptionRef.SubscriptionRef<A> =>
   "changes" in streamOrRef;
 
+type OutputEffect<A, E> = Effect.Effect<
+  Stream.Stream<A, E> | SubscriptionRef.SubscriptionRef<A>,
+  never,
+  EchoRuntimeServices
+>;
+
 /**
  * Controller that takes an effect that produces a stream or a subscription ref
  * and exposes a render method that renders maps the different states of the
@@ -52,17 +58,20 @@ export class StreamEffectController<A, E> implements ReactiveController {
 
   constructor(
     host: ReactiveControllerHost,
-    private readonly _streamEffect: Effect.Effect<
-      Stream.Stream<A, E> | SubscriptionRef.SubscriptionRef<A>,
-      never,
-      EchoRuntimeServices
-    >,
+    private readonly _streamEffect:
+      | OutputEffect<A, E>
+      | (() => OutputEffect<A, E>),
   ) {
     (this.host = host).addController(this);
   }
 
   hostConnected(): void {
-    const consumer$ = this._streamEffect.pipe(
+    const streamEffect =
+      typeof this._streamEffect === "function"
+        ? this._streamEffect()
+        : this._streamEffect;
+
+    const consumer$ = streamEffect.pipe(
       Effect.flatMap((streamOrRef) => {
         const stream = isSubscriptionRef(streamOrRef)
           ? streamOrRef.changes

@@ -1,6 +1,8 @@
 import { AddProviderWorkflowLive } from "@echo/services-add-provider-workflow";
 import { AppInitLive } from "@echo/services-app-init";
 import { MainLive } from "@echo/services-bootstrap";
+import { LibraryLive } from "@echo/services-library";
+import { PlayerLive } from "@echo/services-player";
 import { Layer, ManagedRuntime } from "effect";
 import { globalValue } from "effect/GlobalValue";
 
@@ -11,9 +13,12 @@ import { globalValue } from "effect/GlobalValue";
 export const getOrCreateRuntime = () =>
   globalValue("echo-runtime", () =>
     ManagedRuntime.make(
-      Layer.mergeAll(AppInitLive, AddProviderWorkflowLive).pipe(
-        Layer.provideMerge(MainLive),
-      ),
+      Layer.mergeAll(
+        AppInitLive,
+        AddProviderWorkflowLive,
+        LibraryLive,
+        PlayerLive,
+      ).pipe(Layer.provideMerge(MainLive)),
     ),
   );
 

@@ -1,5 +1,5 @@
 {
-  "name": "@echo/components-{{dashCase name}}",
+  "name": "@echo/components-library",
   "private": true,
   "version": "1.0.0",
   "scripts": {
