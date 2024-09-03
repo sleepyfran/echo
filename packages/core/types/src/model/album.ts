@@ -37,8 +37,7 @@ export type Album = {
   tracks: Track[];
 
   /**
-   * Cover art of the album, encoded in base64. If the cover art is not
-   * available, this field is `undefined`.
+   * Cover art of the album as a blob.
    */
-  base64EmbeddedCover: string | undefined;
+  embeddedCover: Blob | undefined;
 };

@@ -24,10 +24,10 @@ export class UserLibrary extends LitElement {
             albums,
             (album) => html`
               <div key="{album.id}">
-                ${album.base64EmbeddedCover &&
+                ${album.embeddedCover &&
                 html`
                   <img
-                    src="data:image/png;base64, ${album.base64EmbeddedCover}"
+                    src="${URL.createObjectURL(album.embeddedCover)}"
                     height="100"
                     width="100"
                     alt="Album cover"

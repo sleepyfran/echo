@@ -28,7 +28,7 @@ const mmbMetadataProvider = MetadataProvider.of({
     }).pipe(
       Effect.flatMap((metadata) =>
         Effect.gen(function* () {
-          const base64EmbeddedCover = yield* tryExtractToBase64(metadata).pipe(
+          const embeddedCover = yield* tryCreateBlob(metadata).pipe(
             Effect.catchAll(() =>
               Effect.logError(
                 `Cover extraction failed for ${file.name}, continuing without cover`,
@@ -46,7 +46,7 @@ const mmbMetadataProvider = MetadataProvider.of({
             totalDisks: metadata.common.disk.of ?? undefined,
             totalTracks: metadata.common.track.of ?? undefined,
             trackNumber: metadata.common.track.no ?? undefined,
-            base64EmbeddedCover,
+            embeddedCover,
             year: metadata.common.year,
           };
         }),
@@ -54,8 +54,8 @@ const mmbMetadataProvider = MetadataProvider.of({
     ),
 });
 
-const tryExtractToBase64 = (parsedMetadata: IAudioMetadata) =>
-  Effect.try(() => {
+const tryCreateBlob = (parsedMetadata: IAudioMetadata) =>
+  Effect.try((): Blob | undefined => {
     const firstPicture = parsedMetadata.common.picture?.find(
       (picture) => picture.data,
     );
@@ -64,8 +64,7 @@ const tryExtractToBase64 = (parsedMetadata: IAudioMetadata) =>
       return undefined;
     }
 
-    const pictureData = new Uint8Array(firstPicture.data as ArrayBufferLike);
-    return Buffer.from(pictureData).toString("base64");
+    return new Blob([firstPicture.data], { type: firstPicture.format });
   });
 
 /**
