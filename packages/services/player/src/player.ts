@@ -15,25 +15,27 @@ const makePlayer = Effect.gen(function* () {
   return Player.of({
     playAlbum: (album) =>
       Effect.gen(function* () {
-        // TODO: Make work with more than just the first track.
-        const firstTrack = album.tracks[0];
-        if (!firstTrack) {
+        const [track, ...restOfTracks] = album.tracks;
+        if (!track) {
+          yield* Effect.logError(
+            `Attempted to play album ${album.name}, but it has no tracks.`,
+          );
           return;
         }
 
-        const streamingProvider = firstTrack.resource.provider;
+        const streamingProvider = track.resource.provider;
         const provider = yield* providerCache.get(streamingProvider);
         if (Option.isNone(provider)) {
           yield* Effect.logError(
-            `Attempted to play track ${firstTrack.id}, which is registered with the provider ${streamingProvider}, but the provider is not active.`,
+            `Attempted to play track ${track.id}, which is registered with the provider ${streamingProvider}, but the provider is not active.`,
           );
           return yield* Effect.fail(new ProviderNotReady(streamingProvider));
         }
 
-        switch (firstTrack.resource.type) {
+        switch (track.resource.type) {
           case "file": {
             const file = yield* provider.value.provider
-              .fileUrlById(firstTrack.resource.fileId)
+              .fileUrlById(track.resource.fileId)
               .pipe(Effect.mapError(() => new PlayNotFoundError()));
             yield* provider.value.player.playFile(file);
             break;
@@ -48,13 +50,14 @@ const makePlayer = Effect.gen(function* () {
         yield* Ref.update(state, (current) => ({
           ...current,
           status: "playing" as const,
-          currentTrack: Option.some(firstTrack),
+          currentTrack: Option.some(track),
           previouslyPlayedTracks: [
             ...current.previouslyPlayedTracks,
             ...(Option.isSome(current.currentTrack)
               ? [current.currentTrack.value]
               : []),
           ],
+          comingUpTracks: restOfTracks,
         }));
       }),
     observe: state,
