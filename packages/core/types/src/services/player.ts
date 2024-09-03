@@ -1,4 +1,4 @@
-import { Effect, Stream } from "effect";
+import { Effect, SubscriptionRef } from "effect";
 import type { Album, PlayerState, ProviderId } from "../model";
 import type { PlayNotFoundError } from "./media-provider";
 
@@ -30,7 +30,7 @@ export type IPlayer = {
    * Returns a stream that emits the current player state and any subsequent
    * changes to it.
    */
-  readonly observe: Effect.Effect<Stream.Stream<PlayerState>>;
+  readonly observe: SubscriptionRef.SubscriptionRef<PlayerState>;
 };
 
 /**

@@ -13,6 +13,7 @@
   "dependencies": {
     "@echo/components-add-provider": "^1.0.0",
     "@echo/components-library": "^1.0.0",
+    "@echo/components-player": "^1.0.0",
     "@echo/components-shared-controllers": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap-runtime": "^1.0.0",

@@ -5,6 +5,7 @@ import { AppInit } from "@echo/core-types";
 import { EffectConsumer } from "@echo/components-shared-controllers";
 import "@echo/components-add-provider";
 import "@echo/components-library";
+import "@echo/components-player";
 
 initializeWorkers();
 
@@ -21,6 +22,7 @@ export class MyElement extends LitElement {
       complete: () => html`
         <div>
           <add-provider></add-provider>
+          <echo-player></echo-player>
           <user-library></user-library>
         </div>
       `,

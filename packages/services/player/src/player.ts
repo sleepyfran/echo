@@ -5,21 +5,12 @@ import {
   ProviderNotReady,
   type PlayerState,
 } from "@echo/core-types";
-import { Effect, Layer, Option, PubSub, Ref, Stream } from "effect";
+import { Effect, Layer, Option, Ref, SubscriptionRef } from "effect";
 import { PlayerStateRef } from "./state";
 
 const makePlayer = Effect.gen(function* () {
   const state = yield* PlayerStateRef;
   const providerCache = yield* ActiveMediaProviderCache;
-
-  // TODO: Remove all this and switch to subscription ref.
-  const statePubSub = yield* PubSub.dropping<PlayerState>({
-    capacity: 1,
-    replay: 1,
-  });
-
-  // Yield initial state to subscribers.
-  yield* statePubSub.publish(yield* state.get);
 
   return Player.of({
     playAlbum: (album) =>
@@ -52,19 +43,21 @@ const makePlayer = Effect.gen(function* () {
             return Effect.void;
         }
 
+        yield* Effect.log(`Playing album ${album.name}`);
+
         yield* Ref.update(state, (current) => ({
           ...current,
           status: "playing" as const,
+          currentTrack: Option.some(firstTrack),
+          previouslyPlayedTracks: [
+            ...current.previouslyPlayedTracks,
+            ...(Option.isSome(current.currentTrack)
+              ? [current.currentTrack.value]
+              : []),
+          ],
         }));
-
-        yield* statePubSub.publish(yield* state.get);
       }),
-    observe: Effect.sync(() =>
-      Stream.fromPubSub(statePubSub).pipe(
-        Stream.tap((state) => Effect.logInfo("Player state changed", state)),
-        Stream.ensuring(Effect.logInfo("Player state stream closed")),
-      ),
-    ),
+    observe: state,
   });
 });
 
@@ -72,7 +65,7 @@ const PlayerLiveWithState = Layer.effect(Player, makePlayer);
 
 const PlayerStateLive = Layer.effect(
   PlayerStateRef,
-  Ref.make({
+  SubscriptionRef.make({
     comingUpTracks: [],
     previouslyPlayedTracks: [],
     currentTrack: Option.none(),
