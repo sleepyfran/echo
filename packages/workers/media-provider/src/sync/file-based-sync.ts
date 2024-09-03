@@ -160,6 +160,9 @@ const resolveMetadataFromStream = (
             metadataProvider.trackMetadataFromReadableStream(stream, file),
           ),
           Effect.map((metadata) => ({ metadata, file })),
+          Effect.tap(({ file }) =>
+            Effect.log(`Downloaded and processed ${file.name}`),
+          ),
           Effect.tapError((error) =>
             Effect.logError(
               `Failed to process file ${file.name} with error: ${error}`,
