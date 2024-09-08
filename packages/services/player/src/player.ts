@@ -3,7 +3,11 @@ import {
   Player,
   PlayNotFoundError,
   ProviderNotReady,
+  type IActiveMediaProviderCache,
+  type MediaPlayer,
+  type MediaProvider,
   type PlayerState,
+  type Track,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Ref, SubscriptionRef } from "effect";
 import { PlayerStateRef } from "./state";
@@ -23,46 +27,83 @@ const makePlayer = Effect.gen(function* () {
           return;
         }
 
-        const streamingProvider = track.resource.provider;
-        const provider = yield* providerCache.get(streamingProvider);
-        if (Option.isNone(provider)) {
-          yield* Effect.logError(
-            `Attempted to play track ${track.id}, which is registered with the provider ${streamingProvider}, but the provider is not active.`,
-          );
-          return yield* Effect.fail(new ProviderNotReady(streamingProvider));
-        }
-
-        switch (track.resource.type) {
-          case "file": {
-            const file = yield* provider.value.provider
-              .fileUrlById(track.resource.fileId)
-              .pipe(Effect.mapError(() => new PlayNotFoundError()));
-            yield* provider.value.player.playFile(file);
-            break;
-          }
-          default:
-            // TODO: Remove once API streaming is implemented.
-            return Effect.void;
-        }
-
-        yield* Effect.log(`Playing album ${album.name}`);
-
-        yield* Ref.update(state, (current) => ({
-          ...current,
-          status: "playing" as const,
-          currentTrack: Option.some(track),
-          previouslyPlayedTracks: [
-            ...current.previouslyPlayedTracks,
-            ...(Option.isSome(current.currentTrack)
-              ? [current.currentTrack.value]
-              : []),
-          ],
-          comingUpTracks: restOfTracks,
-        }));
+        const providerDependencies = yield* resolveDependenciesForTrack(
+          providerCache,
+          track,
+        );
+        yield* playTrack(providerDependencies, track);
+        yield* Ref.update(state, toPlayingState(track, restOfTracks));
       }),
     observe: state,
   });
 });
+
+/**
+ * Attempts to retrieve the provider assigned by its resource for the given
+ * track. If the provider is not active, logs an error and fails the effect.
+ */
+const resolveDependenciesForTrack = (
+  providerCache: IActiveMediaProviderCache,
+  track: Track,
+) =>
+  providerCache.get(track.resource.provider).pipe(
+    Effect.flatMap((maybeProvider) =>
+      Option.isSome(maybeProvider)
+        ? Effect.succeed(maybeProvider.value)
+        : Effect.fail(new ProviderNotReady(track.resource.provider)),
+    ),
+    Effect.tapError(() =>
+      Effect.logError(
+        `Attempted to play track ${track.id}, which is registered with the provider ${track.resource.provider}, but the provider is not active.`,
+      ),
+    ),
+  );
+
+/**
+ * Given a provider and a player, attempts to resolve the track's source
+ * based on its resource type and play it.
+ */
+const playTrack = (
+  { provider, player }: { provider: MediaProvider; player: MediaPlayer },
+  track: Track,
+) =>
+  Effect.gen(function* () {
+    switch (track.resource.type) {
+      case "file": {
+        const file = yield* provider
+          .fileUrlById(track.resource.fileId)
+          .pipe(Effect.mapError(() => new PlayNotFoundError()));
+        yield* player.playFile(file);
+        break;
+      }
+      default:
+        // TODO: Remove once API streaming is implemented.
+        return Effect.void;
+    }
+
+    yield* Effect.logInfo(`Playing track ${track.id}`);
+  });
+
+/**
+ * Returns a function that takes the current player state and returns a new state
+ * with the given track playing and the rest of the tracks coming up, updating
+ * also the previously played tracks with the current track, if any.
+ */
+const toPlayingState =
+  (currentTrack: Track, comingUpTracks: Track[]) =>
+  (currentState: PlayerState) =>
+    ({
+      ...currentState,
+      status: "playing" as const,
+      currentTrack: Option.some(currentTrack),
+      previouslyPlayedTracks: [
+        ...currentState.previouslyPlayedTracks,
+        ...(Option.isSome(currentState.currentTrack)
+          ? [currentState.currentTrack.value]
+          : []),
+      ],
+      comingUpTracks,
+    }) satisfies PlayerState;
 
 const PlayerLiveWithState = Layer.effect(Player, makePlayer);
 
