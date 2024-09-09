@@ -2,7 +2,7 @@ import {
   getOrCreateRuntime,
   type EchoRuntimeServices,
 } from "@echo/services-bootstrap-runtime";
-import { Effect } from "effect";
+import { Effect, Fiber } from "effect";
 import type { ReactiveController, ReactiveControllerHost } from "lit";
 import type { StatusListener } from "./shared.interface";
 
@@ -18,6 +18,7 @@ type StreamStatus<A, E> =
  */
 export class EffectFn<P, A, E> implements ReactiveController {
   private host: ReactiveControllerHost;
+  private _fiber: Fiber.RuntimeFiber<void, E> | undefined;
   private _status: StreamStatus<A, E> = { _tag: "Initial" };
 
   constructor(
@@ -37,6 +38,13 @@ export class EffectFn<P, A, E> implements ReactiveController {
   }
 
   hostConnected(): void {}
+
+  hostDisconnected(): void {
+    if (this._fiber) {
+      getOrCreateRuntime().runFork(Fiber.interrupt(this._fiber));
+      this._fiber = undefined;
+    }
+  }
 
   /**
    * Runs the effect with the given parameters. This produces a value or an error
