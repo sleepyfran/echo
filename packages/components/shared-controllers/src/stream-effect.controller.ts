@@ -2,7 +2,7 @@ import {
   getOrCreateRuntime,
   type EchoRuntimeServices,
 } from "@echo/services-bootstrap-runtime";
-import { Effect, Stream, type SubscriptionRef } from "effect";
+import { Effect, Fiber, Stream, type SubscriptionRef } from "effect";
 import type { ReactiveController, ReactiveControllerHost } from "lit";
 
 /**
@@ -54,6 +54,8 @@ type OutputEffect<A, E> = Effect.Effect<
  */
 export class StreamConsumer<A, E> implements ReactiveController {
   private host: ReactiveControllerHost;
+
+  private _fiber: Fiber.RuntimeFiber<void, E> | undefined;
   private _status: StreamStatus<A, E> = { _tag: "Initial" };
 
   constructor(
@@ -86,7 +88,14 @@ export class StreamConsumer<A, E> implements ReactiveController {
       }),
     );
 
-    getOrCreateRuntime().runPromise(consumer$);
+    this._fiber = getOrCreateRuntime().runFork(consumer$);
+  }
+
+  hostDisconnected(): void {
+    if (this._fiber) {
+      getOrCreateRuntime().runFork(Fiber.interrupt(this._fiber));
+      this._fiber = undefined;
+    }
   }
 
   /**
