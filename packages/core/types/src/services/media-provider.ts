@@ -6,7 +6,7 @@ import type {
   FileId,
 } from "../model";
 import type { Authentication } from "./authentication";
-import { Context } from "effect";
+import { Brand, Context, Stream } from "effect";
 
 export enum FileBasedProviderError {
   NotFound = "not-found",
@@ -61,9 +61,35 @@ export type FileBasedMediaPlayer = {
 };
 
 /**
+ * Wrapper around a string to represent a media player ID.
+ */
+export type MediaPlayerId = string & Brand.Brand<"MediaPlayerId">;
+export const MediaPlayerId = Brand.nominal<MediaPlayerId>();
+
+/**
+ * Events that can be emitted by a media player.
+ */
+export type MediaPlayerEvent = "trackPlaying" | "trackPaused" | "trackEnded";
+
+/**
  * Defines all types of media players that are available in the app.
  */
-export type MediaPlayer = FileBasedMediaPlayer;
+export type MediaPlayer = FileBasedMediaPlayer & {
+  /**
+   * The ID of the media player.
+   */
+  readonly id: MediaPlayerId;
+
+  /**
+   * Returns a stream that emits events from the media player.
+   */
+  readonly observe: Stream.Stream<MediaPlayerEvent>;
+
+  /**
+   * Disposes of the media player.
+   */
+  readonly dispose: Effect<void>;
+};
 
 /**
  * A factory that can create a new instance of the media player.

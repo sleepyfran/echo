@@ -1,5 +1,9 @@
-import { MediaPlayerFactory, PlayNotFoundError } from "@echo/core-types";
-import { Effect, Layer } from "effect";
+import {
+  MediaPlayerFactory,
+  MediaPlayerId,
+  PlayNotFoundError,
+} from "@echo/core-types";
+import { Effect, Layer, Stream } from "effect";
 
 const make = Effect.succeed(
   MediaPlayerFactory.of({
@@ -19,6 +23,7 @@ const make = Effect.succeed(
         }
 
         return {
+          id: MediaPlayerId("html5-audio"),
           playFile: (trackUrl) =>
             Effect.gen(function* () {
               yield* Effect.log(`Requesting to play ${trackUrl.href}`);
@@ -28,14 +33,18 @@ const make = Effect.succeed(
                 catch: () => new PlayNotFoundError(),
               });
             }),
-          // observe: Effect.succeed(
-          //   Stream.async((emit) => {
-          //     // TODO: Keep track in the state? If something, it can be done via a ref.
-          //     audio.onplay = () => emit.single({ _tag: "playing" });
-          //     audio.onpause = () => emit.single({ _tag: "paused" });
-          //     audio.onended = () => emit.single({ _tag: "idle" });
-          //   }),
-          // ),
+          observe: Stream.async((emit) => {
+            // TODO: Keep track in the state? If something, it can be done via a ref.
+            audioElement.onplay = () => emit.single("trackPlaying");
+            audioElement.onpause = () => emit.single("trackPaused");
+            audioElement.onended = () => emit.single("trackEnded");
+          }),
+          dispose: Effect.sync(() => {
+            const audioElement = document.querySelector("audio");
+            if (audioElement) {
+              audioElement.remove();
+            }
+          }),
         };
       }),
   }),

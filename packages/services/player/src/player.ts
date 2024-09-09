@@ -9,11 +9,25 @@ import {
   type PlayerState,
   type Track,
 } from "@echo/core-types";
-import { Effect, Layer, Option, Ref, SubscriptionRef } from "effect";
-import { PlayerStateRef } from "./state";
+import {
+  Effect,
+  Layer,
+  Match,
+  Option,
+  Ref,
+  Stream,
+  SubscriptionRef,
+} from "effect";
+import {
+  CurrentlyActivePlayerRef,
+  PlayerStateRef,
+  type ICurrentlyActivePlayerRef,
+  type IPlayerStateRef,
+} from "./state";
 
 const makePlayer = Effect.gen(function* () {
   const state = yield* PlayerStateRef;
+  const activeMediaPlayer = yield* CurrentlyActivePlayerRef;
   const providerCache = yield* ActiveMediaProviderCache;
 
   return Player.of({
@@ -27,11 +41,12 @@ const makePlayer = Effect.gen(function* () {
           return;
         }
 
-        const providerDependencies = yield* resolveDependenciesForTrack(
+        const { provider, player } = yield* resolveDependenciesForTrack(
           providerCache,
           track,
         );
-        yield* playTrack(providerDependencies, track);
+        yield* syncPlayerState(player, activeMediaPlayer, state);
+        yield* playTrack(provider, player, track);
         yield* Ref.update(state, toPlayingState(track, restOfTracks));
       }),
     observe: state,
@@ -60,11 +75,85 @@ const resolveDependenciesForTrack = (
   );
 
 /**
+ * Given a media player, an active media player reference and a player state reference,
+ * synchronizes the player state with the media player's events.
+ */
+const syncPlayerState = (
+  mediaPlayer: MediaPlayer,
+  activeMediaPlayer: ICurrentlyActivePlayerRef,
+  playerState: IPlayerStateRef,
+) =>
+  Effect.gen(function* () {
+    yield* overrideActivePlayer(mediaPlayer, activeMediaPlayer);
+
+    yield* Effect.log(`Starting to observe player ${mediaPlayer.id}.`);
+
+    yield* Effect.forkDaemon(
+      mediaPlayer.observe.pipe(
+        Stream.tap((event) =>
+          Match.value(event).pipe(
+            Match.when("trackPlaying", () =>
+              Ref.update(playerState, (currentState) => ({
+                ...currentState,
+                status: "playing" as const,
+              })),
+            ),
+            Match.when("trackEnded", () =>
+              Ref.update(playerState, (currentState) => ({
+                ...currentState,
+                status: "stopped" as const,
+              })),
+            ),
+            Match.when("trackPaused", () =>
+              Ref.update(playerState, (currentState) => ({
+                ...currentState,
+                status: "paused" as const,
+              })),
+            ),
+            Match.exhaustive,
+          ),
+        ),
+        Stream.runDrain,
+      ),
+    );
+  });
+
+/**
+ * Given a media player and an active media player reference, overrides the active
+ * player with the given one, disposing of the previous one if any. If the given
+ * player is already active, skips the retrieval.
+ */
+const overrideActivePlayer = (
+  mediaPlayer: MediaPlayer,
+  activeMediaPlayer: ICurrentlyActivePlayerRef,
+) =>
+  Effect.gen(function* () {
+    const currentMediaPlayer = yield* activeMediaPlayer.get;
+    if (Option.isSome(currentMediaPlayer)) {
+      if (currentMediaPlayer.value.id === mediaPlayer.id) {
+        yield* Effect.log(
+          `Player ${mediaPlayer.id} is already active, skipping retrieval.`,
+        );
+        return;
+      }
+
+      yield* Effect.log(
+        `Disposing of the current player ${currentMediaPlayer.value.id}.`,
+      );
+      yield* currentMediaPlayer.value.dispose;
+    }
+
+    yield* Effect.log(`Setting player ${mediaPlayer.id} as active.`);
+    yield* Ref.set(activeMediaPlayer, Option.some(mediaPlayer));
+  });
+
+/**
  * Given a provider and a player, attempts to resolve the track's source
  * based on its resource type and play it.
  */
 const playTrack = (
-  { provider, player }: { provider: MediaProvider; player: MediaPlayer },
+  provider: MediaProvider,
+  player: MediaPlayer,
   track: Track,
 ) =>
   Effect.gen(function* () {
@@ -117,6 +206,12 @@ const PlayerStateLive = Layer.effect(
   } as PlayerState),
 );
 
+const CurrentlyActivePlayerLive = Layer.effect(
+  CurrentlyActivePlayerRef,
+  SubscriptionRef.make(Option.none()),
+);
+
 export const PlayerLive = PlayerLiveWithState.pipe(
   Layer.provide(PlayerStateLive),
+  Layer.provide(CurrentlyActivePlayerLive),
 );

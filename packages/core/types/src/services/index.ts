@@ -7,7 +7,6 @@ export * from "./database";
 export * from "./library";
 export * from "./local-storage";
 export * from "./metadata-provider";
-export * from "./media-player";
 export * from "./media-provider";
 export * from "./player";
 export * from "./provider-status";
