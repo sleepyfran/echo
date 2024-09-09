@@ -81,6 +81,11 @@ export type MediaPlayer = FileBasedMediaPlayer & {
   readonly id: MediaPlayerId;
 
   /**
+   * Pauses the current track.
+   */
+  pause: Effect<void>;
+
+  /**
    * Returns a stream that emits events from the media player.
    */
   readonly observe: Stream.Stream<MediaPlayerEvent>;

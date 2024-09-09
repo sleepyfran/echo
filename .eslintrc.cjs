@@ -19,6 +19,9 @@ module.exports = {
     },
   },
   rules: {
+    "@typescript-eslint/no-empty-object-type": {
+      allowObjectTypes: true,
+    },
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
