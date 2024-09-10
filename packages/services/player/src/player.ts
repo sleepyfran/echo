@@ -15,6 +15,7 @@ import {
   Layer,
   Match,
   Option,
+  pipe,
   Queue,
   Ref,
   Stream,
@@ -73,48 +74,43 @@ const makePlayer = Effect.gen(function* () {
 const consumeCommandsInBackground = (
   commandQueue: Queue.Queue<PlayerCommand>,
 ) =>
-  Effect.forkScoped(
-    Stream.fromQueue(commandQueue).pipe(
-      Stream.tap((command) =>
-        Match.value(command).pipe(
-          Match.tag("NextTrack", () =>
-            Effect.gen(function* () {
-              const state = yield* PlayerStateRef;
-              const providerCache = yield* ActiveMediaProviderCache;
+  pipe(
+    Stream.fromQueue(commandQueue),
+    Stream.runForEach((command) =>
+      Match.value(command).pipe(
+        Match.tag("NextTrack", () =>
+          Effect.gen(function* () {
+            const state = yield* PlayerStateRef;
+            const providerCache = yield* ActiveMediaProviderCache;
 
-              const { comingUpTracks } = yield* Ref.get(state);
-              yield* playTracks(
-                comingUpTracks,
-                providerCache,
-                commandQueue,
-              ).pipe(
-                Effect.catchTag("NoMoreTracksAvailable", () =>
-                  Effect.logWarning("There are no more tracks to play."),
-                ),
-              );
-            }),
-          ),
-          Match.tag("UpdateState", ({ updateFn }) =>
-            Effect.gen(function* () {
-              const state = yield* PlayerStateRef;
-              yield* Ref.update(state, updateFn);
-            }),
-          ),
-          Match.tag("SyncPlayerState", ({ withMediaPlayer }) =>
-            Effect.gen(function* () {
-              const activeMediaPlayer = yield* CurrentlyActivePlayerRef;
-              yield* syncPlayerState(
-                withMediaPlayer,
-                activeMediaPlayer,
-                commandQueue,
-              );
-            }),
-          ),
-          Match.exhaustive,
+            const { comingUpTracks } = yield* Ref.get(state);
+            yield* playTracks(comingUpTracks, providerCache, commandQueue).pipe(
+              Effect.catchTag("NoMoreTracksAvailable", () =>
+                Effect.logWarning("There are no more tracks to play."),
+              ),
+            );
+          }),
         ),
+        Match.tag("UpdateState", ({ updateFn }) =>
+          Effect.gen(function* () {
+            const state = yield* PlayerStateRef;
+            yield* Ref.update(state, updateFn);
+          }),
+        ),
+        Match.tag("SyncPlayerState", ({ withMediaPlayer }) =>
+          Effect.gen(function* () {
+            const activeMediaPlayer = yield* CurrentlyActivePlayerRef;
+            yield* syncPlayerState(
+              withMediaPlayer,
+              activeMediaPlayer,
+              commandQueue,
+            );
+          }),
+        ),
+        Match.exhaustive,
       ),
-      Stream.runDrain,
     ),
+    Effect.forkScoped,
   );
 
 /**
@@ -175,7 +171,23 @@ const syncPlayerState = (
   commandQueue: Queue.Enqueue<PlayerCommand>,
 ) =>
   Effect.gen(function* () {
-    yield* overrideActivePlayer(mediaPlayer, activeMediaPlayer);
+    const currentMediaPlayer = yield* activeMediaPlayer.get;
+    if (Option.isSome(currentMediaPlayer)) {
+      if (currentMediaPlayer.value.id === mediaPlayer.id) {
+        yield* Effect.log(
+          `Player ${mediaPlayer.id} is already active, skipping subscription.`,
+        );
+        return;
+      }
+
+      yield* Effect.log(
+        `Disposing of the current player ${currentMediaPlayer.value.id}.`,
+      );
+      yield* currentMediaPlayer.value.dispose;
+    }
+
+    yield* Effect.log(`Setting player ${mediaPlayer.id} as active.`);
+    yield* Ref.set(activeMediaPlayer, Option.some(mediaPlayer));
 
     yield* Effect.log(`Starting to observe player ${mediaPlayer.id}.`);
 
@@ -193,35 +205,6 @@ const syncPlayerState = (
         Stream.runDrain,
       ),
     );
-  });
-
-/**
- * Given a media player and an active media player reference, overrides the active
- * player with the given one, disposing of the previous one if any. If the given
- * player is already active, skips the retrieval.
- */
-const overrideActivePlayer = (
-  mediaPlayer: MediaPlayer,
-  activeMediaPlayer: ICurrentlyActivePlayerRef,
-) =>
-  Effect.gen(function* () {
-    const currentMediaPlayer = yield* activeMediaPlayer.get;
-    if (Option.isSome(currentMediaPlayer)) {
-      if (currentMediaPlayer.value.id === mediaPlayer.id) {
-        yield* Effect.log(
-          `Player ${mediaPlayer.id} is already active, skipping retrieval.`,
-        );
-        return;
-      }
-
-      yield* Effect.log(
-        `Disposing of the current player ${currentMediaPlayer.value.id}.`,
-      );
-      yield* currentMediaPlayer.value.dispose;
-    }
-
-    yield* Effect.log(`Setting player ${mediaPlayer.id} as active.`);
-    yield* Ref.set(activeMediaPlayer, Option.some(mediaPlayer));
   });
 
 /**
