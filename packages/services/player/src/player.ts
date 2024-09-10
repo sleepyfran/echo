@@ -12,12 +12,14 @@ import {
 import {
   Data,
   Effect,
+  Exit,
   Layer,
   Match,
   Option,
   pipe,
   Queue,
   Ref,
+  Scope,
   Stream,
   SubscriptionRef,
 } from "effect";
@@ -171,9 +173,9 @@ const syncPlayerState = (
   commandQueue: Queue.Enqueue<PlayerCommand>,
 ) =>
   Effect.gen(function* () {
-    const currentMediaPlayer = yield* activeMediaPlayer.get;
-    if (Option.isSome(currentMediaPlayer)) {
-      if (currentMediaPlayer.value.id === mediaPlayer.id) {
+    const activePlayer = yield* activeMediaPlayer.get;
+    if (Option.isSome(activePlayer)) {
+      if (activePlayer.value.player.id === mediaPlayer.id) {
         yield* Effect.log(
           `Player ${mediaPlayer.id} is already active, skipping subscription.`,
         );
@@ -181,29 +183,37 @@ const syncPlayerState = (
       }
 
       yield* Effect.log(
-        `Disposing of the current player ${currentMediaPlayer.value.id}.`,
+        `Disposing of the current player ${activePlayer.value.player.id}.`,
       );
-      yield* currentMediaPlayer.value.dispose;
+      yield* Scope.close(activePlayer.value.scope, Exit.void);
     }
 
     yield* Effect.log(`Setting player ${mediaPlayer.id} as active.`);
-    yield* Ref.set(activeMediaPlayer, Option.some(mediaPlayer));
+
+    const playerScope = yield* Scope.make();
+    yield* Ref.set(
+      activeMediaPlayer,
+      Option.some({
+        player: mediaPlayer,
+        scope: playerScope,
+      }),
+    );
 
     yield* Effect.log(`Starting to observe player ${mediaPlayer.id}.`);
-
-    // TODO: Do not use daemon, we need to scope this to the player's lifecycle.
-    yield* Effect.forkDaemon(
-      mediaPlayer.observe.pipe(
-        Stream.tap((event) =>
-          Match.value(event).pipe(
-            Match.when("trackPlaying", () => Effect.void),
-            Match.when("trackEnded", () => commandQueue.offer(NextTrack())),
-            Match.when("trackPaused", () => Effect.void),
-            Match.exhaustive,
-          ),
-        ),
-        Stream.runDrain,
+    yield* pipe(
+      mediaPlayer.observe,
+      Stream.ensuring(
+        Effect.log(`Stream from player ${mediaPlayer.id} has stopped.`),
       ),
+      Stream.runForEach((event) =>
+        Match.value(event).pipe(
+          Match.when("trackPlaying", () => Effect.void),
+          Match.when("trackEnded", () => commandQueue.offer(NextTrack())),
+          Match.when("trackPaused", () => Effect.void),
+          Match.exhaustive,
+        ),
+      ),
+      Effect.forkIn(playerScope),
     );
   });
 

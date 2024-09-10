@@ -1,6 +1,9 @@
 import type { MediaPlayer, PlayerState } from "@echo/core-types";
-import { Context, Option, SubscriptionRef } from "effect";
+import { Context, Option, Scope, SubscriptionRef } from "effect";
 
+/**
+ * Reference to the current state of the player.
+ */
 export type IPlayerStateRef = SubscriptionRef.SubscriptionRef<PlayerState>;
 
 /**
@@ -10,8 +13,12 @@ export class PlayerStateRef extends Context.Tag(
   "@echo/services-player/PlayerStateRef",
 )<PlayerStateRef, IPlayerStateRef>() {}
 
+/**
+ * Contains a ref to the currently active media player and a scope to manage
+ * the disposal of it.
+ */
 export type ICurrentlyActivePlayerRef = SubscriptionRef.SubscriptionRef<
-  Option.Option<MediaPlayer>
+  Option.Option<{ player: MediaPlayer; scope: Scope.CloseableScope }>
 >;
 
 /**
