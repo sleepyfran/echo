@@ -15,6 +15,8 @@ export class EchoPlayer extends LitElement {
     this,
     () => PlayerService.togglePlayback,
   );
+  private _previousTrack = new EffectFn(this, () => PlayerService.previous);
+  private _skipTrack = new EffectFn(this, () => PlayerService.skip);
 
   render() {
     return this._player.render({
@@ -30,7 +32,10 @@ export class EchoPlayer extends LitElement {
             )}
           </div>
           <div>
-            <button ?disabled=${!player.previouslyPlayedTracks.length}>
+            <button
+              @click=${this._onPreviousTrack}
+              ?disabled=${!player.previouslyPlayedTracks.length}
+            >
               ⏮
             </button>
             <button
@@ -45,13 +50,21 @@ export class EchoPlayer extends LitElement {
             >
               ⏸
             </button>
-            <button ?disabled=${!player.comingUpTracks.length}>⏭</button>
+            <button
+              @click=${this._onSkipTrack}
+              ?disabled=${!player.comingUpTracks.length}
+            >
+              ⏭
+            </button>
           </div>
           <p>
             Previously played tracks:
-            ${JSON.stringify(player.previouslyPlayedTracks)}
+            ${player.previouslyPlayedTracks.map((t) => t.name).join(", ")}
           </p>
-          <p>Coming up tracks: ${player.comingUpTracks}</p>
+          <p>
+            Coming up tracks:
+            ${player.comingUpTracks.map((t) => t.name).join(", ")}
+          </p>
         </div>
       `,
     });
@@ -66,6 +79,14 @@ export class EchoPlayer extends LitElement {
 
   private _onTogglePlayback() {
     this._togglePlayback.run({});
+  }
+
+  private _onPreviousTrack() {
+    this._previousTrack.run({});
+  }
+
+  private _onSkipTrack() {
+    this._skipTrack.run({});
   }
 }
 

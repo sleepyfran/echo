@@ -13,6 +13,7 @@ import {
   type Track,
 } from "@echo/core-types";
 import {
+  Array,
   Data,
   Effect,
   Exit,
@@ -86,8 +87,45 @@ const makePlayer = Effect.gen(function* () {
 
       yield* mediaPlayer.value.player.togglePlayback;
     }),
-    previous: Effect.void,
-    skip: Effect.void,
+    previous: Effect.gen(function* () {
+      // TODO: Refactor this to avoid duplication with other play commands.
+      const { previouslyPlayedTracks, comingUpTracks, status } =
+        yield* Ref.get(state);
+      const lastPlayedTrack = Array.last(previouslyPlayedTracks);
+      if (Option.isNone(lastPlayedTrack)) {
+        yield* Effect.logWarning(
+          "Attempted to play previous track, but the previous queue is empty",
+        );
+        return;
+      }
+
+      const { provider, player } = yield* resolveDependenciesForTrack(
+        providerCache,
+        lastPlayedTrack.value,
+      );
+
+      const currentTrack = Match.value(status).pipe(
+        Match.tag("Playing", ({ track }) => [track]),
+        Match.tag("Paused", ({ track }) => [track]),
+        Match.tag("Stopped", () => []),
+        Match.exhaustive,
+      );
+      const previousWithoutLast = Array.dropRight(previouslyPlayedTracks, 1);
+      const comingUpWithCurrent = [...currentTrack, ...comingUpTracks];
+
+      yield* playTrack(provider, player, lastPlayedTrack.value);
+      yield* commandQueue.offer(
+        UpdateState({
+          updateFn: (state) => ({
+            ...state,
+            status: Playing({ track: lastPlayedTrack.value }),
+            previouslyPlayedTracks: previousWithoutLast,
+            comingUpTracks: comingUpWithCurrent,
+          }),
+        }),
+      );
+    }),
+    skip: commandQueue.offer(NextTrack()),
     observe: state,
   });
 });
