@@ -1,8 +1,11 @@
 import {
   ActiveMediaProviderCache,
+  Paused,
   Player,
+  Playing,
   PlayNotFoundError,
   ProviderNotReady,
+  Stopped,
   type IActiveMediaProviderCache,
   type MediaPlayer,
   type MediaProvider,
@@ -35,10 +38,11 @@ import {
  */
 type PlayerCommand =
   | { _tag: "NextTrack" }
+  | { _tag: "PlaybackChanged"; isPlaying: boolean }
   | { _tag: "SyncPlayerState"; withMediaPlayer: MediaPlayer }
   | { _tag: "UpdateState"; updateFn: (state: PlayerState) => PlayerState };
 
-const { NextTrack, UpdateState, SyncPlayerState } =
+const { NextTrack, UpdateState, SyncPlayerState, PlaybackChanged } =
   Data.taggedEnum<PlayerCommand>();
 
 /**
@@ -52,19 +56,38 @@ class NoMoreTracksAvailable extends Data.TaggedError(
 const makePlayer = Effect.gen(function* () {
   const state = yield* PlayerStateRef;
   const providerCache = yield* ActiveMediaProviderCache;
+  const activeMediaPlayer = yield* CurrentlyActivePlayerRef;
 
   const commandQueue = yield* Queue.sliding<PlayerCommand>(10);
   yield* consumeCommandsInBackground(commandQueue);
 
   return Player.of({
     playAlbum: (album) =>
-      playTracks(album.tracks, providerCache, commandQueue).pipe(
+      playTracks({
+        tracks: album.tracks,
+        providerCache,
+        commandQueue,
+        preservePreviousTracks: false,
+      }).pipe(
         Effect.catchTag("NoMoreTracksAvailable", () =>
           Effect.logError(
             `Attempted to play album ${album.name}, but it has no tracks.`,
           ),
         ),
       ),
+    togglePlayback: Effect.gen(function* () {
+      const mediaPlayer = yield* activeMediaPlayer.get;
+      if (Option.isNone(mediaPlayer)) {
+        yield* Effect.logWarning(
+          "Attempted to toggle playback with no media player active.",
+        );
+        return;
+      }
+
+      yield* mediaPlayer.value.player.togglePlayback;
+    }),
+    previous: Effect.void,
+    skip: Effect.void,
     observe: state,
   });
 });
@@ -86,10 +109,41 @@ const consumeCommandsInBackground = (
             const providerCache = yield* ActiveMediaProviderCache;
 
             const { comingUpTracks } = yield* Ref.get(state);
-            yield* playTracks(comingUpTracks, providerCache, commandQueue).pipe(
+            yield* playTracks({
+              tracks: comingUpTracks,
+              providerCache,
+              commandQueue,
+            }).pipe(
               Effect.catchTag("NoMoreTracksAvailable", () =>
                 Effect.logWarning("There are no more tracks to play."),
               ),
+            );
+          }),
+        ),
+        Match.tag("PlaybackChanged", ({ isPlaying }) =>
+          Effect.gen(function* () {
+            yield* Effect.log(
+              `Playback changed to ${isPlaying ? "playing" : "paused"}`,
+            );
+
+            yield* commandQueue.offer(
+              UpdateState({
+                updateFn: (state) =>
+                  Match.value(state.status).pipe(
+                    Match.tag("Playing", ({ track }) =>
+                      isPlaying
+                        ? state
+                        : { ...state, status: Paused({ track }) },
+                    ),
+                    Match.tag("Paused", ({ track }) =>
+                      isPlaying
+                        ? { ...state, status: Playing({ track }) }
+                        : state,
+                    ),
+                    Match.tag("Stopped", () => state),
+                    Match.exhaustive,
+                  ),
+              }),
             );
           }),
         ),
@@ -115,15 +169,23 @@ const consumeCommandsInBackground = (
     Effect.forkScoped,
   );
 
+type PlayTracksInput = {
+  tracks: Track[];
+  providerCache: IActiveMediaProviderCache;
+  commandQueue: Queue.Enqueue<PlayerCommand>;
+  preservePreviousTracks?: boolean;
+};
+
 /**
  * Given a list of tracks, a provider cache and a command queue, attempts to play
  * the first track in the list and updates the player state accordingly.
  */
-const playTracks = (
-  tracks: Track[],
-  providerCache: IActiveMediaProviderCache,
-  commandQueue: Queue.Enqueue<PlayerCommand>,
-) =>
+const playTracks = ({
+  tracks,
+  providerCache,
+  commandQueue,
+  preservePreviousTracks = true,
+}: PlayTracksInput) =>
   Effect.gen(function* () {
     const [nextTrack, ...restOfTracks] = tracks;
     if (!nextTrack) {
@@ -138,7 +200,13 @@ const playTracks = (
     yield* commandQueue.offer(SyncPlayerState({ withMediaPlayer: player }));
     yield* playTrack(provider, player, nextTrack);
     yield* commandQueue.offer(
-      UpdateState({ updateFn: toPlayingState(nextTrack, restOfTracks) }),
+      UpdateState({
+        updateFn: toPlayingState(
+          nextTrack,
+          restOfTracks,
+          preservePreviousTracks,
+        ),
+      }),
     );
   });
 
@@ -207,9 +275,13 @@ const syncPlayerState = (
       ),
       Stream.runForEach((event) =>
         Match.value(event).pipe(
-          Match.when("trackPlaying", () => Effect.void),
+          Match.when("trackPlaying", () =>
+            commandQueue.offer(PlaybackChanged({ isPlaying: true })),
+          ),
           Match.when("trackEnded", () => commandQueue.offer(NextTrack())),
-          Match.when("trackPaused", () => Effect.void),
+          Match.when("trackPaused", () =>
+            commandQueue.offer(PlaybackChanged({ isPlaying: false })),
+          ),
           Match.exhaustive,
         ),
       ),
@@ -249,18 +321,22 @@ const playTrack = (
  * also the previously played tracks with the current track, if any.
  */
 const toPlayingState =
-  (currentTrack: Track, comingUpTracks: Track[]) =>
+  (currentTrack: Track, comingUpTracks: Track[], preservePrevious = true) =>
   (currentState: PlayerState): PlayerState =>
     ({
       ...currentState,
-      status: "playing" as const,
-      currentTrack: Option.some(currentTrack),
-      previouslyPlayedTracks: [
-        ...currentState.previouslyPlayedTracks,
-        ...(Option.isSome(currentState.currentTrack)
-          ? [currentState.currentTrack.value]
-          : []),
-      ],
+      status: Playing({ track: currentTrack }),
+      previouslyPlayedTracks: preservePrevious
+        ? [
+            ...currentState.previouslyPlayedTracks,
+            ...Match.value(currentState.status).pipe(
+              Match.tag("Playing", ({ track }) => [track]),
+              Match.tag("Paused", ({ track }) => [track]),
+              Match.tag("Stopped", () => []),
+              Match.exhaustive,
+            ),
+          ]
+        : [],
       comingUpTracks,
     }) satisfies PlayerState;
 
@@ -271,8 +347,7 @@ const PlayerStateLive = Layer.effect(
   SubscriptionRef.make({
     comingUpTracks: [],
     previouslyPlayedTracks: [],
-    currentTrack: Option.none(),
-    status: "stopped",
+    status: Stopped(),
   } as PlayerState),
 );
 

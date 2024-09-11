@@ -81,9 +81,9 @@ export type MediaPlayer = FileBasedMediaPlayer & {
   readonly id: MediaPlayerId;
 
   /**
-   * Pauses the current track.
+   * Toggles the playback of the current track.
    */
-  pause: Effect<void>;
+  togglePlayback: Effect<void>;
 
   /**
    * Returns a stream that emits events from the media player.

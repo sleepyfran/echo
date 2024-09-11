@@ -27,6 +27,21 @@ export type IPlayer = {
   ) => Effect.Effect<void, ProviderNotReady | PlayNotFoundError>;
 
   /**
+   * Pauses or resumes the current track.
+   */
+  readonly togglePlayback: Effect.Effect<void>;
+
+  /**
+   * Skips the current track and starts playing the next one, if any.
+   */
+  readonly skip: Effect.Effect<void, PlayNotFoundError | ProviderNotReady>;
+
+  /**
+   * Returns to the previous track, if any.
+   */
+  readonly previous: Effect.Effect<void, PlayNotFoundError | ProviderNotReady>;
+
+  /**
    * Returns a stream that emits the current player state and any subsequent
    * changes to it.
    */

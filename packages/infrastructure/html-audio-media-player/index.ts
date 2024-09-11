@@ -33,8 +33,8 @@ const make = Effect.succeed(
                 catch: () => new PlayNotFoundError(),
               });
             }),
-          pause: Effect.sync(() => {
-            audioElement.pause();
+          togglePlayback: Effect.sync(() => {
+            audioElement.paused ? audioElement.play() : audioElement.pause();
           }),
           observe: Stream.async((emit) => {
             // TODO: Keep track in the state? If something, it can be done via a ref.
