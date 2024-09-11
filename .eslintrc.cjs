@@ -19,9 +19,7 @@ module.exports = {
     },
   },
   rules: {
-    "@typescript-eslint/no-empty-object-type": {
-      allowObjectTypes: true,
-    },
+    "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {

@@ -73,7 +73,7 @@ export class EchoPlayer extends LitElement {
   private _renderCurrentTrack({ track }: { track: Track }) {
     return html`
       <h4>${track.name}</h4>
-      <h5>${track.mainArtist.name}</h
+      <h5>${track.mainArtist.name}</h5>
     `;
   }
 
