@@ -1,9 +1,9 @@
 import { StreamConsumer } from "@echo/components-shared-controllers";
-import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import { Library, Player } from "@echo/core-types";
-import { LitElement, html } from "lit";
+import { Library } from "@echo/core-types";
+import { LitElement, css, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
+import "@echo/components-albums";
 
 /**
  * Component that displays the user's library of albums and allows them to
@@ -12,33 +12,23 @@ import { map } from "lit/directives/map.js";
 @customElement("user-library")
 export class UserLibrary extends LitElement {
   private _library = new StreamConsumer(this, Library.observeAlbums);
-  private _playAlbum = new EffectFn(this, Player.playAlbum);
+
+  static styles = css`
+    div {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+  `;
 
   render() {
     return this._library.render({
       initial: () => html`<h1>Loading...</h1>`,
       item: (albums) => html`
         <div>
-          <br />
           ${map(
             albums,
-            (album) => html`
-              <div key="{album.id}">
-                ${album.embeddedCover &&
-                html`
-                  <img
-                    src="${URL.createObjectURL(album.embeddedCover)}"
-                    height="100"
-                    width="100"
-                    alt="Album cover"
-                  />
-                `}
-                <h3>${album.name}</h3>
-                <p>${album.artist.name}</p>
-                <button @click=${() => this._playAlbum.run(album)}>Play</button>
-                <hr />
-              </div>
-            `,
+            (album) => html` <library-album .album=${album}></library-album> `,
           )}
         </div>
       `,

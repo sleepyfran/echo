@@ -1,5 +1,5 @@
 {
-  "name": "@echo/components-library",
+  "name": "@echo/components-albums",
   "private": true,
   "version": "1.0.0",
   "scripts": {
@@ -7,7 +7,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/components-albums": "^1.0.0",
     "@echo/components-shared-controllers": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap-runtime": "^1.0.0",
