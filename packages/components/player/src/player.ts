@@ -23,7 +23,6 @@ export class EchoPlayer extends LitElement {
       initial: () => nothing,
       item: (player) => html`
         <div>
-          <h5>Player</h5>
           <div>
             ${Match.value(player.status).pipe(
               Match.tag("Playing", this._renderCurrentTrack),
