@@ -1,0 +1,1 @@
+All icons in this package outside of the providers folder are taken from the Pixel Art Icons pack by Gerrit Halfmann, which is licensed under an MIT license. The original pack can be found at https://pixelarticons.com

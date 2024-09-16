@@ -6,7 +6,6 @@ import {
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import type { ProviderLoadedEvent } from "./provider-loader";
-import "@echo/components-provider-status";
 import "./provider-loader";
 import "./select-root";
 import { EffectConsumer } from "@echo/components-shared-controllers";
@@ -61,7 +60,11 @@ export class AddProvider extends LitElement {
       ),
       Match.tag(
         "ProviderStarted",
-        () => html`<provider-status></provider-status>`,
+        () =>
+          html`<h1>
+            Provider started! Check the status on the top bar for more
+            information
+          </h1>`,
       ),
       Match.exhaustive,
     );
