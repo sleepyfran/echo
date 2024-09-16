@@ -7,6 +7,9 @@ import { WorkerStateRef } from "./state";
 export const InitMessage = S.TaggedStruct("init", {});
 type InitMessage = S.Schema.Type<typeof InitMessage>;
 
+export const InitFinishedMessage = S.TaggedStruct("initFinished", {});
+type InitFinishedMessage = S.Schema.Type<typeof InitFinishedMessage>;
+
 export const initMessageDecoder = S.decode(InitMessage);
 export const initMessageEncoder = S.encode(InitMessage);
 
@@ -39,5 +42,7 @@ export const init = () =>
     yield* Effect.log(
       "Media provider worker initialized, awaiting resolving fibers.",
     );
+
+    yield* Effect.sync(() => self.postMessage(InitFinishedMessage.make({})));
     Fiber.joinAll([startResolverFiber, stopResolverFiber]);
   });

@@ -1,13 +1,10 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { initializeWorkers } from "@echo/services-bootstrap-workers";
 import { AppInit } from "@echo/core-types";
 import { EffectConsumer } from "@echo/components-shared-controllers";
 import "@echo/components-add-provider";
 import "@echo/components-library";
 import "@echo/components-player";
-
-initializeWorkers();
 
 /**
  * Root element of the application.

@@ -18,6 +18,7 @@ import {
 } from "@echo/services-bootstrap";
 import type { ILoadedProvider } from "@echo/services-bootstrap/src/loaders/provider";
 import { Effect, Layer, Option } from "effect";
+import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
   const activeMediaProviderCache = yield* ActiveMediaProviderCache;
@@ -28,6 +29,12 @@ const make = Effect.gen(function* () {
 
   return AppInit.of({
     init: Effect.gen(function* () {
+      yield* Effect.log(
+        "Awaiting worker initialization before starting app...",
+      );
+      yield* initializeWorkers;
+      yield* Effect.log("Worker initialization finished, starting app...");
+
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 
       yield* Effect.log(
@@ -100,7 +107,10 @@ const reinitializeProvider = (
     const mediaProvider = providerFactory.createMediaProvider(authResult);
     const mediaPlayer = yield* createMediaPlayer(authResult);
 
-    yield* broadcastChannel.send("start", startArgs);
+    yield* broadcastChannel.send("start", {
+      ...startArgs,
+      authInfo: authResult,
+    });
     yield* activeMediaProviderCache.add(
       startArgs.metadata,
       mediaProvider,
