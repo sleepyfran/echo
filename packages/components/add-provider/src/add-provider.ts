@@ -61,10 +61,10 @@ export class AddProvider extends LitElement {
       Match.tag(
         "ProviderStarted",
         () =>
-          html`<h1>
-            Provider started! Check the status on the top bar for more
-            information
-          </h1>`,
+          html`<h5>
+            Provider started! Your tracks will now be scanned and added to your
+            library. Check the status on the top bar for the latest status.
+          </h5>`,
       ),
       Match.exhaustive,
     );

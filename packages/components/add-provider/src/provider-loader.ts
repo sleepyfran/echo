@@ -5,7 +5,7 @@ import {
   type ProviderMetadata,
 } from "@echo/core-types";
 import { Match } from "effect";
-import { LitElement, html } from "lit";
+import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 /**
@@ -60,30 +60,66 @@ export class ProviderLoader extends LitElement {
     },
   );
 
+  static styles = css`
+    .available-provider-list {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #000;
+      cursor: pointer;
+      font-size: 1em;
+      text-transform: uppercase;
+    }
+
+    button:hover {
+      background-color: #000;
+      color: #fff;
+    }
+  `;
+
   render() {
-    return Match.value(this._loaderStatus).pipe(
-      Match.tag("Initial", () =>
-        this.availableProviders.map(
-          (provider) => html`
-            <button @click=${() => this._loadProvider.run(provider)}>
-              ${provider.id}
+    return html`
+      <h1>Add provider</h1>
+      ${Match.value(this._loaderStatus).pipe(
+        Match.tag(
+          "Initial",
+          () => html`
+            <p>
+              These are all the currently supported providers that are available
+              to add. Select one to start:
+            </p>
+            <div class="available-provider-list">
+              ${this.availableProviders.map(
+                (provider) => html`
+                  <button @click=${() => this._loadProvider.run(provider)}>
+                    ${provider.id}
+                  </button>
+                `,
+              )}
+            </div>
+          `,
+        ),
+        Match.tag(
+          "WaitingToConnect",
+          ({ metadata }) => html`
+            <button @click=${() => this._connectToProvider.run({})}>
+              Connect to ${metadata.id}
             </button>
           `,
         ),
-      ),
-      Match.tag(
-        "WaitingToConnect",
-        ({ metadata }) => html`
-          <button @click=${() => this._connectToProvider.run({})}>
-            Connect to ${metadata.id}
-          </button>
-        `,
-      ),
-      Match.tag("LoadingProvider", () => html`<h1>Loading provider...</h1>`),
-      Match.tag("ConnectingToProvider", () => html`<h1>Connecting...</h1>`),
-      Match.tag("Connected", () => html`<h1>Connected!</h1>`),
-      Match.exhaustive,
-    );
+        Match.tag("LoadingProvider", () => html`<h5>Loading provider...</h5>`),
+        Match.tag("ConnectingToProvider", () => html`<h5>Connecting...</h5>`),
+        Match.tag("Connected", () => html`<h5>Connected!</h5>`),
+        Match.exhaustive,
+      )}
+    `;
   }
 }
 
