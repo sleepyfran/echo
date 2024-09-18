@@ -41,7 +41,7 @@ const make = Effect.gen(function* () {
         `Re-initializing ${allProviderStates.length} providers on startup`,
       );
 
-      return yield* Effect.all(
+      yield* Effect.all(
         allProviderStates.map((providerStartArgs) =>
           Effect.gen(function* () {
             const retrievedMetadata = {

@@ -36,4 +36,4 @@ export const initializeMediaProviderWorker = Effect.async<void>(
 
     worker.postMessage(InitMessage.make({}));
   },
-).pipe(Effect.timeout("5 seconds"));
+).pipe(Effect.timeout("5 seconds"), Effect.orDie);
