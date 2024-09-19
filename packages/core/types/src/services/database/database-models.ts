@@ -19,7 +19,7 @@ export type DatabaseArtist = Artist;
  */
 export type DatabaseTrack = Omit<
   Track,
-  "mainArtist" | "secondaryArtists" | "album"
+  "mainArtist" | "secondaryArtists" | "albumInfo"
 > & {
   mainArtistId: Artist["id"];
   secondaryArtistIds: Artist["id"][];

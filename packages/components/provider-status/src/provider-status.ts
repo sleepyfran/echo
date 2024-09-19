@@ -28,6 +28,7 @@ export class AllProvidersStatusBar extends LitElement {
     .provider-container {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       margin: 0.5rem 0;
     }
 

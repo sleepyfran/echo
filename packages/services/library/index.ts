@@ -2,6 +2,7 @@ import {
   Database,
   Library,
   NonExistingArtistReferenced,
+  type AlbumInfo,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Stream } from "effect";
 
@@ -42,14 +43,19 @@ export const LibraryLive = Layer.effect(
                       );
                     }
 
-                    return {
+                    const albumInfo: AlbumInfo = {
                       ...album,
+                      artist: artist.value,
+                    };
+
+                    return {
+                      ...albumInfo,
                       artist: artist.value,
                       tracks: tracks
                         .sort((a, b) => a.trackNumber - b.trackNumber)
                         .map((track) => ({
                           ...track,
-                          albumId: album.id,
+                          albumInfo,
                           mainArtist: artist.value,
                           secondaryArtists: [],
                         })),

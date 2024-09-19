@@ -33,6 +33,10 @@ export class MyElement extends LitElement {
       padding: 0 1rem;
     }
 
+    header > * {
+      flex: 1;
+    }
+
     button {
       margin-top: 10px;
       padding: 5px 10px;
@@ -108,9 +112,9 @@ export class MyElement extends LitElement {
       <div>
         <header>
           <command-bar></command-bar>
+          <echo-player></echo-player>
           <all-providers-status-bar></all-providers-status-bar>
         </header>
-        <echo-player></echo-player>
         <user-library></user-library>
       </div>
     `;
