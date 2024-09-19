@@ -44,6 +44,14 @@ export class EchoPlayer extends LitElement {
     .track-info h5 {
       margin: 0;
     }
+
+    h5 {
+      margin: 0;
+    }
+
+    h5.logo {
+      font-size: 2rem;
+    }
   `;
 
   render() {
@@ -54,8 +62,12 @@ export class EchoPlayer extends LitElement {
           ${Match.value(player.status).pipe(
             Match.tag("Playing", (st) => this._renderActivePlayer(player, st)),
             Match.tag("Paused", (st) => this._renderActivePlayer(player, st)),
-            Match.orElse(() =>
-              this._renderPlayer(player, undefined, "No Track", "No Artist"),
+            Match.orElse(
+              () => html`
+                <div class="current-track">
+                  <h5 class="logo">echo</h5>
+                </div>
+              `,
             ),
           )}
         </div>
