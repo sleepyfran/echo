@@ -7,6 +7,7 @@ import {
 import { Match } from "effect";
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@echo/components-ui-atoms";
 
 /**
  * Event that gets dispatched by the component when the provider has been loaded
@@ -67,58 +68,60 @@ export class ProviderLoader extends LitElement {
       gap: 1rem;
     }
 
-    button {
-      margin-top: 10px;
-      padding: 5px 10px;
-      background-color: #fff;
-      color: #000;
-      border: 1px solid #000;
-      cursor: pointer;
-      font-size: 1em;
-      text-transform: uppercase;
-    }
-
-    button:hover {
-      background-color: #000;
-      color: #fff;
+    .centered {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
   `;
 
   render() {
     return html`
       <h1>Add provider</h1>
-      ${Match.value(this._loaderStatus).pipe(
-        Match.tag(
-          "Initial",
-          () => html`
-            <p>
-              These are all the currently supported providers that are available
-              to add. Select one to start:
-            </p>
-            <div class="available-provider-list">
-              ${this.availableProviders.map(
-                (provider) => html`
-                  <button @click=${() => this._loadProvider.run(provider)}>
-                    ${provider.id}
-                  </button>
-                `,
-              )}
-            </div>
-          `,
-        ),
-        Match.tag(
-          "WaitingToConnect",
-          ({ metadata }) => html`
-            <button @click=${() => this._connectToProvider.run({})}>
-              Connect to ${metadata.id}
-            </button>
-          `,
-        ),
-        Match.tag("LoadingProvider", () => html`<h5>Loading provider...</h5>`),
-        Match.tag("ConnectingToProvider", () => html`<h5>Connecting...</h5>`),
-        Match.tag("Connected", () => html`<h5>Connected!</h5>`),
-        Match.exhaustive,
-      )}
+      <div class="centered">
+        ${Match.value(this._loaderStatus).pipe(
+          Match.tag(
+            "Initial",
+            () => html`
+              <p>
+                These are all the currently supported providers that are
+                available to add. Select which one you want to add:
+              </p>
+              <div class="available-provider-list">
+                ${this.availableProviders.map(
+                  (provider) => html`
+                    <echo-button
+                      @click=${() => this._loadProvider.run(provider)}
+                    >
+                      ${provider.id}
+                    </echo-button>
+                  `,
+                )}
+              </div>
+            `,
+          ),
+          Match.tag(
+            "WaitingToConnect",
+            ({ metadata }) => html`
+              <p>
+                Let's connect to ${metadata.id}. Clicking the button below will
+                open a new window to authenticate with the provider. Echo does
+                not store any of your credentials:
+              </p>
+              <echo-button @click=${() => this._connectToProvider.run({})}>
+                Connect to ${metadata.id}
+              </echo-button>
+            `,
+          ),
+          Match.tag(
+            "LoadingProvider",
+            () => html`<h5>Loading provider...</h5>`,
+          ),
+          Match.tag("ConnectingToProvider", () => html`<h5>Connecting...</h5>`),
+          Match.tag("Connected", () => html`<h5>Connected!</h5>`),
+          Match.exhaustive,
+        )}
+      </div>
     `;
   }
 }

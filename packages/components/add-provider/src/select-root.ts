@@ -2,6 +2,7 @@ import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.cont
 import { AddProviderWorkflow, type FolderMetadata } from "@echo/core-types";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@echo/components-ui-atoms";
 
 /**
  * Event that gets dispatched by the component when the root has been selected
@@ -22,6 +23,9 @@ export class SelectRoot extends LitElement {
   @property({ type: Array })
   availableFolders: FolderMetadata[] = [];
 
+  @property({ type: Object })
+  private _selectedFolder: FolderMetadata | undefined = undefined;
+
   private _selectRoot = new EffectFn(
     this,
     (rootFolder: FolderMetadata) => AddProviderWorkflow.selectRoot(rootFolder),
@@ -37,20 +41,14 @@ export class SelectRoot extends LitElement {
       gap: 10;
     }
 
-    button {
-      margin-top: 10px;
-      padding: 5px 10px;
-      background-color: #fff;
-      color: #000;
-      border: 1px solid #000;
-      cursor: pointer;
-      font-size: 1em;
-      text-transform: uppercase;
+    echo-button {
+      width: 100%;
     }
 
-    button:hover {
-      background-color: #000;
-      color: #fff;
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
   `;
 
@@ -58,18 +56,38 @@ export class SelectRoot extends LitElement {
     return this._selectRoot.render({
       initial: () => html`
         <h1>Select a root folder:</h1>
-        <div class="available-folder-grid">
-          ${this.availableFolders.map(
-            (folder) =>
-              html`<button @click=${() => this._selectRoot.run(folder)}>
-                ${folder.name}
-              </button>`,
-          )}
+        <p>Select the folder where your music is stored to start syncing:</p>
+        <div class="form">
+          <echo-select
+            @selected=${this._onSelectChange}
+            placeholder="Select a folder"
+            .elements=${this.availableFolders}
+            displayKey="name"
+          >
+          </echo-select>
+          <echo-button
+            ?disabled=${!this._selectedFolder}
+            @click=${this._onStartProvider}
+          >
+            ${this._selectedFolder
+              ? `Start provider using ${this._selectedFolder.name}`
+              : "Select a folder"}
+          </echo-button>
         </div>
       `,
       pending: () => html`<h5>Connecting...</h5>`,
       complete: () => nothing,
     });
+  }
+
+  private _onSelectChange(event: CustomEvent<FolderMetadata>) {
+    this._selectedFolder = event.detail;
+  }
+
+  private _onStartProvider() {
+    if (this._selectedFolder) {
+      this._selectRoot.run(this._selectedFolder);
+    }
   }
 }
 

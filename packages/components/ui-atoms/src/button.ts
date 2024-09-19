@@ -1,11 +1,14 @@
 import { LitElement, css, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 
 /**
  * Component that encapsulates the default button of the application.
  */
 @customElement("echo-button")
 export class EchoButton extends LitElement {
+  @property({ type: Boolean })
+  disabled = false;
+
   static styles = css`
     button {
       background-color: var(--button-background-color);
@@ -25,11 +28,16 @@ export class EchoButton extends LitElement {
       outline: none;
       border: 2px solid var(--border-prominent-color);
     }
+
+    button:disabled {
+      background-color: var(--disabled-background-color);
+      cursor: not-allowed;
+    }
   `;
 
   render() {
     return html`
-      <button>
+      <button ?disabled=${this.disabled}>
         <slot></slot>
       </button>
     `;
