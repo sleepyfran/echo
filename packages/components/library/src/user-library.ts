@@ -18,6 +18,7 @@ export class UserLibrary extends LitElement {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
+      padding: 1rem;
     }
   `;
 

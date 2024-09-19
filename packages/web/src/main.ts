@@ -5,17 +5,15 @@ import {
   EffectConsumer,
   StreamConsumer,
 } from "@echo/components-shared-controllers";
-import "@echo/components-command-bar";
+import "@echo/components-header";
 import "@echo/components-library";
-import "@echo/components-player";
-import "@echo/components-provider-status";
 import { cache } from "lit/directives/cache.js";
 
 /**
  * Root element of the application.
  */
 @customElement("app-root")
-export class MyElement extends LitElement {
+export class AppRoot extends LitElement {
   private _init = new EffectConsumer(this, AppInit.init);
   private _providerStatus = new StreamConsumer(
     this,
@@ -26,17 +24,6 @@ export class MyElement extends LitElement {
   private _addProviderDialog!: HTMLDialogElement;
 
   static styles = css`
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 1rem;
-    }
-
-    header > * {
-      flex: 1;
-    }
-
     button {
       margin-top: 10px;
       padding: 5px 10px;
@@ -109,14 +96,8 @@ export class MyElement extends LitElement {
 
   private _renderMainPage() {
     return html`
-      <div>
-        <header>
-          <command-bar></command-bar>
-          <echo-player></echo-player>
-          <all-providers-status-bar></all-providers-status-bar>
-        </header>
-        <user-library></user-library>
-      </div>
+      <app-header></app-header>
+      <user-library></user-library>
     `;
   }
 
@@ -139,6 +120,6 @@ export class MyElement extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "app-root": MyElement;
+    "app-root": AppRoot;
   }
 }

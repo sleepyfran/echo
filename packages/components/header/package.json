@@ -1,0 +1,20 @@
+{
+  "name": "@echo/components-header",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/components-shared-controllers": "^1.0.0",
+    "@echo/components-command-bar": "^1.0.0",
+    "@echo/components-player": "^1.0.0",
+    "@echo/components-provider-status": "^1.0.0",
+    "@echo/core-types": "^1.0.0",
+    "@echo/services-bootstrap-runtime": "^1.0.0",
+    "effect": "^3.6.5",
+    "lit": "^3.2.0",
+    "@lit/task": "^1.0.1"
+  }
+}
