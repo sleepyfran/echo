@@ -15,6 +15,10 @@ export class CommandBar extends LitElement {
       font-size: 1rem;
       width: 80%;
     }
+
+    input::placeholder {
+      font-family: "DepartureMono", monospace;
+    }
   `;
 
   render() {
