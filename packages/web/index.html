@@ -14,15 +14,23 @@
       }
 
       :root {
+        /* Colors. */
+        --font-family: "DepartureMono", monospace;
         --background-color: #f4f4f9;
         --background-color-muted: #e9e9f3;
         --border-color: #e9e9f3;
+        --border-prominent-color: #007bff;
         --primary-text-color: #333333;
         --secondary-text-color: #555555;
         --accent-color: #ff6f61;
         --button-background-color: #007bff;
         --button-text-color: #ffffff;
         --button-hover-background-color: #0056b3;
+
+        /* Animations. */
+        --short-transition-duration: 0.3s;
+        --medium-transition-duration: 0.4s;
+        --long-transition-duration: 0.5s;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -38,10 +46,15 @@
         }
       }
 
+      html,
+      body {
+        height: 100%;
+      }
+
       body {
         background-color: var(--background-color);
         color: var(--primary-text-color);
-        font-family: "DepartureMono", monospace;
+        font-family: var(--font-family);
         margin: 0;
       }
     </style>

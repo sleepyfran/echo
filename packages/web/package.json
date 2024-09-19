@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@echo/components-header": "^1.0.0",
+    "@echo/components-initial-setup": "^1.0.0",
     "@echo/components-library": "^1.0.0",
     "@echo/components-shared-controllers": "^1.0.0",
     "@echo/core-types": "^1.0.0",
