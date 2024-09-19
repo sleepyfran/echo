@@ -23,6 +23,7 @@ export class Header extends LitElement {
       position: sticky;
       top: 0;
       transition: box-shadow 0.6s;
+      z-index: 1000;
     }
 
     header.shadowed {

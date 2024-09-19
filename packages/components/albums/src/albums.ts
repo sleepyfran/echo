@@ -14,47 +14,72 @@ export class LibraryAlbum extends LitElement {
   private _playAlbum = new EffectFn(this, Player.playAlbum);
 
   static styles = css`
-    :host {
-      display: block;
+    div.album-container {
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem;
+    }
+
+    div.album-container:hover {
+      background-color: #f0f0f0;
+      transition: all 1s;
+    }
+
+    div.img-wrapper {
+      position: relative;
+    }
+
+    button.play {
+      opacity: 0;
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.5rem;
+      background-color: #f42c04;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 100%;
+      font-size: 2rem;
+      cursor: pointer;
+      height: 4rem;
+      width: 4rem;
+      box-shadow: 0 0 10px 5px #0000;
+      transition: all 0.5s;
+    }
+
+    div.img-wrapper:hover button.play {
+      opacity: 1;
+    }
+
+    img.album-cover {
+      border-radius: 2%;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: relative;
+    }
+
+    div.album-info {
+      cursor: pointer;
       padding: 10px;
-      border: 1px solid #000;
-      background-color: #fff;
-      color: #000;
+      box-sizing: border-box;
     }
 
-    img {
-      border-radius: 4px;
+    h5,
+    p {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
-    h3 {
+    h5 {
       margin: 0;
-      font-size: 1.2em;
-      color: #000;
-      white-space: normal;
-      word-break: break-all;
-      overflow: visible;
+      font-size: 1rem;
     }
 
     p {
       margin: 0;
-      color: #000;
-      font-size: 1em;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 5px 10px;
-      background-color: #fff;
-      color: #000;
-      border: 1px solid #000;
-      cursor: pointer;
-      font-size: 1em;
-      text-transform: uppercase;
-    }
-
-    button:hover {
-      background-color: #000;
-      color: #fff;
+      font-size: 0.8em;
     }
   `;
 
@@ -64,19 +89,22 @@ export class LibraryAlbum extends LitElement {
 
   render() {
     return html`
-      <div key="{album.id}">
-        ${this.album.embeddedCover &&
-        html`
-          <img
-            src="${URL.createObjectURL(this.album.embeddedCover)}"
-            height="100"
-            width="100"
-            alt="Album cover"
-          />
-        `}
-        <h3>${this.album.name}</h3>
-        <p>${this.album.artist.name}</p>
-        <button @click=${this._onPlayClick}>Play</button>
+      <div key="{album.id}" class="album-container">
+        <div class="img-wrapper">
+          ${this.album.embeddedCover &&
+          html`
+            <img
+              src="${URL.createObjectURL(this.album.embeddedCover)}"
+              alt="Album cover"
+              class="album-cover"
+            />
+          `}
+          <button class="play" @click=${this._onPlayClick}>⏵</button>
+        </div>
+        <div class="album-info">
+          <h5>${this.album.name}</h5>
+          <p>${this.album.artist.name}</p>
+        </div>
       </div>
     `;
   }
