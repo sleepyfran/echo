@@ -1,5 +1,6 @@
 import { LitElement, css, html } from "lit";
-import { customElement, query } from "lit/decorators.js";
+import { customElement, query, state } from "lit/decorators.js";
+import type { EchoDialog } from "@echo/components-ui-atoms";
 import "@echo/components-ui-atoms";
 
 /**
@@ -7,8 +8,11 @@ import "@echo/components-ui-atoms";
  */
 @customElement("initial-setup")
 export class InitialSetup extends LitElement {
-  @query("#add-provider")
-  private _addProviderDialog!: HTMLDialogElement;
+  @state()
+  dialogOpen = false;
+
+  @query("echo-dialog")
+  private _dialog!: EchoDialog;
 
   static styles = css`
     :host {
@@ -21,25 +25,6 @@ export class InitialSetup extends LitElement {
 
     div.initial-setup {
       max-width: 40%;
-    }
-
-    dialog[open] {
-      display: flex;
-      flex-direction: column;
-      height: 50%;
-      width: 50%;
-    }
-
-    dialog[open]::backdrop {
-      background-color: rgb(0 0 0 / 75%);
-    }
-
-    dialog .dismiss {
-      align-self: flex-end;
-      padding: 0.5rem;
-      font-size: 1.5rem;
-      background: none;
-      border: none;
     }
   `;
 
@@ -62,20 +47,14 @@ export class InitialSetup extends LitElement {
 
   private _renderAddProviderModal() {
     return html`
-      <dialog id="add-provider">
-        <echo-button
-          class="dismiss"
-          @click=${() => this._addProviderDialog.close()}
-        >
-          x
-        </echo-button>
+      <echo-dialog ?open=${this.dialogOpen}>
         <add-provider></add-provider>
-      </dialog>
+      </echo-dialog>
     `;
   }
 
   private _onAddProviderClick() {
-    this._addProviderDialog.showModal();
+    this._dialog.open();
   }
 }
 
