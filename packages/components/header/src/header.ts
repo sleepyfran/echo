@@ -15,7 +15,7 @@ export class Header extends LitElement {
 
   static styles = css`
     header {
-      background-color: white;
+      background-color: var(--background-color);
       display: flex;
       justify-content: space-between;
       align-items: center;

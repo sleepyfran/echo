@@ -21,8 +21,8 @@ export class LibraryAlbum extends LitElement {
     }
 
     div.album-container:hover {
-      background-color: #f0f0f0;
-      transition: all 1s;
+      background-color: var(--background-color-muted);
+      transition: background-color 1s;
     }
 
     div.img-wrapper {
@@ -34,8 +34,8 @@ export class LibraryAlbum extends LitElement {
       position: absolute;
       bottom: 0.5rem;
       right: 0.5rem;
-      background-color: #f42c04;
-      color: #ffffff;
+      background-color: var(--accent-color);
+      color: var(--text-color);
       border: none;
       padding: 0.5rem;
       border-radius: 100%;
@@ -44,6 +44,7 @@ export class LibraryAlbum extends LitElement {
       height: 4rem;
       width: 4rem;
       box-shadow: 0 0 10px 5px #0000;
+      transform: translate3d(1rem, 1rem, 1rem);
       transition: all 0.5s;
     }
 

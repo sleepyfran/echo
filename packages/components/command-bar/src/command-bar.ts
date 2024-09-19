@@ -10,8 +10,8 @@ export class CommandBar extends LitElement {
   static styles = css`
     input {
       padding: 0.5rem;
-      border: 1px solid #ccc;
-      background-color: #f5f5f5;
+      border: 1px solid var(--border-color);
+      background-color: var(--background-color-muted);
       font-size: 1rem;
       width: 80%;
     }
