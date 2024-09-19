@@ -5,6 +5,7 @@ import {
   EffectConsumer,
   StreamConsumer,
 } from "@echo/components-shared-controllers";
+import "@echo/components-command-bar";
 import "@echo/components-library";
 import "@echo/components-player";
 import "@echo/components-provider-status";
@@ -27,7 +28,7 @@ export class MyElement extends LitElement {
   static styles = css`
     header {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
       padding: 0 1rem;
     }
@@ -106,6 +107,7 @@ export class MyElement extends LitElement {
     return html`
       <div>
         <header>
+          <command-bar></command-bar>
           <all-providers-status-bar></all-providers-status-bar>
         </header>
         <echo-player></echo-player>

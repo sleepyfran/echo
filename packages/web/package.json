@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@echo/components-command-bar": "^1.0.0",
     "@echo/components-library": "^1.0.0",
     "@echo/components-player": "^1.0.0",
     "@echo/components-provider-status": "^1.0.0",
