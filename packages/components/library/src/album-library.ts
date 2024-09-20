@@ -9,8 +9,8 @@ import "@echo/components-albums";
  * Component that displays the user's library of albums and allows them to
  * play them.
  */
-@customElement("user-library")
-export class UserLibrary extends LitElement {
+@customElement("album-library")
+export class AlbumLibrary extends LitElement {
   private _library = new StreamConsumer(this, Library.observeAlbums);
 
   static styles = css`
@@ -47,6 +47,6 @@ export class UserLibrary extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "user-library": UserLibrary;
+    "album-library": AlbumLibrary;
   }
 }

@@ -1,5 +1,5 @@
 import { Effect, Stream } from "effect";
-import type { Album, ArtistId } from "../model";
+import type { Album, Artist, ArtistId } from "../model";
 
 /**
  * Error that is thrown when an album references an artist that does not exist.
@@ -22,6 +22,11 @@ export type ILibrary = {
   readonly observeAlbums: () => Effect.Effect<
     Stream.Stream<Album[], NonExistingArtistReferenced>
   >;
+
+  /**
+   * Returns a stream of artists that are currently stored in the database.
+   */
+  readonly observeArtists: () => Effect.Effect<Stream.Stream<Artist[]>>;
 };
 
 /**

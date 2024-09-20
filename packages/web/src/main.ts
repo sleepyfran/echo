@@ -21,7 +21,11 @@ export class AppRoot extends LitElement {
     [
       {
         path: "/",
-        render: () => html`<user-library></user-library>`,
+        render: () => html`<album-library></album-library>`,
+      },
+      {
+        path: "/artists",
+        render: () => html`<artist-library></artist-library>`,
       },
     ],
     {

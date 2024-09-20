@@ -1,5 +1,5 @@
 {
-  "name": "@echo/components-library",
+  "name": "@echo/components-artists",
   "private": true,
   "version": "1.0.0",
   "scripts": {
@@ -7,13 +7,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/components-albums": "^1.0.0",
-    "@echo/components-artists": "^1.0.0",
     "@echo/components-shared-controllers": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap-runtime": "^1.0.0",
     "effect": "^3.6.5",
     "lit": "^3.2.0",
-    "@lit/task": "^1.0.1"
+    "@lit/task": "^1.0.1",
+    "@lit-labs/router": "^0.1.3"
   }
 }

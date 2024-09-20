@@ -31,7 +31,17 @@ export const LibraryLive = Layer.effect(
             Stream.mapEffect((albums) =>
               resolveAllAlbums(albums, artistsTable, tracksTable),
             ),
-            Stream.map(sortByArtistName),
+            Stream.map(sortAlbumsByArtistName),
+          );
+        }),
+      observeArtists: () =>
+        Effect.gen(function* () {
+          const artistsTable = yield* database.table("artists");
+          const allArtists = yield* artistsTable.observe();
+
+          return allArtists.pipe(
+            Stream.map(sortArtistsByName),
+            Stream.catchAll(() => Stream.empty),
           );
         }),
     });
@@ -91,5 +101,8 @@ const toAlbumSchema = (
   });
 };
 
-const sortByArtistName = (albums: Album[]): Album[] =>
+const sortAlbumsByArtistName = (albums: Album[]): Album[] =>
   albums.sort((a, b) => a.artist.name.localeCompare(b.artist.name));
+
+const sortArtistsByName = (artists: DatabaseArtist[]): DatabaseArtist[] =>
+  artists.sort((a, b) => a.name.localeCompare(b.name));
