@@ -2,6 +2,7 @@ import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.cont
 import { Player, type Album } from "@echo/core-types";
 import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@echo/components-icons";
 
 /**
  * An element that displays an album from the user's library.
@@ -29,6 +30,15 @@ export class LibraryAlbum extends LitElement {
       position: relative;
     }
 
+    provider-icon {
+      opacity: 0;
+      position: absolute;
+      top: 0.5rem;
+      left: 0.5rem;
+      z-index: 1;
+      transition: opacity 0.5s;
+    }
+
     button.play {
       opacity: 0;
       position: absolute;
@@ -43,9 +53,13 @@ export class LibraryAlbum extends LitElement {
       cursor: pointer;
       height: 4rem;
       width: 4rem;
-      box-shadow: 0 0 10px 5px #0000;
+      box-shadow: var(--large-shadow);
       transform: translate3d(1rem, 1rem, 1rem);
       transition: all 0.5s;
+    }
+
+    div.img-wrapper:hover provider-icon {
+      opacity: 1;
     }
 
     div.img-wrapper:hover button.play {
@@ -92,6 +106,10 @@ export class LibraryAlbum extends LitElement {
     return html`
       <div key="{album.id}" class="album-container">
         <div class="img-wrapper">
+          <provider-icon
+            providerId=${this.album.providerId}
+            title=${`This album is hosted on ${this.album.providerId}`}
+          ></provider-icon>
           ${this.album.embeddedCover &&
           html`
             <img
@@ -100,7 +118,9 @@ export class LibraryAlbum extends LitElement {
               class="album-cover"
             />
           `}
-          <button class="play" @click=${this._onPlayClick}>⏵</button>
+          <button class="play" @click=${this._onPlayClick} title="Play">
+            ⏵
+          </button>
         </div>
         <div class="album-info">
           <h5>${this.album.name}</h5>

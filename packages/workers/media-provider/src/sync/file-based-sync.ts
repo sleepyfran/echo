@@ -19,6 +19,7 @@ import {
   AlbumId,
   TrackId,
   FileBasedProviderId,
+  type ProviderId,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { head } from "effect/Array";
@@ -73,6 +74,7 @@ export const syncFileBasedProvider = ({
 
     const normalizedData = yield* normalizeData(
       { database, crypto },
+      metadata,
       processed,
     );
 
@@ -203,6 +205,7 @@ const resolveMetadataFromStream = (
  */
 const normalizeData = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  providerMetadata: ProviderMetadata,
   successes: { metadata: TrackMetadata; file: FileMetadata }[],
 ) =>
   Stream.fromIterable(successes).pipe(
@@ -227,6 +230,7 @@ const normalizeData = (
             metadata.album ?? "Unknown Album",
             metadata.embeddedCover,
             accumulator.albums,
+            providerMetadata.id,
           );
 
           const track = yield* tryRetrieveOrCreateTrack(
@@ -293,6 +297,7 @@ const tryRetrieveOrCreateAlbum = (
   albumName: string,
   embeddedCover: Blob | undefined,
   processedAlbums: Map<string, DatabaseAlbum>,
+  providerId: ProviderId,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const albumTable = yield* database.table("albums");
@@ -311,7 +316,13 @@ const tryRetrieveOrCreateAlbum = (
       );
 
     return Option.isNone(existingAlbum)
-      ? yield* createAlbum({ crypto }, albumName, artistId, embeddedCover)
+      ? yield* createAlbum(
+          { crypto },
+          albumName,
+          artistId,
+          embeddedCover,
+          providerId,
+        )
       : existingAlbum.value;
   });
 
@@ -359,6 +370,7 @@ const createAlbum = (
   name: string,
   artistId: DatabaseArtist["id"],
   embeddedCover: Blob | undefined,
+  providerId: ProviderId,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
@@ -368,6 +380,7 @@ const createAlbum = (
       name,
       artistId,
       embeddedCover,
+      providerId,
     };
   });
 

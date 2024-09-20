@@ -1,6 +1,7 @@
 import { Brand } from "effect";
 import type { Artist } from "./artist";
 import type { Track } from "./track";
+import type { ProviderId } from "./provider-metadata";
 
 /**
  * Wrapper around a string to represent an album id.
@@ -35,6 +36,11 @@ export type AlbumInfo = {
    * Cover art of the album as a blob.
    */
   embeddedCover: Blob | undefined;
+
+  /**
+   * Provider that hosts the album.
+   */
+  providerId: ProviderId;
 };
 
 /**
