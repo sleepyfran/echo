@@ -16,12 +16,23 @@ import { Router } from "@lit-labs/router";
  */
 @customElement("app-root")
 export class AppRoot extends LitElement {
-  private _router = new Router(this, [
+  private _router = new Router(
+    this,
+    [
+      {
+        path: "/",
+        render: () => html`<user-library></user-library>`,
+      },
+    ],
     {
-      path: "/",
-      render: () => html`<user-library></user-library>`,
+      fallback: {
+        enter: async () => {
+          await this._router.goto("/");
+          return false;
+        },
+      },
     },
-  ]);
+  );
   private _init = new EffectConsumer(this, AppInit.init);
   private _providerStatus = new StreamConsumer(
     this,
