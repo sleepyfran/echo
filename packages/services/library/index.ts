@@ -2,7 +2,12 @@ import {
   Database,
   Library,
   NonExistingArtistReferenced,
+  type Album,
   type AlbumInfo,
+  type DatabaseAlbum,
+  type DatabaseArtist,
+  type DatabaseTrack,
+  type Table,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Stream } from "effect";
 
@@ -24,48 +29,67 @@ export const LibraryLive = Layer.effect(
 
           return allAlbums.pipe(
             Stream.mapEffect((albums) =>
-              Effect.all(
-                albums.map((album) =>
-                  Effect.gen(function* () {
-                    const artist = yield* artistsTable.byId(album.artistId);
-                    const tracks = yield* tracksTable.filtered({
-                      filter: {
-                        albumId: album.id,
-                      },
-                    });
-
-                    if (Option.isNone(artist)) {
-                      return yield* Effect.fail(
-                        new NonExistingArtistReferenced(
-                          album.name,
-                          album.artistId,
-                        ),
-                      );
-                    }
-
-                    const albumInfo: AlbumInfo = {
-                      ...album,
-                      artist: artist.value,
-                    };
-
-                    return {
-                      ...albumInfo,
-                      artist: artist.value,
-                      tracks: tracks
-                        .sort((a, b) => a.trackNumber - b.trackNumber)
-                        .map((track) => ({
-                          ...track,
-                          albumInfo,
-                          mainArtist: artist.value,
-                          secondaryArtists: [],
-                        })),
-                    };
-                  }),
-                ),
-              ),
+              resolveAllAlbums(albums, artistsTable, tracksTable),
             ),
+            Stream.map(sortByArtistName),
           );
         }),
     });
   }),
 );
+
+const resolveAllAlbums = (
+  albums: DatabaseAlbum[],
+  artistsTable: Table<"artists", DatabaseArtist>,
+  tracksTable: Table<"tracks", DatabaseTrack>,
+): Effect.Effect<Album[], NonExistingArtistReferenced> =>
+  Effect.all(
+    albums.map((album) =>
+      Effect.gen(function* () {
+        const artist = yield* artistsTable.byId(album.artistId);
+        const tracks = yield* tracksTable.filtered({
+          filter: {
+            albumId: album.id,
+          },
+        });
+
+        return yield* toAlbumSchema(album, artist, tracks);
+      }),
+    ),
+    {
+      concurrency: 4,
+    },
+  );
+
+const toAlbumSchema = (
+  album: DatabaseAlbum,
+  artist: Option.Option<DatabaseArtist>,
+  tracks: DatabaseTrack[],
+): Effect.Effect<Album, NonExistingArtistReferenced> => {
+  if (Option.isNone(artist)) {
+    return Effect.fail(
+      new NonExistingArtistReferenced(album.name, album.artistId),
+    );
+  }
+
+  const albumInfo: AlbumInfo = {
+    ...album,
+    artist: artist.value,
+  };
+
+  return Effect.succeed({
+    ...albumInfo,
+    artist: artist.value,
+    tracks: tracks
+      .sort((a, b) => a.trackNumber - b.trackNumber)
+      .map((track) => ({
+        ...track,
+        albumInfo,
+        mainArtist: artist.value,
+        secondaryArtists: [],
+      })),
+  });
+};
+
+const sortByArtistName = (albums: Album[]): Album[] =>
+  albums.sort((a, b) => a.artist.name.localeCompare(b.artist.name));
