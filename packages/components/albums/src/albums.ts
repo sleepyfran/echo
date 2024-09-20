@@ -119,7 +119,7 @@ export class LibraryAlbum extends LitElement {
             />
           `}
           <button class="play" @click=${this._onPlayClick} title="Play">
-            ⏵
+            <play-icon size="24"></play-icon>
           </button>
         </div>
         <div class="album-info">

@@ -8,6 +8,8 @@ import {
 } from "@echo/core-types";
 import { Match } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
+import { ButtonType } from "@echo/components-ui-atoms";
+import "@echo/components-icons";
 
 /**
  * Component that displays the current status of the player.
@@ -107,21 +109,28 @@ export class EchoPlayer extends LitElement {
         </div>
         ${player.status._tag !== "Stopped"
           ? html`
-              <button
+              <echo-button
+                .type=${ButtonType.Icon}
                 @click=${this._onPreviousTrack}
                 ?disabled=${!player.previouslyPlayedTracks.length}
               >
-                ⏮
-              </button>
-              <button @click=${this._onTogglePlayback}>
-                ${player.status._tag === "Paused" ? "⏵" : "⏸"}
-              </button>
-              <button
+                <prev-icon></prev-icon>
+              </echo-button>
+              <echo-button
+                .type=${ButtonType.Icon}
+                @click=${this._onTogglePlayback}
+              >
+                ${player.status._tag === "Paused"
+                  ? html` <play-icon></play-icon> `
+                  : html` <pause-icon></pause-icon> `}
+              </echo-button>
+              <echo-button
+                .type=${ButtonType.Icon}
                 @click=${this._onSkipTrack}
                 ?disabled=${!player.comingUpTracks.length}
               >
-                ⏭
-              </button>
+                <next-icon></next-icon>
+              </echo-button>
             `
           : nothing}
       </div>
