@@ -11,7 +11,9 @@ export type DatabaseAlbum = Omit<Album, "artist" | "tracks"> & {
 /**
  * Represents an artist in the database, which is synced with the model.
  */
-export type DatabaseArtist = Artist;
+export type DatabaseArtist = Omit<Artist, "image"> & {
+  image: Blob | null;
+};
 
 /**
  * Represents a track in the database, which is synced with the model but

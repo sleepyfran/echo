@@ -4,6 +4,7 @@ import {
   NonExistingArtistReferenced,
   type Album,
   type AlbumInfo,
+  type Artist,
   type DatabaseAlbum,
   type DatabaseArtist,
   type DatabaseTrack,
@@ -40,7 +41,9 @@ export const LibraryLive = Layer.effect(
           const allArtists = yield* artistsTable.observe();
 
           return allArtists.pipe(
-            Stream.map(sortArtistsByName),
+            Stream.map((artists) =>
+              sortArtistsByName(artists.map(toArtistSchema)),
+            ),
             Stream.catchAll(() => Stream.empty),
           );
         }),
@@ -84,25 +87,30 @@ const toAlbumSchema = (
 
   const albumInfo: AlbumInfo = {
     ...album,
-    artist: artist.value,
+    artist: toArtistSchema(artist.value),
   };
 
   return Effect.succeed({
     ...albumInfo,
-    artist: artist.value,
+    artist: toArtistSchema(artist.value),
     tracks: tracks
       .sort((a, b) => a.trackNumber - b.trackNumber)
       .map((track) => ({
         ...track,
         albumInfo,
-        mainArtist: artist.value,
+        mainArtist: toArtistSchema(artist.value),
         secondaryArtists: [],
       })),
   });
 };
 
+const toArtistSchema = (artist: DatabaseArtist): Artist => ({
+  ...artist,
+  image: Option.fromNullable(artist.image),
+});
+
 const sortAlbumsByArtistName = (albums: Album[]): Album[] =>
   albums.sort((a, b) => a.artist.name.localeCompare(b.artist.name));
 
-const sortArtistsByName = (artists: DatabaseArtist[]): DatabaseArtist[] =>
+const sortArtistsByName = (artists: Artist[]): Artist[] =>
   artists.sort((a, b) => a.name.localeCompare(b.name));

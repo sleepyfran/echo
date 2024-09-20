@@ -20,6 +20,7 @@ import {
   TrackId,
   FileBasedProviderId,
   type ProviderId,
+  ArtistImageProvider,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { head } from "effect/Array";
@@ -36,6 +37,7 @@ type SyncFileBasedProviderInput = {
   metadataProvider: MetadataProvider;
   database: Database;
   crypto: Crypto;
+  artistImageProvider: ArtistImageProvider;
   rootFolder: FolderMetadata;
 };
 
@@ -53,6 +55,7 @@ export const syncFileBasedProvider = ({
   rootFolder,
   database,
   crypto,
+  artistImageProvider,
 }: SyncFileBasedProviderInput) =>
   Effect.gen(function* () {
     yield* Effect.log(`Starting sync for provider ${metadata.id}`);
@@ -73,7 +76,7 @@ export const syncFileBasedProvider = ({
     );
 
     const normalizedData = yield* normalizeData(
-      { database, crypto },
+      { database, crypto, artistImageProvider },
       metadata,
       processed,
     );
@@ -204,7 +207,14 @@ const resolveMetadataFromStream = (
  * @returns An object with all the unique artists and tracks that were retrieved.
  */
 const normalizeData = (
-  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  {
+    database,
+    crypto,
+    artistImageProvider,
+  }: Pick<
+    SyncFileBasedProviderInput,
+    "database" | "crypto" | "artistImageProvider"
+  >,
   providerMetadata: ProviderMetadata,
   successes: { metadata: TrackMetadata; file: FileMetadata }[],
 ) =>
@@ -219,7 +229,7 @@ const normalizeData = (
         Effect.gen(function* () {
           const mainArtistName = metadata.artists?.[0] ?? "Unknown Artist";
           const artist = yield* tryRetrieveOrCreateArtist(
-            { database, crypto },
+            { database, crypto, artistImageProvider },
             mainArtistName,
             accumulator.artists,
           );
@@ -265,7 +275,14 @@ const saveToDatabase = (
   });
 
 const tryRetrieveOrCreateArtist = (
-  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
+  {
+    database,
+    crypto,
+    artistImageProvider,
+  }: Pick<
+    SyncFileBasedProviderInput,
+    "database" | "crypto" | "artistImageProvider"
+  >,
   artistName: string,
   processedArtists: Map<string, DatabaseArtist>,
 ): Effect.Effect<DatabaseArtist> =>
@@ -287,7 +304,7 @@ const tryRetrieveOrCreateArtist = (
       );
 
     return Option.isNone(existingArtist)
-      ? yield* createArtist({ crypto }, artistName)
+      ? yield* createArtist({ crypto, artistImageProvider }, artistName)
       : existingArtist.value;
   });
 
@@ -352,16 +369,20 @@ const tryRetrieveOrCreateTrack = (
   });
 
 const createArtist = (
-  { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
+  {
+    crypto,
+    artistImageProvider,
+  }: Pick<SyncFileBasedProviderInput, "crypto" | "artistImageProvider">,
   name: string,
 ): Effect.Effect<DatabaseArtist> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
+    const artistImage = yield* artistImageProvider.imageForArtist(name);
 
     return {
       id: ArtistId(id),
       name,
-      imageUrl: Option.some("https://example.com/image.jpg"),
+      image: Option.getOrNull(artistImage),
     };
   });
 

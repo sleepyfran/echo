@@ -16,6 +16,7 @@ export class LibraryAlbum extends LitElement {
       display: flex;
       flex-direction: column;
       padding: 0.5rem;
+      aspect-ratio: 3 / 4;
     }
 
     div.artist-container:hover {
@@ -24,11 +25,10 @@ export class LibraryAlbum extends LitElement {
     }
 
     img.artist-image {
-      border-radius: 100%;
-      width: 100%;
+      border-radius: 10%;
       height: 100%;
+      width: 100%;
       object-fit: cover;
-      position: relative;
     }
 
     div.artist-info {
@@ -56,11 +56,11 @@ export class LibraryAlbum extends LitElement {
   render() {
     return html`
       <div key=${String(this.artist.id)} class="artist-container">
-        ${Option.isSome(this.artist.imageUrl)
+        ${Option.isSome(this.artist.image)
           ? html`
               <img
-                src=${this.artist.imageUrl.value}
-                alt="Album cover"
+                src="${URL.createObjectURL(this.artist.image.value)}"
+                alt=${`Image of ${this.artist.name}`}
                 class="artist-image"
               />
             `

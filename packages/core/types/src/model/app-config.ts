@@ -29,6 +29,21 @@ export const AppConfigSchema = Schema.Struct({
      */
     scopes: Schema.NonEmptyArray(Schema.String),
   }),
+
+  /**
+   * Settings related to the Spotify API.
+   */
+  spotify: Schema.Struct({
+    /**
+     * The client ID of the application registered in Spotify.
+     */
+    clientId: Schema.String.pipe(Schema.nonEmptyString()),
+
+    /**
+     * The client secret of the application registered in Spotify.
+     */
+    secret: Schema.String.pipe(Schema.nonEmptyString()),
+  }),
 });
 
 /**

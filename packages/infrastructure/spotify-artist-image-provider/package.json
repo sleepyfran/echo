@@ -1,0 +1,15 @@
+{
+  "name": "@echo/infrastructure-spotify-artist-image-provider",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Implementation of the ArtistImageProvider interface using the Spotify API",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "effect": "^3.6.5"
+  }
+}

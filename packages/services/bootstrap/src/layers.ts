@@ -12,6 +12,7 @@ import { LazyLoadedMediaPlayerLive } from "./loaders/player";
 import { ActiveMediaProviderCacheLive } from "@echo/services-active-media-provider-cache";
 import { MediaProviderStatusLive } from "@echo/services-media-provider-status";
 import { BrowserLocalStorageLive } from "@echo/infrastructure-browser-local-storage";
+import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-image-provider";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
@@ -40,6 +41,7 @@ export const WorkerLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(MmbMetadataProviderLive),
+  Layer.provideMerge(SpotifyArtistImageProvider),
   Layer.provideMerge(AppConfigLive),
   Layer.provide(Logger.pretty),
 );

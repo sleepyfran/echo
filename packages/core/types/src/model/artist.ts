@@ -25,9 +25,7 @@ export type Artist = {
   name: string;
 
   /**
-   * URL to an image of the artist. This is typically the artist's profile
-   * picture on a third-party service. If none is available, this field is
-   * omitted.
+   * Blob containing the artist's image.
    */
-  imageUrl: Option.Option<string>;
+  image: Option.Option<Blob>;
 };
