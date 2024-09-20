@@ -41,11 +41,9 @@ export class EchoPlayer extends LitElement {
       justify-content: center;
     }
 
-    .track-info h5 {
-      margin: 0;
-    }
-
-    h5 {
+    h4,
+    h5,
+    h6 {
       margin: 0;
     }
 
@@ -103,7 +101,10 @@ export class EchoPlayer extends LitElement {
               alt="Album cover"
             />`
           : nothing}
-        <h5>${trackName} - ${artistName}</h5>
+        <div class="track-info">
+          <h4>${trackName}</h4>
+          <h6>${artistName}</h6>
+        </div>
         ${player.status._tag !== "Stopped"
           ? html`
               <button
