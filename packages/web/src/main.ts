@@ -9,12 +9,19 @@ import "@echo/components-header";
 import "@echo/components-initial-setup";
 import "@echo/components-library";
 import { cache } from "lit/directives/cache.js";
+import { Router } from "@lit-labs/router";
 
 /**
  * Root element of the application.
  */
 @customElement("app-root")
 export class AppRoot extends LitElement {
+  private _router = new Router(this, [
+    {
+      path: "/",
+      render: () => html`<user-library></user-library>`,
+    },
+  ]);
   private _init = new EffectConsumer(this, AppInit.init);
   private _providerStatus = new StreamConsumer(
     this,
@@ -45,7 +52,7 @@ export class AppRoot extends LitElement {
   private _renderMainPage() {
     return html`
       <app-header></app-header>
-      <user-library></user-library>
+      ${this._router.outlet()}
     `;
   }
 }

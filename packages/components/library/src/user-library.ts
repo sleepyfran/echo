@@ -14,6 +14,13 @@ export class UserLibrary extends LitElement {
   private _library = new StreamConsumer(this, Library.observeAlbums);
 
   static styles = css`
+    div.loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
+
     div {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -24,7 +31,8 @@ export class UserLibrary extends LitElement {
 
   render() {
     return this._library.render({
-      initial: () => html`<h1>Loading...</h1>`,
+      initial: () =>
+        html`<div class="loading-container"><h1>Loading...</h1></div>`,
       item: (albums) => html`
         <div>
           ${map(
@@ -39,6 +47,6 @@ export class UserLibrary extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    userLibrary: UserLibrary;
+    "user-library": UserLibrary;
   }
 }
