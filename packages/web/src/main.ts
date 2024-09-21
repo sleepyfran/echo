@@ -5,38 +5,17 @@ import {
   EffectConsumer,
   StreamConsumer,
 } from "@echo/components-shared-controllers";
+import { cache } from "lit/directives/cache.js";
 import "@echo/components-header";
 import "@echo/components-initial-setup";
 import "@echo/components-library";
-import { cache } from "lit/directives/cache.js";
-import { Router } from "@lit-labs/router";
+import "@echo/components-router";
 
 /**
  * Root element of the application.
  */
 @customElement("app-root")
 export class AppRoot extends LitElement {
-  private _router = new Router(
-    this,
-    [
-      {
-        path: "/",
-        render: () => html`<album-library></album-library>`,
-      },
-      {
-        path: "/artists",
-        render: () => html`<artist-library></artist-library>`,
-      },
-    ],
-    {
-      fallback: {
-        enter: async () => {
-          await this._router.goto("/");
-          return false;
-        },
-      },
-    },
-  );
   private _init = new EffectConsumer(this, AppInit.init);
   private _providerStatus = new StreamConsumer(
     this,
@@ -67,7 +46,8 @@ export class AppRoot extends LitElement {
   private _renderMainPage() {
     return html`
       <app-header></app-header>
-      ${this._router.outlet()}
+      <library-selection></library-selection>
+      <echo-router></echo-router>
     `;
   }
 }
