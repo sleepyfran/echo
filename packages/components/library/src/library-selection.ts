@@ -1,6 +1,10 @@
 import { LitElement, css, html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { navigate, Path } from "@echo/components-router/index.routing";
+import {
+  navigate,
+  Path,
+  RouteAwareController,
+} from "@echo/components-router/index.routing";
 import "@echo/components-artists";
 
 /**
@@ -9,6 +13,8 @@ import "@echo/components-artists";
  */
 @customElement("library-selection")
 export class LibrarySelection extends LitElement {
+  private _routeController = new RouteAwareController(this);
+
   static styles = css`
     div {
       display: flex;
@@ -32,15 +38,27 @@ export class LibrarySelection extends LitElement {
 
     button.pill[active] {
       background-color: var(--accent-color);
-      filter: brightness(80%);
+      color: var(--button-text-color);
     }
   `;
 
   render() {
     return html`
       <div>
-        <button class="pill" @click=${this._navigateToAlbums}>Albums</button>
-        <button class="pill" @click=${this._navigateToArtists}>Artists</button>
+        <button
+          ?active=${this._routeController.matchesPath(Path.Albums)}
+          class="pill"
+          @click=${this._navigateToAlbums}
+        >
+          Albums
+        </button>
+        <button
+          ?active=${this._routeController.matchesPath(Path.Artists)}
+          class="pill"
+          @click=${this._navigateToArtists}
+        >
+          Artists
+        </button>
       </div>
     `;
   }

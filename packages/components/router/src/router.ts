@@ -24,7 +24,7 @@ export class EchoRouter extends LitElement {
   }
 
   render() {
-    return html` <div id="outlet"></div> `;
+    return html`<div id="outlet"></div> `;
   }
 }
 
