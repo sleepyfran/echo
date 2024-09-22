@@ -8,10 +8,10 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 import { Match } from "effect";
+import { ButtonType, type EchoDialog } from "@echo/components-ui-atoms";
 import "@echo/components-icons";
 import "@echo/components-add-provider";
 import "@echo/components-ui-atoms";
-import type { EchoDialog } from "@echo/components-ui-atoms";
 
 /**
  * Component that displays the status of all active providers.
@@ -78,7 +78,12 @@ export class AllProvidersStatusBar extends LitElement {
               </div>
             `,
           )}
-          <button @click=${this._onAddProviderClick}>+</button>
+          <echo-button
+            .type=${ButtonType.Icon}
+            @click=${this._onAddProviderClick}
+          >
+            <plus-icon title="Add provider"></plus-icon>
+          </echo-button>
         </div>
         ${this._renderAddProviderModal()}
       `,

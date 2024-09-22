@@ -22,6 +22,10 @@ export class EchoButton extends LitElement {
 
   static styles = css`
     button {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
       background-color: var(--button-background-color);
       color: var(--button-text-color);
       font-family: var(--font-family);
