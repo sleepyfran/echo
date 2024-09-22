@@ -20,7 +20,7 @@ export const MediaProviderStatusLive = Layer.effect(
     });
 
     return MediaProviderStatus.of({
-      observe: stateByProviderRef,
+      observe: Effect.sync(() => stateByProviderRef),
     });
   }),
 );

@@ -15,7 +15,9 @@ export type IMediaProviderStatus = {
    * Returns a subscription ref that holds the current status of a specific
    * provider, while also allowing to observe changes to it.
    */
-  readonly observe: SubscriptionRef.SubscriptionRef<StateByProvider>;
+  readonly observe: Effect.Effect<
+    SubscriptionRef.SubscriptionRef<StateByProvider>
+  >;
 };
 
 /**

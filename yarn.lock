@@ -1050,10 +1050,10 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
-effect@^3.6.5:
-  version "3.6.5"
-  resolved "https://registry.yarnpkg.com/effect/-/effect-3.6.5.tgz#be177847e69273ea9ed95bebe03bd672c5af474b"
-  integrity sha512-NhopZTAKljaAlR0CEroOAJJngdqg7bzlnWcDrCwh4d2WNVohVbBtUS4SGqLt8tUy7IFsTWATYiUtmhDG+YELjA==
+effect@^3.8.3:
+  version "3.8.3"
+  resolved "https://registry.yarnpkg.com/effect/-/effect-3.8.3.tgz#37a78c4c91d2eebdc315bf2d55a07aea443cd869"
+  integrity sha512-ZHTNRik0mJWK+g12/HHwsouOux0OE2v+qRD7zsEJLtZ1RJdrlxvCpSXdJ+KgOqJ4wigIToDSb5e5HG885uKs/w==
 
 emoji-regex@^10.3.0:
   version "10.3.0"

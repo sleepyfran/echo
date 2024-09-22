@@ -45,7 +45,7 @@ export type IPlayer = {
    * Returns a stream that emits the current player state and any subsequent
    * changes to it.
    */
-  readonly observe: SubscriptionRef.SubscriptionRef<PlayerState>;
+  readonly observe: Effect.Effect<SubscriptionRef.SubscriptionRef<PlayerState>>;
 };
 
 /**

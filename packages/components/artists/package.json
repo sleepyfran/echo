@@ -10,7 +10,7 @@
     "@echo/components-shared-controllers": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap-runtime": "^1.0.0",
-    "effect": "^3.6.5",
+    "effect": "^3.8.3",
     "lit": "^3.2.0",
     "@lit/task": "^1.0.1",
     "@lit-labs/router": "^0.1.3"

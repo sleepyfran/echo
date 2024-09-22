@@ -126,7 +126,7 @@ const makePlayer = Effect.gen(function* () {
       );
     }),
     skip: commandQueue.offer(NextTrack()),
-    observe: state,
+    observe: Effect.sync(() => state),
   });
 });
 

@@ -11,6 +11,6 @@
   "dependencies": {
     "@echo/core-types": "^1.0.0",
     "@echo/workers-media-provider": "^1.0.0",
-    "effect": "^3.6.5"
+    "effect": "^3.8.3"
   }
 }

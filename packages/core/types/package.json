@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@effect/schema": "^0.71.1",
-    "effect": "^3.6.5"
+    "effect": "^3.8.3"
   }
 }
