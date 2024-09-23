@@ -1,0 +1,15 @@
+import { Data, Effect } from "effect";
+import { InitMessage } from "./src/init";
+import {{properCase name}}Worker from "./src/{{dashCase name}}.worker?worker";
+
+export class WorkerInitializationError extends Data.TaggedError(
+  "@echo/workers-{{dashCase name}}/WorkerInitializationError",
+)<{}> {}
+
+/**
+ * Creates the {{properCase name}} worker and initializes it.
+ */
+export const initialize{{properCase name}}Worker = Effect.sync(() => {
+  const worker = new {{properCase name}}Worker();
+  worker.postMessage(InitMessage.make({}));
+});

@@ -35,8 +35,9 @@ export const MainLive = ActiveMediaProviderCacheLive.pipe(
  * Exports a layer that can provide all dependencies that are needed in a
  * web worker.
  */
-export const WorkerLive = MediaProviderMainThreadBroadcastChannelLive.pipe(
+export const WorkerLive = MediaProviderStatusLive.pipe(
   Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
+  Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(DexieDatabaseLive),

@@ -14,12 +14,18 @@ module.exports = {
   actions: [
     {
       type: "add",
-      path: "packages/workers/{{dashCase name}}/index.ts",
-      templateFile: `${__dirname}/template/index.ts.hbs`,
+      path: "packages/workers/{{dashCase name}}/src/{{dashCase name}}.worker.ts",
+      templateFile: `${__dirname}/template/worker.ts.hbs`,
     },
     {
       type: "add",
-      path: "packages/workers/{{dashCase name}}/src/.gitkeep",
+      path: "packages/workers/{{dashCase name}}/src/init.ts",
+      templateFile: `${__dirname}/template/init.ts.hbs`,
+    },
+    {
+      type: "add",
+      path: "packages/workers/{{dashCase name}}/index.ts",
+      templateFile: `${__dirname}/template/index.ts.hbs`,
     },
     {
       type: "add",

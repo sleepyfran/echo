@@ -56,6 +56,13 @@ const createTable = <
         table.bulkAdd(records, { allKeys: true }),
       ).pipe(Effect.map((keys) => keys.length));
     }),
+  putOne: (record) =>
+    Effect.gen(function* () {
+      const table = db[tableName] as DexieTable<TSchema>;
+      return yield* Effect.promise(() =>
+        table.put(record, { allKeys: true }),
+      ).pipe(Effect.map((keys) => keys.length));
+    }),
   putMany: (records) =>
     Effect.gen(function* () {
       const table = db[tableName] as DexieTable<TSchema>;
@@ -76,6 +83,16 @@ const createTable = <
         Effect.map(Option.fromNullable),
       );
     }),
+  all: Effect.gen(function* () {
+    const table = db[tableName];
+
+    return yield* Effect.tryPromise<TSchema[]>(
+      () => table.toArray() as unknown as PromiseLike<TSchema[]>,
+    ).pipe(
+      Effect.catchAllCause(catchToDefaultAndLog),
+      Effect.map((res) => res ?? []),
+    );
+  }),
   filtered: ({ filter, limit = 100 }) =>
     Effect.gen(function* () {
       const table = db[tableName];

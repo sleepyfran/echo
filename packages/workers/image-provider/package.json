@@ -1,8 +1,8 @@
 {
-  "name": "@echo/workers-{{dashCase name}}",
+  "name": "@echo/workers-image-provider",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the {{properCase name}} related workers",
+  "description": "Contains the ImageProvider related workers",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

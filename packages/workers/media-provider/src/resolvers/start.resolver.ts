@@ -6,7 +6,6 @@ import {
   type MediaProviderBroadcastSchema,
   Database,
   Crypto,
-  ArtistImageProvider,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
 import { Effect, Match, Ref } from "effect";
@@ -62,7 +61,6 @@ export const startMediaProviderResolver = ({
     const metadataProvider = yield* MetadataProvider;
     const database = yield* Database;
     const crypto = yield* Crypto;
-    const artistImageProvider = yield* ArtistImageProvider;
 
     const runtimeFiber = yield* Match.type<Input>().pipe(
       Match.tag("file-based", (input) =>
@@ -75,7 +73,6 @@ export const startMediaProviderResolver = ({
             rootFolder: input.rootFolder,
             database,
             crypto,
-            artistImageProvider,
           }),
         ),
       ),

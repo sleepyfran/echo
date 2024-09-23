@@ -1,0 +1,16 @@
+import { Effect } from "effect";
+import * as S from "@effect/schema/Schema";
+
+export const InitMessage = S.TaggedStruct("init", {});
+type InitMessage = S.Schema.Type<typeof InitMessage>;
+
+export const initMessageDecoder = S.decode(InitMessage);
+export const initMessageEncoder = S.encode(InitMessage);
+
+/**
+ * Initializes the {{properCase name}} worker.
+ */
+export const init = () =>
+  Effect.gen(function* () {
+    yield* Effect.log("Initializing {{properCase name}} worker...");
+  });
