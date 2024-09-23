@@ -10,9 +10,6 @@ type InitMessage = S.Schema.Type<typeof InitMessage>;
 export const InitFinishedMessage = S.TaggedStruct("initFinished", {});
 type InitFinishedMessage = S.Schema.Type<typeof InitFinishedMessage>;
 
-export const initMessageDecoder = S.decode(InitMessage);
-export const initMessageEncoder = S.encode(InitMessage);
-
 /**
  * Initializes the media provider worker, which sets up itself to resolve
  * media provider messages from the main thread.
