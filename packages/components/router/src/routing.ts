@@ -1,4 +1,4 @@
-import { Router } from "@vaadin/router";
+import { Router, type RouterLocation } from "@vaadin/router";
 import type { ReactiveController, ReactiveControllerHost } from "lit";
 
 /**
@@ -54,4 +54,4 @@ export class RouteAwareController implements ReactiveController {
   }
 }
 
-export { Router };
+export { Router, type RouterLocation };

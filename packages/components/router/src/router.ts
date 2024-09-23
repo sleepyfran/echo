@@ -18,6 +18,7 @@ export class EchoRouter extends LitElement {
         children: [
           { path: "", component: "album-library" },
           { path: "/artists", component: "artist-library" },
+          { path: "/artists/:id", component: "artist-detail-page" },
         ],
       },
     ]);

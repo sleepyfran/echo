@@ -1,4 +1,4 @@
-import { Effect, Stream } from "effect";
+import { Effect, Option, Stream } from "effect";
 import type { Album, Artist, ArtistId } from "../model";
 
 /**
@@ -11,6 +11,14 @@ export class NonExistingArtistReferenced extends Error {
     );
   }
 }
+
+/**
+ * Detail of an artist, including their albums.
+ */
+export type ArtistDetail = {
+  readonly artist: Artist;
+  readonly albums: Album[];
+};
 
 /**
  * Service that provides access to the user's library.
@@ -27,6 +35,13 @@ export type ILibrary = {
    * Returns a stream of artists that are currently stored in the database.
    */
   readonly observeArtists: () => Effect.Effect<Stream.Stream<Artist[]>>;
+
+  /**
+   * Returns an artist by their ID, if it exists.
+   */
+  readonly artistDetail: (
+    artistId: ArtistId,
+  ) => Effect.Effect<Option.Option<ArtistDetail>, NonExistingArtistReferenced>;
 };
 
 /**

@@ -35,6 +35,32 @@ export const LibraryLive = Layer.effect(
             Stream.map(sortAlbumsByArtistName),
           );
         }),
+      artistDetail: (artistId) =>
+        Effect.gen(function* () {
+          const artistsTable = yield* database.table("artists");
+          const albumsTable = yield* database.table("albums");
+          const tracksTable = yield* database.table("tracks");
+
+          const artist = yield* artistsTable.byId(artistId);
+          const albums = yield* albumsTable
+            .filtered({
+              filter: {
+                artistId,
+              },
+            })
+            .pipe(
+              Effect.flatMap((albums) =>
+                resolveAllAlbums(albums, artistsTable, tracksTable),
+              ),
+            );
+
+          return artist.pipe(
+            Option.map((artist) => ({
+              artist: toArtistSchema(artist),
+              albums,
+            })),
+          );
+        }),
       observeArtists: () =>
         Effect.gen(function* () {
           const artistsTable = yield* database.table("artists");

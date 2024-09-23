@@ -37,6 +37,11 @@ export class LibraryArtist extends LitElement {
       box-sizing: border-box;
     }
 
+    a {
+      text-decoration: none;
+      color: var(--text-color);
+    }
+
     h5 {
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -66,7 +71,7 @@ export class LibraryArtist extends LitElement {
             `
           : nothing}
         <div class="artist-info">
-          <h5>${this.artist.name}</h5>
+          <a href="/artists/${this.artist.id}"><h5>${this.artist.name}</h5></a>
         </div>
       </div>
     `;
