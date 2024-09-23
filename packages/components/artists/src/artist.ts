@@ -7,7 +7,7 @@ import { customElement, property } from "lit/decorators.js";
  * An element that displays an artist from the user's library.
  */
 @customElement("library-artist")
-export class LibraryAlbum extends LitElement {
+export class LibraryArtist extends LitElement {
   @property({ type: Object })
   artist!: Artist;
 
@@ -75,6 +75,6 @@ export class LibraryAlbum extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "library-artist": LibraryAlbum;
+    "library-artist": LibraryArtist;
   }
 }

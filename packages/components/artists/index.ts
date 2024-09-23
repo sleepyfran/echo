@@ -1,1 +1,1 @@
-export * from "./src/artists";
+export * from "./src/artist";
