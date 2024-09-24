@@ -26,6 +26,12 @@ export class EchoPlayer extends LitElement {
   private _skipTrack = new EffectFn(this, () => PlayerService.skip);
 
   static styles = css`
+    .player {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .current-track {
       display: flex;
       align-items: center;
@@ -42,12 +48,16 @@ export class EchoPlayer extends LitElement {
       display: flex;
       flex-direction: column;
       justify-content: center;
+      max-width: 50%;
     }
 
     h4,
     h5,
     h6 {
       margin: 0;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     h5.logo {
@@ -59,7 +69,7 @@ export class EchoPlayer extends LitElement {
     return this._player.render({
       initial: () => nothing,
       item: (player) => html`
-        <div>
+        <div class="player">
           ${Match.value(player.status).pipe(
             Match.tag("Playing", (st) => this._renderActivePlayer(player, st)),
             Match.tag("Paused", (st) => this._renderActivePlayer(player, st)),

@@ -13,7 +13,7 @@ export class CommandBar extends LitElement {
       border: 1px solid var(--border-color);
       background-color: var(--background-color-muted);
       font-size: 1rem;
-      width: 80%;
+      width: 95%;
     }
 
     input::placeholder {
