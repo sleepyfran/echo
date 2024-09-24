@@ -5,6 +5,7 @@ import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { type RouterLocation } from "@echo/components-router/index.routing";
 import { map } from "lit/directives/map.js";
+import "@echo/components-ui-atoms";
 import "./playable-album-cover";
 
 /**
@@ -16,16 +17,6 @@ export class AlbumDetail extends LitElement {
   album!: Album;
 
   static styles = css`
-    div.album-container {
-      display: flex;
-      height: 100vh;
-    }
-
-    div.track-list-container {
-      margin: 0 1rem;
-      width: 100%;
-    }
-
     ol.track-list {
       display: flex;
       flex-direction: column;
@@ -41,9 +32,7 @@ export class AlbumDetail extends LitElement {
     div.album-info {
       display: flex;
       flex-direction: column;
-      padding: 1rem 5rem;
       box-sizing: border-box;
-      max-width: 30rem;
     }
 
     div.album-info:after {
@@ -78,8 +67,8 @@ export class AlbumDetail extends LitElement {
 
   render() {
     return html`
-      <div key=${String(this.album.id)} class="album-container">
-        <div class="album-info">
+      <two-column-layout>
+        <div class="album-info" slot="left-column">
           <playable-album-cover
             .album=${this.album}
             detailsAlwaysVisible
@@ -95,13 +84,13 @@ export class AlbumDetail extends LitElement {
           </h5>
         </div>
 
-        <div class="track-list-container">
+        <div class="track-list-container" slot="right-column">
           <h2>Tracks</h2>
           <ol class="track-list">
             ${map(this.album.tracks, (track) => html`<li>${track.name}</li>`)}
           </ol>
         </div>
-      </div>
+      </two-column-layout>
     `;
   }
 }

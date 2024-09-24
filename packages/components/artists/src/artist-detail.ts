@@ -8,8 +8,9 @@ import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { type RouterLocation } from "@echo/components-router/index.routing";
-import "@echo/components-albums";
 import { map } from "lit/directives/map.js";
+import "@echo/components-albums";
+import "@echo/components-ui-atoms";
 
 /**
  * Component that displays the details of an artist.
@@ -20,16 +21,6 @@ export class ArtistDetail extends LitElement {
   details!: IArtistDetail;
 
   static styles = css`
-    div.artist-container {
-      display: flex;
-      height: 100vh;
-    }
-
-    div.album-grid-container {
-      margin: 0 1rem;
-      width: 100%;
-    }
-
     div.album-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
@@ -45,9 +36,8 @@ export class ArtistDetail extends LitElement {
     div.artist-info {
       display: flex;
       flex-direction: column;
-      padding: 1rem 5rem;
       box-sizing: border-box;
-      max-width: 30rem;
+      width: 100%;
     }
 
     div.artist-info:after {
@@ -76,8 +66,8 @@ export class ArtistDetail extends LitElement {
 
   render() {
     return html`
-      <div key=${String(this.details.artist.id)} class="artist-container">
-        <div class="artist-info">
+      <two-column-layout>
+        <div class="artist-info" slot="left-column">
           ${Option.isSome(this.details.artist.image)
             ? html`
                 <img
@@ -90,7 +80,7 @@ export class ArtistDetail extends LitElement {
           <h1>${this.details.artist.name}</h1>
         </div>
 
-        <div class="album-grid-container">
+        <div class="album-grid-container" slot="right-column">
           <h2>Albums</h2>
           <div class="album-grid">
             ${map(
@@ -99,7 +89,7 @@ export class ArtistDetail extends LitElement {
             )}
           </div>
         </div>
-      </div>
+      </two-column-layout>
     `;
   }
 }
