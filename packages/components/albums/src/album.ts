@@ -3,6 +3,7 @@ import { Player, type Album } from "@echo/core-types";
 import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import "@echo/components-icons";
+import "@echo/components-ui-atoms";
 
 /**
  * An element that displays an album from the user's library.
@@ -18,12 +19,6 @@ export class LibraryAlbum extends LitElement {
     div.album-container {
       display: flex;
       flex-direction: column;
-      padding: 0.5rem;
-    }
-
-    div.album-container:hover {
-      background-color: var(--background-color-muted);
-      transition: background-color 1s;
     }
 
     div.img-wrapper {
@@ -104,29 +99,31 @@ export class LibraryAlbum extends LitElement {
 
   render() {
     return html`
-      <div key="{album.id}" class="album-container">
-        <div class="img-wrapper">
-          <provider-icon
-            providerId=${this.album.providerId}
-            title=${`This album is hosted on ${this.album.providerId}`}
-          ></provider-icon>
-          ${this.album.embeddedCover &&
-          html`
-            <img
-              src="${URL.createObjectURL(this.album.embeddedCover)}"
-              alt="Album cover"
-              class="album-cover"
-            />
-          `}
-          <button class="play" @click=${this._onPlayClick} title="Play">
-            <play-icon size="24"></play-icon>
-          </button>
+      <echo-hoverable>
+        <div key="{album.id}" class="album-container">
+          <div class="img-wrapper">
+            <provider-icon
+              providerId=${this.album.providerId}
+              title=${`This album is hosted on ${this.album.providerId}`}
+            ></provider-icon>
+            ${this.album.embeddedCover &&
+            html`
+              <img
+                src="${URL.createObjectURL(this.album.embeddedCover)}"
+                alt="Album cover"
+                class="album-cover"
+              />
+            `}
+            <button class="play" @click=${this._onPlayClick} title="Play">
+              <play-icon size="24"></play-icon>
+            </button>
+          </div>
+          <div class="album-info">
+            <h5>${this.album.name}</h5>
+            <p>${this.album.artist.name}</p>
+          </div>
         </div>
-        <div class="album-info">
-          <h5>${this.album.name}</h5>
-          <p>${this.album.artist.name}</p>
-        </div>
-      </div>
+      </echo-hoverable>
     `;
   }
 

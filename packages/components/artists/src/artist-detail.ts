@@ -8,6 +8,8 @@ import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { type RouterLocation } from "@echo/components-router/index.routing";
+import "@echo/components-albums";
+import { map } from "lit/directives/map.js";
 
 /**
  * Component that displays the details of an artist.
@@ -24,20 +26,14 @@ export class ArtistDetail extends LitElement {
     }
 
     div.album-grid-container {
-      margin-left: 1rem;
+      margin: 0 1rem;
       width: 100%;
     }
 
     div.album-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
       gap: 10px;
-    }
-
-    div.album-grid img {
-      border-radius: 10%;
-      height: 10rem;
-      object-fit: cover;
     }
 
     img.artist-image {
@@ -97,18 +93,9 @@ export class ArtistDetail extends LitElement {
         <div class="album-grid-container">
           <h2>Albums</h2>
           <div class="album-grid">
-            ${this.details.albums.map(
-              (album) => html`
-                <div class="album-info" key=${String(album.id)}>
-                  ${album.embeddedCover
-                    ? html`<img
-                        src=${URL.createObjectURL(album.embeddedCover)}
-                        alt=${album.name}
-                      />`
-                    : nothing}
-                  <h5>${album.name}</h5>
-                </div>
-              `,
+            ${map(
+              this.details.albums,
+              (album) => html`<library-album .album=${album}></library-album>`,
             )}
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { Artist } from "@echo/core-types";
 import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@echo/components-ui-atoms";
 
 /**
  * An element that displays an artist from the user's library.
@@ -15,13 +16,7 @@ export class LibraryArtist extends LitElement {
     div.artist-container {
       display: flex;
       flex-direction: column;
-      padding: 0.5rem;
       aspect-ratio: 3 / 4;
-    }
-
-    div.artist-container:hover {
-      background-color: var(--background-color-muted);
-      transition: background-color 1s;
     }
 
     img.artist-image {
@@ -60,20 +55,24 @@ export class LibraryArtist extends LitElement {
 
   render() {
     return html`
-      <div key=${String(this.artist.id)} class="artist-container">
-        ${Option.isSome(this.artist.image)
-          ? html`
-              <img
-                src="${URL.createObjectURL(this.artist.image.value)}"
-                alt=${`Image of ${this.artist.name}`}
-                class="artist-image"
-              />
-            `
-          : nothing}
-        <div class="artist-info">
-          <a href="/artists/${this.artist.id}"><h5>${this.artist.name}</h5></a>
+      <echo-hoverable>
+        <div key=${String(this.artist.id)} class="artist-container">
+          ${Option.isSome(this.artist.image)
+            ? html`
+                <img
+                  src="${URL.createObjectURL(this.artist.image.value)}"
+                  alt=${`Image of ${this.artist.name}`}
+                  class="artist-image"
+                />
+              `
+            : nothing}
+          <div class="artist-info">
+            <a href="/artists/${this.artist.id}"
+              ><h5>${this.artist.name}</h5></a
+            >
+          </div>
         </div>
-      </div>
+      </echo-hoverable>
     `;
   }
 }

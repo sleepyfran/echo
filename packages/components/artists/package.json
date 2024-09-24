@@ -7,7 +7,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@echo/components-albums": "^1.0.0",
     "@echo/components-shared-controllers": "^1.0.0",
+    "@echo/components-ui-atoms": "^1.0.0",
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap-runtime": "^1.0.0",
     "effect": "^3.8.3",
