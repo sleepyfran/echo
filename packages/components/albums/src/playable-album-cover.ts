@@ -7,12 +7,16 @@ import "@echo/components-icons";
 import "@echo/components-ui-atoms";
 
 /**
- * An element that displays an album from the user's library.
+ * An element that displays the cover of an album from the user's library
+ * and a button to play it.
  */
-@customElement("library-album")
-export class LibraryAlbum extends LitElement {
+@customElement("playable-album-cover")
+export class PlayableAlbumCover extends LitElement {
   @property({ type: Object })
   album!: Album;
+
+  @property({ type: Boolean })
+  detailsAlwaysVisible = false;
 
   private _playAlbum = new EffectFn(this, Player.playAlbum);
 
@@ -52,6 +56,14 @@ export class LibraryAlbum extends LitElement {
       box-shadow: var(--large-shadow);
       transform: translate3d(1rem, 1rem, 1rem);
       transition: all 0.5s;
+    }
+
+    div.img-wrapper[always-visible] button.play {
+      opacity: 1;
+    }
+
+    div.img-wrapper[always-visible] provider-icon {
+      opacity: 1;
     }
 
     div.img-wrapper:hover provider-icon {
@@ -105,33 +117,23 @@ export class LibraryAlbum extends LitElement {
 
   render() {
     return html`
-      <echo-hoverable>
-        <div key="{album.id}" class="album-container">
-          <div class="img-wrapper">
-            <provider-icon
-              providerId=${this.album.providerId}
-              title=${`This album is hosted on ${this.album.providerId}`}
-            ></provider-icon>
-            ${Option.isSome(this.album.embeddedCover) &&
-            html`
-              <img
-                src="${URL.createObjectURL(this.album.embeddedCover.value)}"
-                alt="Album cover"
-                class="album-cover"
-              />
-            `}
-            <button class="play" @click=${this._onPlayClick} title="Play">
-              <play-icon size="24"></play-icon>
-            </button>
-          </div>
-          <a href="/albums/${this.album.id}">
-            <div class="album-info">
-              <h5>${this.album.name}</h5>
-              <p>${this.album.artist.name}</p>
-            </div>
-          </a>
-        </div>
-      </echo-hoverable>
+      <div class="img-wrapper" ?always-visible=${this.detailsAlwaysVisible}>
+        <provider-icon
+          providerId=${this.album.providerId}
+          title=${`This album is hosted on ${this.album.providerId}`}
+        ></provider-icon>
+        ${Option.isSome(this.album.embeddedCover) &&
+        html`
+          <img
+            src="${URL.createObjectURL(this.album.embeddedCover.value)}"
+            alt="Album cover"
+            class="album-cover"
+          />
+        `}
+        <button class="play" @click=${this._onPlayClick} title="Play">
+          <play-icon size="24"></play-icon>
+        </button>
+      </div>
     `;
   }
 
@@ -142,6 +144,6 @@ export class LibraryAlbum extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "library-album": LibraryAlbum;
+    "playable-album-cover": PlayableAlbumCover;
   }
 }

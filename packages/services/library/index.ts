@@ -65,6 +65,27 @@ export const LibraryLive = Layer.effect(
             })),
           );
         }),
+      albumDetail: (albumId) =>
+        Effect.gen(function* () {
+          const albumsTable = yield* database.table("albums");
+          const artistsTable = yield* database.table("artists");
+          const tracksTable = yield* database.table("tracks");
+
+          const maybeAlbum = yield* albumsTable.byId(albumId);
+          if (Option.isNone(maybeAlbum)) {
+            return Option.none();
+          }
+
+          const artist = yield* artistsTable.byId(maybeAlbum.value.artistId);
+          const tracks = yield* tracksTable.filtered({
+            filter: {
+              albumId,
+            },
+          });
+
+          const album = yield* toAlbumSchema(maybeAlbum.value, artist, tracks);
+          return Option.some(album);
+        }),
       observeArtists: () =>
         Effect.gen(function* () {
           const artistsTable = yield* database.table("artists");
