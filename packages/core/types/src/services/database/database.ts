@@ -113,7 +113,18 @@ export type Table<
     /**
      * Optional field to sort the records by.
      */
-    sort?: keyof TSchema;
+    sort?: {
+      /**
+       * Field to sort the records by.
+       */
+      field: keyof TSchema;
+
+      /**
+       * Direction to sort the records in. If not specified, the default will be
+       * chosen by each specific implementation.
+       */
+      direction?: "asc" | "desc";
+    };
   }) => Effect.Effect<TSchema[]>;
 
   /**

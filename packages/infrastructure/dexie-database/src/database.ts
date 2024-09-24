@@ -114,7 +114,14 @@ const createTable = <
           .limit(limit);
 
         if (sort) {
-          return query.sortBy(sort as string) as unknown as Promise<TSchema[]>;
+          let queryWithDirection = query;
+          if (sort.direction === "desc") {
+            queryWithDirection = query.reverse();
+          }
+
+          return queryWithDirection.sortBy(
+            sort.field as string,
+          ) as unknown as Promise<TSchema[]>;
         }
 
         return query.toArray() as unknown as Promise<TSchema[]>;
