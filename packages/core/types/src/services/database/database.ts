@@ -109,6 +109,11 @@ export type Table<
      * chosen by each specific implementation.
      */
     limit?: number;
+
+    /**
+     * Optional field to sort the records by.
+     */
+    sort?: keyof TSchema;
   }) => Effect.Effect<TSchema[]>;
 
   /**

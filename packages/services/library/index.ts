@@ -47,6 +47,7 @@ export const LibraryLive = Layer.effect(
               filter: {
                 artistId,
               },
+              sort: "releaseYear",
             })
             .pipe(
               Effect.flatMap((albums) =>

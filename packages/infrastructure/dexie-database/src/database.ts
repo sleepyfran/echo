@@ -93,28 +93,32 @@ const createTable = <
       Effect.map((res) => res ?? []),
     );
   }),
-  filtered: ({ filter, limit = 100 }) =>
+  filtered: ({ filter, sort, limit = 100 }) =>
     Effect.gen(function* () {
       const table = db[tableName];
 
-      return yield* Effect.tryPromise<TSchema[]>(
-        () =>
-          table
-            .filter((tableRow) =>
-              Object.keys(filter).some((key) => {
-                const schemaTable = tableRow as TSchema;
-                return normalizeForComparison(
-                  schemaTable[key as keyof TSchema] as string,
-                ).includes(
-                  normalizeForComparison(
-                    filter[key as keyof typeof filter] as string,
-                  ),
-                );
-              }),
-            )
-            .limit(limit)
-            .toArray() as unknown as PromiseLike<TSchema[]>,
-      ).pipe(
+      return yield* Effect.tryPromise<TSchema[]>(() => {
+        const query = table
+          .filter((tableRow) =>
+            Object.keys(filter).some((key) => {
+              const schemaTable = tableRow as TSchema;
+              return normalizeForComparison(
+                schemaTable[key as keyof TSchema] as string,
+              ).includes(
+                normalizeForComparison(
+                  filter[key as keyof typeof filter] as string,
+                ),
+              );
+            }),
+          )
+          .limit(limit);
+
+        if (sort) {
+          return query.sortBy(sort as string) as unknown as Promise<TSchema[]>;
+        }
+
+        return query.toArray() as unknown as Promise<TSchema[]>;
+      }).pipe(
         Effect.catchAllCause(catchToDefaultAndLog),
         Effect.map((res) => res ?? []),
       );
