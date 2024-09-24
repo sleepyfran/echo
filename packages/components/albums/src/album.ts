@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { Player, type Album } from "@echo/core-types";
 import { LitElement, html, css } from "lit";
@@ -106,10 +107,10 @@ export class LibraryAlbum extends LitElement {
               providerId=${this.album.providerId}
               title=${`This album is hosted on ${this.album.providerId}`}
             ></provider-icon>
-            ${this.album.embeddedCover &&
+            ${Option.isSome(this.album.embeddedCover) &&
             html`
               <img
-                src="${URL.createObjectURL(this.album.embeddedCover)}"
+                src="${URL.createObjectURL(this.album.embeddedCover.value)}"
                 alt="Album cover"
                 class="album-cover"
               />

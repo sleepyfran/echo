@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import { Brand, Option } from "effect";
 import type { Artist } from "./artist";
 import type { Track } from "./track";
 import type { ProviderId } from "./provider-metadata";
@@ -33,9 +33,14 @@ export type AlbumInfo = {
   name: string;
 
   /**
+   * Year in which the album was released.
+   */
+  releaseYear: Option.Option<number>;
+
+  /**
    * Cover art of the album as a blob.
    */
-  embeddedCover: Blob | undefined;
+  embeddedCover: Option.Option<Blob>;
 
   /**
    * Provider that hosts the album.

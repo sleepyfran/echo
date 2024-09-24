@@ -114,6 +114,8 @@ const toAlbumSchema = (
   const albumInfo: AlbumInfo = {
     ...album,
     artist: toArtistSchema(artist.value),
+    embeddedCover: Option.fromNullable(album.embeddedCover),
+    releaseYear: Option.fromNullable(album.releaseYear),
   };
 
   return Effect.succeed({

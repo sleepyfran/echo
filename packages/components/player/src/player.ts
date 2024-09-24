@@ -3,10 +3,11 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import {
   Player as PlayerService,
+  type Album,
   type PlayerState,
   type Track,
 } from "@echo/core-types";
-import { Match } from "effect";
+import { Match, Option } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { ButtonType } from "@echo/components-ui-atoms";
 import "@echo/components-icons";
@@ -89,15 +90,15 @@ export class EchoPlayer extends LitElement {
 
   private _renderPlayer(
     player: PlayerState,
-    cover: Blob | undefined,
+    cover: Album["embeddedCover"],
     artistName: string,
     trackName: string,
   ) {
     return html`
       <div class="current-track">
-        ${cover
+        ${Option.isSome(cover)
           ? html` <img
-              src="${URL.createObjectURL(cover!)}"
+              src="${URL.createObjectURL(cover.value)}"
               height="40"
               width="40"
               alt="Album cover"

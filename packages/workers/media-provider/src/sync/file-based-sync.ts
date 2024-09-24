@@ -228,7 +228,8 @@ const normalizeData = (
             { database, crypto },
             artist.id,
             metadata.album ?? "Unknown Album",
-            metadata.embeddedCover,
+            metadata.embeddedCover ?? null,
+            metadata.year ?? null,
             accumulator.albums,
             providerMetadata.id,
           );
@@ -295,7 +296,8 @@ const tryRetrieveOrCreateAlbum = (
   { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
   artistId: DatabaseArtist["id"],
   albumName: string,
-  embeddedCover: Blob | undefined,
+  embeddedCover: Blob | null,
+  releaseYear: number | null,
   processedAlbums: Map<string, DatabaseAlbum>,
   providerId: ProviderId,
 ): Effect.Effect<DatabaseAlbum> =>
@@ -321,6 +323,7 @@ const tryRetrieveOrCreateAlbum = (
           albumName,
           artistId,
           embeddedCover,
+          releaseYear,
           providerId,
         )
       : existingAlbum.value;
@@ -369,7 +372,8 @@ const createAlbum = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   name: string,
   artistId: DatabaseArtist["id"],
-  embeddedCover: Blob | undefined,
+  embeddedCover: Blob | null,
+  releaseYear: number | null,
   providerId: ProviderId,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
@@ -380,6 +384,7 @@ const createAlbum = (
       name,
       artistId,
       embeddedCover,
+      releaseYear,
       providerId,
     };
   });
