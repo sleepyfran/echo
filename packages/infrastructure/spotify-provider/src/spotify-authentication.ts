@@ -17,9 +17,9 @@ import {
   Match,
 } from "effect";
 import { DEFAULT_SCOPES, SPOTIFY_AUTH_URL } from "./constants";
-import { AuthApi } from "./api/auth-api";
+import { AuthApi } from "./apis/auth-api";
 import { addSeconds } from "@echo/core-dates";
-import type { SpotifyAuthenticationResponse } from "./api/types";
+import type { SpotifyAuthenticationResponse } from "./apis/types";
 
 export class UnableToOpenWindow extends Data.TaggedError(
   "@echo/spotify-provider/UnableToOpenWindow",

@@ -2,6 +2,7 @@ import {
   MediaPlayerFactory,
   MediaPlayerId,
   PlayNotFoundError,
+  ProviderType,
 } from "@echo/core-types";
 import { Effect, Layer, Stream } from "effect";
 
@@ -22,6 +23,7 @@ const make = MediaPlayerFactory.of({
       }
 
       return {
+        _tag: ProviderType.FileBased,
         id: MediaPlayerId("html5-audio"),
         playFile: (trackUrl) =>
           Effect.gen(function* () {

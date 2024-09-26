@@ -6,6 +6,7 @@ import {
   AvailableProviders,
   LocalStorage,
   MediaProviderMainThreadBroadcastChannel,
+  ProviderType,
   type Authentication,
   type AuthenticationError,
   type AuthenticationInfo,
@@ -134,16 +135,22 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                 mediaPlayer,
               );
 
-              const rootFolder = yield* mediaProvider.listRoot;
+              if (mediaProvider._tag === ProviderType.FileBased) {
+                const rootFolder = yield* mediaProvider.listRoot;
 
-              return [
-                rootFolder,
-                {
-                  _tag: "WaitingForRoot" as const,
-                  authInfo,
-                  providerMetadata: state.loadedProvider.metadata,
-                },
-              ];
+                return [
+                  rootFolder,
+                  {
+                    _tag: "WaitingForRoot" as const,
+                    authInfo,
+                    providerMetadata: state.loadedProvider.metadata,
+                  },
+                ];
+              }
+
+              // For API-based providers, we don't need to select a root folder,
+              // so we're done.
+              return [[], { _tag: "Done" as const }];
             }),
         ),
 
@@ -160,7 +167,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
               }
 
               const startArgs = {
-                _tag: "file-based" as const,
+                _tag: ProviderType.FileBased,
                 metadata: state.providerMetadata,
                 authInfo: state.authInfo,
                 rootFolder: request.rootFolder,

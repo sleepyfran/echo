@@ -6,6 +6,8 @@ import {
   type MediaProviderBroadcastSchema,
   Database,
   Crypto,
+  ProviderType,
+  type FileBasedProvider,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
 import { Effect, Match, Ref } from "effect";
@@ -63,20 +65,24 @@ export const startMediaProviderResolver = ({
     const crypto = yield* Crypto;
 
     const runtimeFiber = yield* Match.type<Input>().pipe(
-      Match.tag("file-based", (input) =>
+      Match.tag(ProviderType.FileBased, (input) =>
         Effect.fork(
           syncFileBasedProvider({
             broadcastChannel,
             metadata: input.metadata,
             metadataProvider,
-            provider: mediaProvider,
+            /*
+            Provider loader guarantees this.
+            FIXME: Can we type this better?
+            */
+            provider: mediaProvider as FileBasedProvider,
             rootFolder: input.rootFolder,
             database,
             crypto,
           }),
         ),
       ),
-      Match.tag("api-based", (_input) => Effect.fork(Effect.void)),
+      Match.tag(ProviderType.ApiBased, (_input) => Effect.fork(Effect.void)),
       Match.exhaustive,
     )(input);
 
