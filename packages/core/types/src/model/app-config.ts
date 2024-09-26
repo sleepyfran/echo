@@ -6,6 +6,21 @@ import { Context } from "effect";
  */
 export const AppConfigSchema = Schema.Struct({
   /**
+   * General settings that apply to the overall application.
+   */
+  echo: Schema.Struct({
+    /**
+     * Base URL in which the application is currently running.
+     */
+    baseUrl: Schema.String.pipe(
+      Schema.nonEmptyString(),
+      Schema.filter(
+        (url) => url.startsWith("http://") || url.startsWith("https://"),
+      ),
+    ),
+  }),
+
+  /**
    * Settings related to the Graph API.
    */
   graph: Schema.Struct({

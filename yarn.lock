@@ -28,6 +28,14 @@
   dependencies:
     msgpackr "^1.10.2"
 
+"@effect/platform@^0.66.2":
+  version "0.66.2"
+  resolved "https://registry.yarnpkg.com/@effect/platform/-/platform-0.66.2.tgz#f88aec205dc4d23812e23c4f4e2efe724c9cd3f6"
+  integrity sha512-Gqr+C8GhjC9Ix1JdakDVaWbJcy9qISN8wNz6OdLjiWL1aR3glAscEgICTuB3TOH7F6e3M/PK3RYhsuwVgo63QA==
+  dependencies:
+    find-my-way-ts "^0.1.5"
+    multipasta "^0.2.5"
+
 "@effect/schema@^0.71.1":
   version "0.71.1"
   resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.71.1.tgz#4d344b3c44b2490fb6d6698439956a25ae18ea0f"
@@ -1456,6 +1464,11 @@ fill-range@^7.0.1:
   dependencies:
     to-regex-range "^5.0.1"
 
+find-my-way-ts@^0.1.5:
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/find-my-way-ts/-/find-my-way-ts-0.1.5.tgz#9de9494f19e0319d4f6366bb91d6bf7952af7874"
+  integrity sha512-4GOTMrpGQVzsCH2ruUn2vmwzV/02zF4q+ybhCIrw/Rkt3L8KWcycdC6aJMctJzwN4fXD4SD5F/4B9Sksh5rE0A==
+
 find-up@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/find-up/-/find-up-5.0.0.tgz#4c92819ecb7083561e4f4a240a86be5198f536fc"
@@ -2311,6 +2324,11 @@ msgpackr@^1.10.2:
   integrity sha512-I8qXuuALqJe5laEBYoFykChhSXLikZmUhccjGsPuSJ/7uPip2TJ7lwdIQwWSAi0jGZDXv4WOP8Qg65QZRuXxXw==
   optionalDependencies:
     msgpackr-extract "^3.0.2"
+
+multipasta@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/multipasta/-/multipasta-0.2.5.tgz#fb3564c4c619b73f98e72e2a4bbd4f7fba153edf"
+  integrity sha512-c8eMDb1WwZcE02WVjHoOmUVk7fnKU/RmUcosHACglrWAuPQsEJv+E8430sXj6jNc1jHw0zrS16aCjQh4BcEb4A==
 
 music-metadata@^10.0.0:
   version "10.0.0"

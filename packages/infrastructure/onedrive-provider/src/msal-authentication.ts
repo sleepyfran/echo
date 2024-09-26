@@ -9,7 +9,7 @@ import {
   type Authentication,
   AuthenticationError,
   type AuthenticationInfo,
-  ProviderSpecificAuthenticationInfo,
+  MsalSpecificAuthenticationInfo,
 } from "@echo/core-types";
 import { Context, Effect, Layer, Ref } from "effect";
 
@@ -54,7 +54,7 @@ export const MsalAuthenticationLive = Layer.effect(
           return {
             accessToken: authResult.accessToken,
             expiresOn: authResult.expiresOn ?? addHours(new Date(), 2),
-            providerSpecific: ProviderSpecificAuthenticationInfo.make({
+            providerSpecific: MsalSpecificAuthenticationInfo.make({
               account: authResult.account,
             }),
           };
@@ -90,6 +90,8 @@ export const MsalAuthenticationLive = Layer.effect(
           return yield* Effect.fail(AuthenticationError.WrongCredentials);
         }
 
+        const account = cachedCredentials.providerSpecific.account;
+
         yield* Effect.tryPromise({
           try: () => app.initialize(),
           catch: () => AuthenticationError.Unknown,
@@ -99,7 +101,7 @@ export const MsalAuthenticationLive = Layer.effect(
           try: () =>
             app.acquireTokenSilent({
               ...authRequest,
-              account: cachedCredentials.providerSpecific.account,
+              account,
             }),
           catch: (e) => {
             console.error(e);

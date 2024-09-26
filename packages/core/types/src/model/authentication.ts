@@ -1,19 +1,32 @@
 import * as S from "@effect/schema/Schema";
 
 /**
+ * Defines the specific information that is needed to authenticate with MSAL.
+ */
+export const MsalSpecificAuthenticationInfo = S.TaggedStruct("MSAL", {
+  account: S.Struct({
+    homeAccountId: S.String.pipe(S.nonEmptyString()),
+    environment: S.String.pipe(S.nonEmptyString()),
+    tenantId: S.String.pipe(S.nonEmptyString()),
+    username: S.String.pipe(S.nonEmptyString()),
+    localAccountId: S.String.pipe(S.nonEmptyString()),
+  }),
+});
+
+/**
+ * Defines the specific information that is needed to authenticate with Spotify.
+ */
+export const SpotifySpecificAuthenticationInfo = S.TaggedStruct("Spotify", {
+  refreshToken: S.String.pipe(S.nonEmptyString()),
+});
+
+/**
  * Defines all the provider-specific information that is needed to authenticate
  * with a specific provider.
  */
 export const ProviderSpecificAuthenticationInfo = S.Union(
-  S.TaggedStruct("MSAL", {
-    account: S.Struct({
-      homeAccountId: S.String.pipe(S.nonEmptyString()),
-      environment: S.String.pipe(S.nonEmptyString()),
-      tenantId: S.String.pipe(S.nonEmptyString()),
-      username: S.String.pipe(S.nonEmptyString()),
-      localAccountId: S.String.pipe(S.nonEmptyString()),
-    }),
-  }),
+  MsalSpecificAuthenticationInfo,
+  SpotifySpecificAuthenticationInfo,
 );
 export type ProviderSpecificAuthenticationInfo = S.Schema.Type<
   typeof ProviderSpecificAuthenticationInfo
@@ -49,4 +62,6 @@ export enum AuthenticationError {
   InteractionRequired = "InteractionRequired",
   Unknown = "Unknown",
   WrongCredentials = "WrongCredentials",
+  InteractionTimedOut = "InteractionTimedOut",
+  InteractionFailed = "InteractionFailed",
 }
