@@ -28,6 +28,13 @@
   dependencies:
     msgpackr "^1.10.2"
 
+"@effect/platform-browser@^0.45.2":
+  version "0.45.2"
+  resolved "https://registry.yarnpkg.com/@effect/platform-browser/-/platform-browser-0.45.2.tgz#91abc108743400ba1d82b96ec0f2511735db163d"
+  integrity sha512-If701Uh/yJZXxX7TQ5EHxPxIqtlBNvA5PBwO2ZL/ggK00vvkNzp1/saSfOLnDOQ9R9uSbDOBk5S4RN2M876QJQ==
+  dependencies:
+    multipasta "^0.2.5"
+
 "@effect/platform@^0.66.2":
   version "0.66.2"
   resolved "https://registry.yarnpkg.com/@effect/platform/-/platform-0.66.2.tgz#f88aec205dc4d23812e23c4f4e2efe724c9cd3f6"
