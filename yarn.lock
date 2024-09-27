@@ -471,6 +471,11 @@
   dependencies:
     undici-types "~5.26.4"
 
+"@types/spotify-web-playback-sdk@^0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@types/spotify-web-playback-sdk/-/spotify-web-playback-sdk-0.1.19.tgz#0fe4a7bdab95321309e4bc8a3f2124c17dfd3578"
+  integrity sha512-Is7x9gMIMoERxE0uvb2SPFQoy5OR7nO1B24CJiaDAUIdq195OLTQedN95XJQtxB2mfm+zi2j3LvEtpPdHKnB3w==
+
 "@types/through@*":
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/@types/through/-/through-0.0.33.tgz#14ebf599320e1c7851e7d598149af183c6b9ea56"

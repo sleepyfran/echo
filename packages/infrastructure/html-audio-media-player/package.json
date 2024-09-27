@@ -2,7 +2,7 @@
   "name": "@echo/infrastructure-html-audio-media-player",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the HtmlAudioMediaPlayer related infrastructure",
+  "description": "Contains an implementation of the media player interface that uses the HTML audio element",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

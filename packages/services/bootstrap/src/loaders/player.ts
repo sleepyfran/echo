@@ -4,6 +4,7 @@ import {
   MediaPlayerFactory,
   ProviderType,
 } from "@echo/core-types";
+import { BrowserHttpClient } from "@effect/platform-browser";
 
 /**
  * Service that can lazily load a media player.
@@ -27,18 +28,24 @@ export class LazyLoadedMediaPlayer extends Effect.Tag(
 const lazyLoadFromMetadata = (
   metadata: ProviderMetadata,
 ): Effect.Effect<Layer.Layer<MediaPlayerFactory, never, never>> => {
-  if (metadata.type === ProviderType.FileBased) {
-    return Effect.promise(async () => {
-      const { HtmlAudioMediaPlayerFactoryLive } = await import(
-        "@echo/infrastructure-html-audio-media-player"
-      );
-      return HtmlAudioMediaPlayerFactoryLive;
-    });
+  switch (metadata.type) {
+    case ProviderType.FileBased:
+      return Effect.promise(async () => {
+        const { HtmlAudioMediaPlayerFactoryLive } = await import(
+          "@echo/infrastructure-html-audio-media-player"
+        );
+        return HtmlAudioMediaPlayerFactoryLive;
+      });
+    case ProviderType.ApiBased:
+      return Effect.promise(async () => {
+        const { SpotifyMediaPlayerFactoryLive } = await import(
+          "@echo/infrastructure-spotify-player"
+        );
+        return SpotifyMediaPlayerFactoryLive.pipe(
+          Layer.provide(BrowserHttpClient.layerXMLHttpRequest),
+        );
+      });
   }
-
-  throw new Error(
-    `No package available for media player with type: ${metadata.type}`,
-  );
 };
 
 const createLazyLoadedMediaPlayer = (metadata: ProviderMetadata) =>

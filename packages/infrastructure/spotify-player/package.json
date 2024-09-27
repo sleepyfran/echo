@@ -1,0 +1,20 @@
+{
+  "name": "@echo/infrastructure-spotify-player",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains an implementation of the media player interface that uses Spotify",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "@effect/platform": "^0.66.2",
+    "@effect/schema": "^0.71.1",
+    "effect": "^3.8.3"
+  },
+  "devDependencies": {
+    "@types/spotify-web-playback-sdk": "^0.1.19"
+  }
+}
