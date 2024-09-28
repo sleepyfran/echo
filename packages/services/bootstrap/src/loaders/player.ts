@@ -4,7 +4,7 @@ import {
   MediaPlayerFactory,
   ProviderType,
 } from "@echo/core-types";
-import { BrowserHttpClient } from "@effect/platform-browser";
+import { FetchHttpClient } from "@effect/platform";
 
 /**
  * Service that can lazily load a media player.
@@ -42,7 +42,7 @@ const lazyLoadFromMetadata = (
           "@echo/infrastructure-spotify-player"
         );
         return SpotifyMediaPlayerFactoryLive.pipe(
-          Layer.provide(BrowserHttpClient.layerXMLHttpRequest),
+          Layer.provide(FetchHttpClient.layer),
         );
       });
   }

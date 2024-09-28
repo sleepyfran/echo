@@ -17,7 +17,7 @@ import {
   Match,
 } from "effect";
 import { DEFAULT_SCOPES, SPOTIFY_AUTH_URL } from "./constants";
-import { AuthApi } from "./apis/auth-api";
+import { SpotifyAuthApi } from "./apis/auth-api";
 import { addSeconds } from "@echo/core-dates";
 import type { SpotifyAuthenticationResponse } from "./apis/types";
 
@@ -36,27 +36,16 @@ type CodeOrError = Option.Option<Either.Either<string, string>>;
 
 const make = Effect.gen(function* () {
   const appConfig = yield* AppConfig;
-  const authApi = yield* AuthApi;
+  const authApi = yield* SpotifyAuthApi;
 
   const connect = Effect.gen(function* () {
     const loginPopup = yield* Effect.acquireRelease(
       openLoginPopup(appConfig),
-      (window) => Effect.sync(window.close),
+      (window) => Effect.sync(() => window.close()),
     );
 
     const authenticationCode = yield* tryRetrieveAuthenticationCode(loginPopup);
-
-    const authResponse = yield* authApi.auth.authorize({
-      path: {
-        code: authenticationCode,
-        grant_type: "authorization_code",
-        redirect_uri: createRedirectUri(appConfig),
-      },
-      headers: {
-        Authorization: createBasicAuthHeader(appConfig),
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    const authResponse = yield* authApi.retrieveToken(authenticationCode);
 
     return toAuthenticationInfo(authResponse);
   }).pipe(
@@ -73,18 +62,14 @@ const make = Effect.gen(function* () {
         return yield* Effect.fail(AuthenticationError.WrongCredentials);
       }
 
-      const authResponse = yield* authApi.auth.refreshToken({
-        headers: {
-          Authorization: createBasicAuthHeader(appConfig),
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        path: {
-          grant_type: "refresh_token",
-          refresh_token: cachedCredentials.providerSpecific.refreshToken,
-        },
-      });
+      const authResponse = yield* authApi.refreshToken(
+        cachedCredentials.providerSpecific.refreshToken,
+      );
 
-      return toAuthenticationInfo(authResponse);
+      return toAuthenticationInfo({
+        ...authResponse,
+        refresh_token: cachedCredentials.providerSpecific.refreshToken,
+      });
     }).pipe(
       Effect.catchAll(() => Effect.fail(AuthenticationError.Unknown)),
       Effect.scoped,
@@ -180,13 +165,7 @@ const retrieveCodeOrErrorFromWindow = (window: Window) =>
   });
 
 const createAuthUrl = (appConfig: AppConfig) =>
-  `${SPOTIFY_AUTH_URL}?response_type=code&client_id=${appConfig.spotify.clientId}&scope=${DEFAULT_SCOPES}&redirect_uri=${createRedirectUri(appConfig)}`;
-
-const createRedirectUri = (appConfig: AppConfig) =>
-  `${appConfig.echo.baseUrl}/auth/spotify/callback`;
-
-const createBasicAuthHeader = (appConfig: AppConfig) =>
-  `Basic ${btoa(`${appConfig.spotify.clientId}:${appConfig.spotify.secret}`)}`;
+  `${SPOTIFY_AUTH_URL}?response_type=code&client_id=${appConfig.spotify.clientId}&scope=${DEFAULT_SCOPES}&redirect_uri=${appConfig.spotify.redirectUri}`;
 
 const toAuthenticationInfo = (
   spotifyAuthInfo: SpotifyAuthenticationResponse,

@@ -3,16 +3,7 @@ import { AddProviderWorkflow, type FolderMetadata } from "@echo/core-types";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import "@echo/components-ui-atoms";
-
-/**
- * Event that gets dispatched by the component when the root has been selected
- * and the provider has started successfully.
- */
-export class ProviderStartedEvent extends Event {
-  constructor() {
-    super("root-selected", { bubbles: true, composed: true });
-  }
-}
+import { ProviderStartedEvent } from "./events";
 
 /**
  * Component that displays a list of available folders and allows the user to

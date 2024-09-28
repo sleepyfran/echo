@@ -7,7 +7,7 @@ import {
   ApiBasedProviderId,
 } from "@echo/core-types";
 import { AppConfigLive } from "../app-config";
-import { BrowserHttpClient } from "@effect/platform-browser";
+import { FetchHttpClient } from "@effect/platform";
 
 /**
  * Represents the available data for a loaded provider.
@@ -53,7 +53,7 @@ const lazyLoadFromMetadata = (
         );
         return SpotifyProviderFactoryLive.pipe(
           Layer.provide(AppConfigLive),
-          Layer.provide(BrowserHttpClient.layerXMLHttpRequest),
+          Layer.provide(FetchHttpClient.layer),
         );
       });
   }

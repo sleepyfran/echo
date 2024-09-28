@@ -5,6 +5,7 @@ import {
   HttpApiEndpoint,
   HttpApiGroup,
 } from "@effect/platform";
+import type { Effect } from "effect";
 
 const PlayTrackEndpoint = HttpApiEndpoint.get(
   "playTrack",
@@ -36,3 +37,4 @@ export const PlayerApi = HttpApiClient.make(
     baseUrl: "https://api.spotify.com",
   },
 );
+export type PlayerApi = Effect.Effect.Success<typeof PlayerApi>;

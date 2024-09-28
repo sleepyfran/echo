@@ -10,8 +10,24 @@ export const SpotifyAuthenticationResponse = S.Struct({
   scope: S.String,
   refresh_token: S.String,
 });
+
 export type SpotifyAuthenticationResponse = S.Schema.Type<
   typeof SpotifyAuthenticationResponse
+>;
+
+/**
+ * Response from the Spotify authentication API that only omits the refresh token,
+ * since it's not returned in the refresh token response.
+ */
+export const SpotifyRefreshResponse = S.Struct({
+  access_token: S.String,
+  token_type: S.String,
+  expires_in: S.Number,
+  scope: S.String,
+});
+
+export type SpotifyRefreshResponse = S.Schema.Type<
+  typeof SpotifyRefreshResponse
 >;
 
 /**

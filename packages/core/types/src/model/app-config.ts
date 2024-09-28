@@ -58,6 +58,16 @@ export const AppConfigSchema = Schema.Struct({
      * The client secret of the application registered in Spotify.
      */
     secret: Schema.String.pipe(Schema.nonEmptyString()),
+
+    /**
+     * The redirect URI of the application registered in Spotify.
+     */
+    redirectUri: Schema.String.pipe(
+      Schema.nonEmptyString(),
+      Schema.filter(
+        (url) => url.startsWith("http://") || url.startsWith("https://"),
+      ),
+    ),
   }),
 });
 

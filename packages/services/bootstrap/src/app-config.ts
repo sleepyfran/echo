@@ -16,6 +16,7 @@ export const appConfig: AppConfig = {
   spotify: {
     clientId: import.meta.env.VITE_SPOTIFY_CLIENT_ID,
     secret: import.meta.env.VITE_SPOTIFY_SECRET,
+    redirectUri: import.meta.env.VITE_SPOTIFY_REDIRECT_URI,
   },
 };
 

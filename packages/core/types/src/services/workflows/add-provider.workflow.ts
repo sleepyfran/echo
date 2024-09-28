@@ -20,7 +20,13 @@ export type IAddProviderWorkflow = {
     metadata: ProviderMetadata,
   ) => Effect.Effect<ProviderMetadata>;
   readonly connectToProvider: Effect.Effect<
-    FolderMetadata[],
+    | {
+        requiresRootFolderSelection: true;
+        folders: FolderMetadata[];
+      }
+    | {
+        requiresRootFolderSelection: false;
+      },
     AuthenticationError | FileBasedProviderError
   >;
   readonly selectRoot: (rootFolder: FolderMetadata) => Effect.Effect<Empty>;
