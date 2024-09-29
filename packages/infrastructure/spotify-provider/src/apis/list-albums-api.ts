@@ -1,5 +1,5 @@
 import { Effect, Option } from "effect";
-import type { UserLibraryApi } from "./user-library-api";
+import type { ISpotifyLibraryApi } from "./user-library-api";
 import {
   AlbumId,
   ApiBasedProviderError,
@@ -24,7 +24,7 @@ const initialState = {
  */
 export const createListAlbums = (
   authInfo: AuthenticationInfo,
-  userLibraryApi: Effect.Effect.Success<typeof UserLibraryApi>,
+  userLibraryApi: ISpotifyLibraryApi,
 ) =>
   Effect.iterate(initialState, {
     while: ({ maybeOffset }) => Option.isSome(maybeOffset),
@@ -36,17 +36,24 @@ export const createListAlbums = (
           return state;
         }
 
-        const response = yield* userLibraryApi.albums.savedAlbums({
-          headers: {
-            Authorization: `Bearer ${authInfo.accessToken}`,
-          },
-          path: {
-            limit: "50",
-            offset: String(maybeOffset.value),
-          },
-        });
+        const response = yield* userLibraryApi
+          .savedAlbums({
+            authInfo,
+            offset: maybeOffset.value,
+            limit: 50,
+          })
+          .pipe(
+            Effect.tapError((error) =>
+              Effect.logError(
+                `An error happened while fetching albums from Spotify: ${error}`,
+              ),
+            ),
+          );
 
-        const nextOffset = Option.fromNullable(response.offset);
+        const previousOffset = response.offset;
+        const nextOffset = response.next
+          ? Option.some(previousOffset + response.limit)
+          : Option.none();
         const nextAlbums = yield* Effect.all(
           response.items.map((response) => resolveAlbum(response.album)),
         );

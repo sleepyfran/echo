@@ -2,6 +2,7 @@ import { Layer } from "effect";
 import { SpotifyAuthenticationLive } from "./src/spotify-authentication";
 import { SpotifyProviderLive } from "./src/spotify-provider";
 import { SpotifyAuthApiLive } from "./src/apis/auth-api";
+import { SpotifyLibraryApiLive } from "./src/apis/user-library-api";
 
 /**
  * Layer that can be used to construct the Spotify provider. The returned
@@ -12,4 +13,5 @@ import { SpotifyAuthApiLive } from "./src/apis/auth-api";
 export const SpotifyProviderFactoryLive = SpotifyProviderLive.pipe(
   Layer.provide(SpotifyAuthenticationLive),
   Layer.provide(SpotifyAuthApiLive),
+  Layer.provide(SpotifyLibraryApiLive),
 );

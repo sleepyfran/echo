@@ -101,7 +101,10 @@ export const SpotifyUserSavedAlbumsResponse = S.Struct({
     }),
   ),
   limit: S.Number,
-  next: S.Option(S.String),
+  next: S.NullOr(S.String),
   offset: S.Number,
-  previous: S.Option(S.String),
+  previous: S.NullOr(S.String),
 });
+export type SpotifyUserSavedAlbumsResponse = S.Schema.Type<
+  typeof SpotifyUserSavedAlbumsResponse
+>;
