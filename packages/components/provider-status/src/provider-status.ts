@@ -41,7 +41,7 @@ export class AllProvidersStatusBar extends LitElement {
     .provider-status-icon {
       position: absolute;
       bottom: -5px;
-      right: 5px;
+      right: -5px;
     }
 
     .syncing-icon {
@@ -73,7 +73,7 @@ export class AllProvidersStatusBar extends LitElement {
                 class="provider-status"
                 title=${this._providerStatusTitle(providerId, providerStatus)}
               >
-                ${this._renderProviderIcon(providerId)}
+                <provider-icon .providerId=${providerId}></provider-icon>
                 ${this._renderProviderStatus(providerStatus)}
               </div>
             `,
@@ -90,15 +90,6 @@ export class AllProvidersStatusBar extends LitElement {
       complete: () => nothing,
       error: () => nothing,
     });
-  }
-
-  private _renderProviderIcon(providerId: ProviderId) {
-    switch (providerId) {
-      case "onedrive":
-        return html`<onedrive-icon size="32"></onedrive-icon>`;
-      default:
-        return nothing;
-    }
   }
 
   private _renderProviderStatus(providerStatus: ProviderStatus) {

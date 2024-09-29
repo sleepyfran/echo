@@ -1,4 +1,8 @@
-import { FileBasedProviderId, type ProviderId } from "@echo/core-types";
+import {
+  ApiBasedProviderId,
+  FileBasedProviderId,
+  type ProviderId,
+} from "@echo/core-types";
 import { LitElement, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
@@ -13,8 +17,15 @@ export class ProviderIcon extends LitElement {
   render() {
     switch (this.providerId) {
       case FileBasedProviderId.OneDrive:
-        return html`<onedrive-icon size=${this.size}></onedrive-icon>`;
-      // TODO: Add Spotify icon once we support it.
+        return html`<img
+          style="width: 3rem; height: 2rem;"
+          src="/icons/onedrive.png"
+        />`;
+      case ApiBasedProviderId.Spotify:
+        return html`<img
+          style="width: 2rem; height: 2rem;"
+          src="/icons/spotify.png"
+        />`;
       default:
         return nothing;
     }

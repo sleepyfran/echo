@@ -4,5 +4,5 @@ export * from "./src/play-icon";
 export * from "./src/plus-icon";
 export * from "./src/prev-icon";
 export * from "./src/pause-icon";
-export * from "./src/providers";
+export * from "./src/provider-icon";
 export * from "./src/sync-icon";
