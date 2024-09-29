@@ -85,15 +85,15 @@ export const syncFileBasedProvider = ({
       status: {
         _tag: "synced",
         lastSyncedAt: new Date(),
-        filesWithError: errors.length,
-        syncedFiles: normalizedData.tracks.length,
+        tracksWithError: errors.length,
+        syncedTracks: normalizedData.tracks.length,
       },
     });
   }).pipe(
     Effect.catchAll(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
-          "Sync has failed, reporting error with API to main thread.",
+          `Sync of ${metadata.id} has failed, reporting error with API to main thread.`,
         );
 
         // If we end up here, the provider has failed to retrieve any

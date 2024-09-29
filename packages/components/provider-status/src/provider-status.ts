@@ -48,6 +48,10 @@ export class AllProvidersStatusBar extends LitElement {
       animation: blinking 1s infinite;
     }
 
+    .error-icon {
+      color: var(--error-color);
+    }
+
     @keyframes blinking {
       0% {
         opacity: 1;
@@ -105,6 +109,13 @@ export class AllProvidersStatusBar extends LitElement {
         "synced",
         () => html`<done-icon class="provider-status-icon"></done-icon>`,
       ),
+      Match.tag(
+        "errored",
+        () =>
+          html`<cross-icon
+            class="provider-status-icon error-icon"
+          ></cross-icon>`,
+      ),
       Match.orElse(() => nothing),
     );
   }
@@ -117,7 +128,11 @@ export class AllProvidersStatusBar extends LitElement {
       Match.tag(
         "synced",
         (status) =>
-          `${providerId} has finished syncing. Synced ${status.syncedFiles} files`,
+          `${providerId} has finished syncing. Synced ${status.syncedTracks} tracks`,
+      ),
+      Match.tag(
+        "errored",
+        () => `${providerId} has encountered an error while syncing`,
       ),
       Match.orElse(() => `Syncing ${providerId}`),
     );

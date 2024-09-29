@@ -94,6 +94,7 @@ export const startMediaProviderResolver = ({
             FIXME: Can we type this better?
             */
             provider: mediaProvider as ApiBasedProvider,
+            database,
           }),
         ),
       ),

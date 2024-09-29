@@ -86,8 +86,8 @@ export type ProviderStatus =
   | {
       _tag: "synced";
       lastSyncedAt: Date;
-      syncedFiles: number;
-      filesWithError: number;
+      syncedTracks: number;
+      tracksWithError: number;
     }
   | { _tag: "errored"; error: ProviderError }
   | { _tag: "stopped" };
