@@ -4,11 +4,18 @@ import type {
   FolderMetadata,
   FolderContentMetadata,
   FileId,
+  TrackId,
+  Album,
+  ProviderType,
 } from "../model";
 import type { Authentication } from "./authentication";
 import { Brand, Context, Stream } from "effect";
 
 export enum FileBasedProviderError {
+  NotFound = "not-found",
+}
+
+export enum ApiBasedProviderError {
   NotFound = "not-found",
 }
 
@@ -27,6 +34,8 @@ export class PlayNotFoundError extends Error {
  * A provider that provides its data via a file system. For example, OneDrive.
  */
 export type FileBasedProvider = {
+  _tag: ProviderType.FileBased;
+
   /**
    * Lists the root folder of the provider.
    */
@@ -46,18 +55,44 @@ export type FileBasedProvider = {
 };
 
 /**
+ * A provider that provides its data via an API. For example, Spotify.
+ */
+export type ApiBasedProvider = {
+  _tag: ProviderType.ApiBased;
+
+  /**
+   * Lists the albums available in the provider.
+   */
+  readonly listAlbums: Effect<Album[], ApiBasedProviderError>;
+};
+
+/**
  * Defines all types of providers that are available in the app.
  */
-export type MediaProvider = FileBasedProvider;
+export type MediaProvider = FileBasedProvider | ApiBasedProvider;
 
 /**
  * A media player that can play files from a file-based provider.
  */
 export type FileBasedMediaPlayer = {
+  _tag: ProviderType.FileBased;
+
   /**
    * Attempts to stream the given file via a file-based media player.
    */
   readonly playFile: (file: URL) => Effect<void, PlayNotFoundError>;
+};
+
+/**
+ * A media player that can play tracks from an API-based provider.
+ */
+export type ApiBasedMediaPlayer = {
+  _tag: ProviderType.ApiBased;
+
+  /**
+   * Attempts to play the given track.
+   */
+  readonly playTrack: (trackId: TrackId) => Effect<void, PlayNotFoundError>;
 };
 
 /**
@@ -74,7 +109,7 @@ export type MediaPlayerEvent = "trackPlaying" | "trackPaused" | "trackEnded";
 /**
  * Defines all types of media players that are available in the app.
  */
-export type MediaPlayer = FileBasedMediaPlayer & {
+export type MediaPlayer = (FileBasedMediaPlayer | ApiBasedMediaPlayer) & {
   /**
    * The ID of the media player.
    */
@@ -83,7 +118,12 @@ export type MediaPlayer = FileBasedMediaPlayer & {
   /**
    * Toggles the playback of the current track.
    */
-  togglePlayback: Effect<void>;
+  readonly togglePlayback: Effect<void>;
+
+  /**
+   * Stops the playback of the current track.
+   */
+  readonly stop: Effect<void>;
 
   /**
    * Returns a stream that emits events from the media player.

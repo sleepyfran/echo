@@ -5,6 +5,9 @@ import { Layer } from "effect";
  * The application configuration.
  */
 export const appConfig: AppConfig = {
+  echo: {
+    baseUrl: import.meta.env.VITE_ECHO_BASE_URL,
+  },
   graph: {
     clientId: import.meta.env.VITE_GRAPH_CLIENT_ID,
     redirectUri: import.meta.env.VITE_GRAPH_REDIRECT_URI,
@@ -13,6 +16,7 @@ export const appConfig: AppConfig = {
   spotify: {
     clientId: import.meta.env.VITE_SPOTIFY_CLIENT_ID,
     secret: import.meta.env.VITE_SPOTIFY_SECRET,
+    redirectUri: import.meta.env.VITE_SPOTIFY_REDIRECT_URI,
   },
 };
 

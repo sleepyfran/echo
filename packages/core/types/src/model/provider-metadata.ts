@@ -86,8 +86,8 @@ export type ProviderStatus =
   | {
       _tag: "synced";
       lastSyncedAt: Date;
-      syncedFiles: number;
-      filesWithError: number;
+      syncedTracks: number;
+      tracksWithError: number;
     }
   | { _tag: "errored"; error: ProviderError }
   | { _tag: "stopped" };
@@ -96,7 +96,7 @@ export type ProviderStatus =
  * Defines the parameters required to start a file-based provider.
  */
 type FileBasedStartArgs = {
-  _tag: "file-based";
+  _tag: ProviderType.FileBased;
   metadata: ProviderMetadata;
   authInfo: AuthenticationInfo;
   rootFolder: FolderMetadata;
@@ -106,7 +106,7 @@ type FileBasedStartArgs = {
  * Defines the parameters required to start an API-based provider.
  */
 type ApiBasedStartArgs = {
-  _tag: "api-based";
+  _tag: ProviderType.ApiBased;
   metadata: ProviderMetadata;
   authInfo: AuthenticationInfo;
 };

@@ -68,12 +68,12 @@ const createBroadcastChannel = <TSchema extends Schema>(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               MessageEvent<Request<any, any>>
             >(channel, "message").pipe(
+              Stream.filter((event) => event.data.actionId === actionId),
               Stream.tap((event) =>
                 Effect.log(
                   `Received request for action ${event.data.actionId} with correlation ${event.data.identifier}`,
                 ),
               ),
-              Stream.filter((event) => event.data.actionId === actionId),
               Stream.runForEach((event) =>
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 resolver(event.data.input as any),

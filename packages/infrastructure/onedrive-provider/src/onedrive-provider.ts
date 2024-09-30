@@ -1,4 +1,4 @@
-import { MediaProviderFactory } from "@echo/core-types";
+import { MediaProviderFactory, ProviderType } from "@echo/core-types";
 import { Effect, Layer } from "effect";
 import { MsalAuthentication } from "./msal-authentication";
 import { Client, type ClientOptions } from "@microsoft/microsoft-graph-client";
@@ -30,6 +30,7 @@ export const OneDriveProviderLive = Layer.effect(
         const client = Client.initWithMiddleware(options);
 
         return {
+          _tag: ProviderType.FileBased,
           listRoot: createListRoot(client),
           listFolder: createListFolder(client),
           fileUrlById: createFileUrlById(client),

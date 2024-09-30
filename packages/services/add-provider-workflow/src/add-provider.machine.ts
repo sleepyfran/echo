@@ -6,6 +6,7 @@ import {
   AvailableProviders,
   LocalStorage,
   MediaProviderMainThreadBroadcastChannel,
+  ProviderType,
   type Authentication,
   type AuthenticationError,
   type AuthenticationInfo,
@@ -15,6 +16,7 @@ import {
   type MediaPlayerFactory,
   type MediaProviderFactory,
   type ProviderMetadata,
+  type ProviderStartArgs,
 } from "@echo/core-types";
 import {
   LazyLoadedProvider,
@@ -30,7 +32,13 @@ class LoadProvider extends Request.TaggedClass("LoadProvider")<
 > {}
 
 class ConnectToProvider extends Request.TaggedClass("ConnectToProvider")<
-  FolderMetadata[], // List of folders on the root of the provider.
+  | {
+      requiresRootFolderSelection: true;
+      folders: FolderMetadata[];
+    }
+  | {
+      requiresRootFolderSelection: false;
+    },
   AuthenticationError | FileBasedProviderError,
   Empty
 > {}
@@ -40,6 +48,14 @@ class SelectRoot extends Request.TaggedClass("SelectRoot")<
   never,
   {
     readonly rootFolder: FolderMetadata;
+  }
+> {}
+
+class AddProvider extends Request.TaggedClass("AddProvider")<
+  Empty,
+  never,
+  {
+    readonly startArgs: ProviderStartArgs;
   }
 > {}
 
@@ -73,6 +89,26 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
       const localStorage = yield* LocalStorage;
 
       return Machine.procedures.make(state).pipe(
+        /*
+        Private step meant as the last one to add the provider to the worker thread.
+        Requires: Nothing.
+        Outputs: Done state, with started media provider in worker thread.
+        */
+        Machine.procedures.addPrivate<AddProvider>()(
+          "AddProvider",
+          ({ request }) =>
+            Effect.gen(function* () {
+              yield* broadcastChannel.send("start", request.startArgs);
+              yield* localStorage.set(
+                "media-provider-start-args",
+                request.startArgs.metadata.id,
+                request.startArgs,
+              );
+
+              return [{}, { _tag: "Done" as const }];
+            }),
+        ),
+
         /*
         Requires: Idle state.
         Outputs: WaitingForConnection state with provider and media player factories.
@@ -112,10 +148,10 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
         */
         Machine.procedures.add<ConnectToProvider>()(
           "ConnectToProvider",
-          ({ state }) =>
+          ({ state, send }) =>
             Effect.gen(function* () {
               if (state._tag !== "WaitingForConnection") {
-                return [[], state];
+                return [{ requiresRootFolderSelection: false }, state];
               }
 
               const authInfo =
@@ -134,15 +170,35 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                 mediaPlayer,
               );
 
-              const rootFolder = yield* mediaProvider.listRoot;
+              if (mediaProvider._tag === ProviderType.FileBased) {
+                const rootFolder = yield* mediaProvider.listRoot;
+
+                return [
+                  {
+                    requiresRootFolderSelection: true,
+                    folders: rootFolder,
+                  },
+                  {
+                    _tag: "WaitingForRoot" as const,
+                    authInfo,
+                    providerMetadata: state.loadedProvider.metadata,
+                  },
+                ];
+              }
+
+              // For API-based providers, we don't need to select a root folder,
+              // so let's start the provider right away.
+              const startArgs: ProviderStartArgs = {
+                _tag: ProviderType.ApiBased,
+                authInfo,
+                metadata: state.loadedProvider.metadata,
+              };
+
+              yield* send(new AddProvider({ startArgs }));
 
               return [
-                rootFolder,
-                {
-                  _tag: "WaitingForRoot" as const,
-                  authInfo,
-                  providerMetadata: state.loadedProvider.metadata,
-                },
+                { requiresRootFolderSelection: false },
+                { _tag: "Done" as const },
               ];
             }),
         ),
@@ -153,25 +209,20 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
         */
         Machine.procedures.add<SelectRoot>()(
           "SelectRoot",
-          ({ state, request }) =>
+          ({ state, request, send }) =>
             Effect.gen(function* () {
               if (state._tag !== "WaitingForRoot") {
                 return [{}, state];
               }
 
-              const startArgs = {
-                _tag: "file-based" as const,
+              const startArgs: ProviderStartArgs = {
+                _tag: ProviderType.FileBased,
                 metadata: state.providerMetadata,
                 authInfo: state.authInfo,
                 rootFolder: request.rootFolder,
               };
-              yield* broadcastChannel.send("start", startArgs);
-              yield* localStorage.set(
-                "media-provider-start-args",
-                state.providerMetadata.id,
-                startArgs,
-              );
 
+              yield* send(new AddProvider({ startArgs }));
               return [{}, { _tag: "Done" as const }];
             }),
         ),

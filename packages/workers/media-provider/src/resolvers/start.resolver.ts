@@ -6,12 +6,16 @@ import {
   type MediaProviderBroadcastSchema,
   Database,
   Crypto,
+  ProviderType,
+  type FileBasedProvider,
+  type ApiBasedProvider,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
 import { Effect, Match, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
+import { syncApiBasedProvider } from "../sync/api-based-sync";
 
 type Input = MediaProviderBroadcastSchema["worker"]["resolvers"]["start"];
 type TBroadcastChannel = BroadcastChannel<
@@ -63,20 +67,37 @@ export const startMediaProviderResolver = ({
     const crypto = yield* Crypto;
 
     const runtimeFiber = yield* Match.type<Input>().pipe(
-      Match.tag("file-based", (input) =>
+      Match.tag(ProviderType.FileBased, (input) =>
         Effect.fork(
           syncFileBasedProvider({
             broadcastChannel,
             metadata: input.metadata,
             metadataProvider,
-            provider: mediaProvider,
+            /*
+            Provider loader guarantees this.
+            FIXME: Can we type this better?
+            */
+            provider: mediaProvider as FileBasedProvider,
             rootFolder: input.rootFolder,
             database,
             crypto,
           }),
         ),
       ),
-      Match.tag("api-based", (_input) => Effect.fork(Effect.void)),
+      Match.tag(ProviderType.ApiBased, (_input) =>
+        Effect.fork(
+          syncApiBasedProvider({
+            metadata: input.metadata,
+            broadcastChannel,
+            /*
+            Provider loader guarantees this.
+            FIXME: Can we type this better?
+            */
+            provider: mediaProvider as ApiBasedProvider,
+            database,
+          }),
+        ),
+      ),
       Match.exhaustive,
     )(input);
 

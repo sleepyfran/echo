@@ -4,8 +4,10 @@ import {
   type ProviderMetadata,
   MediaProviderFactory,
   type Authentication,
+  ApiBasedProviderId,
 } from "@echo/core-types";
 import { AppConfigLive } from "../app-config";
+import { FetchHttpClient } from "@effect/platform";
 
 /**
  * Represents the available data for a loaded provider.
@@ -36,18 +38,25 @@ export class LazyLoadedProvider extends Effect.Tag(
 const lazyLoadFromMetadata = (
   metadata: ProviderMetadata,
 ): Effect.Effect<Layer.Layer<MediaProviderFactory, never, never>> => {
-  if (metadata.id === FileBasedProviderId.OneDrive) {
-    return Effect.promise(async () => {
-      const { OneDriveProviderFactoryLive } = await import(
-        "@echo/infrastructure-onedrive-provider"
-      );
-      return OneDriveProviderFactoryLive.pipe(Layer.provide(AppConfigLive));
-    });
+  switch (metadata.id) {
+    case FileBasedProviderId.OneDrive:
+      return Effect.promise(async () => {
+        const { OneDriveProviderFactoryLive } = await import(
+          "@echo/infrastructure-onedrive-provider"
+        );
+        return OneDriveProviderFactoryLive.pipe(Layer.provide(AppConfigLive));
+      });
+    case ApiBasedProviderId.Spotify:
+      return Effect.promise(async () => {
+        const { SpotifyProviderFactoryLive } = await import(
+          "@echo/infrastructure-spotify-provider"
+        );
+        return SpotifyProviderFactoryLive.pipe(
+          Layer.provide(AppConfigLive),
+          Layer.provide(FetchHttpClient.layer),
+        );
+      });
   }
-
-  throw new Error(
-    `No package available for provider with name: ${metadata.id}`,
-  );
 };
 
 const createLazyLoadedProvider = (metadata: ProviderMetadata) =>

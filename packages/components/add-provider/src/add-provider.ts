@@ -5,11 +5,11 @@ import {
 } from "@echo/core-types";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import type { ProviderLoadedEvent } from "./provider-loader";
 import "./provider-loader";
 import "./select-root";
 import { EffectConsumer } from "@echo/components-shared-controllers";
 import { Match } from "effect";
+import type { ProviderWaitingForRoot } from "./events";
 
 type ProviderStatus =
   | { _tag: "LoadingProviders" }
@@ -23,7 +23,7 @@ type ProviderStatus =
  */
 @customElement("add-provider")
 export class AddProvider extends LitElement {
-  @property()
+  @property({ type: Object })
   private _providerStatus: ProviderStatus = { _tag: "LoadingProviders" };
 
   connectedCallback(): void {
@@ -47,7 +47,8 @@ export class AddProvider extends LitElement {
         ({ availableProviders }) =>
           html`<provider-loader
             .availableProviders=${availableProviders}
-            @provider-loaded=${this._onProviderLoaded}
+            @waiting-for-root=${this._onProviderLoaded}
+            @provider-started=${this._onProviderStarted}
           ></provider-loader>`,
       ),
       Match.tag(
@@ -55,7 +56,7 @@ export class AddProvider extends LitElement {
         ({ folders }) =>
           html`<select-root
             .availableFolders=${folders}
-            @root-selected=${this._onRootSelected}
+            @provider-started=${this._onProviderStarted}
           ></select-root>`,
       ),
       Match.tag(
@@ -70,14 +71,14 @@ export class AddProvider extends LitElement {
     );
   }
 
-  private _onProviderLoaded(event: ProviderLoadedEvent) {
+  private _onProviderLoaded(event: ProviderWaitingForRoot) {
     this._providerStatus = {
       _tag: "WaitingForRootFolderSelection",
       folders: event.availableFolders,
     };
   }
 
-  private _onRootSelected() {
+  private _onProviderStarted() {
     this._providerStatus = {
       _tag: "ProviderStarted",
     };

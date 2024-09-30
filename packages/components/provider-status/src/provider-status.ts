@@ -41,11 +41,15 @@ export class AllProvidersStatusBar extends LitElement {
     .provider-status-icon {
       position: absolute;
       bottom: -5px;
-      right: 5px;
+      right: -5px;
     }
 
     .syncing-icon {
       animation: blinking 1s infinite;
+    }
+
+    .error-icon {
+      color: var(--error-color);
     }
 
     @keyframes blinking {
@@ -73,7 +77,7 @@ export class AllProvidersStatusBar extends LitElement {
                 class="provider-status"
                 title=${this._providerStatusTitle(providerId, providerStatus)}
               >
-                ${this._renderProviderIcon(providerId)}
+                <provider-icon .providerId=${providerId}></provider-icon>
                 ${this._renderProviderStatus(providerStatus)}
               </div>
             `,
@@ -92,15 +96,6 @@ export class AllProvidersStatusBar extends LitElement {
     });
   }
 
-  private _renderProviderIcon(providerId: ProviderId) {
-    switch (providerId) {
-      case "onedrive":
-        return html`<onedrive-icon size="32"></onedrive-icon>`;
-      default:
-        return nothing;
-    }
-  }
-
   private _renderProviderStatus(providerStatus: ProviderStatus) {
     return Match.value(providerStatus).pipe(
       Match.tag(
@@ -114,6 +109,13 @@ export class AllProvidersStatusBar extends LitElement {
         "synced",
         () => html`<done-icon class="provider-status-icon"></done-icon>`,
       ),
+      Match.tag(
+        "errored",
+        () =>
+          html`<cross-icon
+            class="provider-status-icon error-icon"
+          ></cross-icon>`,
+      ),
       Match.orElse(() => nothing),
     );
   }
@@ -126,7 +128,11 @@ export class AllProvidersStatusBar extends LitElement {
       Match.tag(
         "synced",
         (status) =>
-          `${providerId} has finished syncing. Synced ${status.syncedFiles} files`,
+          `${providerId} has finished syncing. Synced ${status.syncedTracks} tracks`,
+      ),
+      Match.tag(
+        "errored",
+        () => `${providerId} has encountered an error while syncing`,
       ),
       Match.orElse(() => `Syncing ${providerId}`),
     );

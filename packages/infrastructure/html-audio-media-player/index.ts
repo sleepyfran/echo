@@ -2,6 +2,7 @@ import {
   MediaPlayerFactory,
   MediaPlayerId,
   PlayNotFoundError,
+  ProviderType,
 } from "@echo/core-types";
 import { Effect, Layer, Stream } from "effect";
 
@@ -22,6 +23,7 @@ const make = MediaPlayerFactory.of({
       }
 
       return {
+        _tag: ProviderType.FileBased,
         id: MediaPlayerId("html5-audio"),
         playFile: (trackUrl) =>
           Effect.gen(function* () {
@@ -34,6 +36,10 @@ const make = MediaPlayerFactory.of({
           }),
         togglePlayback: Effect.sync(() => {
           audioElement.paused ? audioElement.play() : audioElement.pause();
+        }),
+        stop: Effect.sync(() => {
+          audioElement.pause();
+          audioElement.currentTime = 0;
         }),
         observe: Stream.async((emit) => {
           // TODO: Keep track in the state? If something, it can be done via a ref.

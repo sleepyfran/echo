@@ -5,6 +5,7 @@ import {
   Playing,
   PlayNotFoundError,
   ProviderNotReady,
+  ProviderType,
   Stopped,
   type IActiveMediaProviderCache,
   type MediaPlayer,
@@ -309,8 +310,11 @@ const syncPlayerState = (
     yield* pipe(
       mediaPlayer.observe,
       Stream.ensuring(
-        Effect.log(`Stream from player ${mediaPlayer.id} has stopped.`),
+        Effect.log(
+          `Stream from player ${mediaPlayer.id} has stopped, stopping current playback...`,
+        ),
       ),
+      Stream.ensuring(mediaPlayer.stop),
       Stream.runForEach((event) =>
         Match.value(event).pipe(
           Match.when("trackPlaying", () =>
@@ -339,15 +343,30 @@ const playTrack = (
   Effect.gen(function* () {
     switch (track.resource.type) {
       case "file": {
+        if (
+          provider._tag !== ProviderType.FileBased ||
+          player._tag !== ProviderType.FileBased
+        ) {
+          return Effect.void;
+        }
+
         const file = yield* provider
           .fileUrlById(track.resource.fileId)
           .pipe(Effect.mapError(() => new PlayNotFoundError()));
         yield* player.playFile(file);
         break;
       }
-      default:
-        // TODO: Remove once API streaming is implemented.
-        return Effect.void;
+      case "api": {
+        if (
+          provider._tag !== ProviderType.ApiBased ||
+          player._tag !== ProviderType.ApiBased
+        ) {
+          return Effect.void;
+        }
+
+        yield* player.playTrack(track.id);
+        break;
+      }
     }
 
     yield* Effect.logInfo(`Playing track ${track.id}`);

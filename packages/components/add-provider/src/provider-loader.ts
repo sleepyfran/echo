@@ -1,23 +1,10 @@
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import {
-  AddProviderWorkflow,
-  type FolderMetadata,
-  type ProviderMetadata,
-} from "@echo/core-types";
+import { AddProviderWorkflow, type ProviderMetadata } from "@echo/core-types";
 import { Match } from "effect";
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import "@echo/components-ui-atoms";
-
-/**
- * Event that gets dispatched by the component when the provider has been loaded
- * and is awaiting root folder selection.
- */
-export class ProviderLoadedEvent extends Event {
-  constructor(public availableFolders: FolderMetadata[]) {
-    super("provider-loaded", { bubbles: true, composed: true });
-  }
-}
+import { ProviderStartedEvent, ProviderWaitingForRoot } from "./events";
 
 type LoaderStatus =
   | { _tag: "Initial" }
@@ -31,7 +18,7 @@ type LoaderStatus =
  */
 @customElement("provider-loader")
 export class ProviderLoader extends LitElement {
-  @property()
+  @property({ type: Object })
   private _loaderStatus: LoaderStatus = { _tag: "Initial" };
 
   @property({ type: Array })
@@ -54,9 +41,13 @@ export class ProviderLoader extends LitElement {
       pending: () => {
         this._loaderStatus = { _tag: "ConnectingToProvider" };
       },
-      complete: (rootFolder) => {
+      complete: (result) => {
         this._loaderStatus = { _tag: "Connected" };
-        this.dispatchEvent(new ProviderLoadedEvent(rootFolder));
+        this.dispatchEvent(
+          result.requiresRootFolderSelection
+            ? new ProviderWaitingForRoot(result.folders)
+            : new ProviderStartedEvent(),
+        );
       },
     },
   );
