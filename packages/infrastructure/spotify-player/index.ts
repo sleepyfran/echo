@@ -32,12 +32,13 @@ type InitCommand =
 type SpotifyPlayerCommand =
   | { _tag: "PlayTrack"; trackId: TrackId }
   | { _tag: "TogglePlayback" }
+  | { _tag: "Stop" }
   | { _tag: "Dispose" };
 
 const { CallbackRegistered, PlayerCreated, PlayerReady } =
   Data.taggedEnum<InitCommand>();
 
-const { PlayTrack, TogglePlayback, Dispose } =
+const { PlayTrack, TogglePlayback, Stop, Dispose } =
   Data.taggedEnum<SpotifyPlayerCommand>();
 
 const make = Effect.gen(function* () {
@@ -136,6 +137,7 @@ const make = Effect.gen(function* () {
           id: MediaPlayerId("spotify-player"),
           playTrack: (trackId) => commandQueue.offer(PlayTrack({ trackId })),
           togglePlayback: commandQueue.offer(TogglePlayback()),
+          stop: commandQueue.offer(Stop()),
           observe: mediaPlayerEventQueue,
           dispose: commandQueue.offer(Dispose()),
         };
@@ -174,6 +176,12 @@ const consumeCommandsInBackground = (
         ),
         Match.tag("TogglePlayback", () =>
           Effect.sync(() => player.togglePlay()),
+        ),
+        Match.tag("Stop", () =>
+          Effect.all([
+            Effect.sync(() => player.pause()),
+            Effect.sync(() => player.seek(0)),
+          ]),
         ),
         Match.tag("Dispose", () => Effect.sync(() => player.disconnect())),
         Match.exhaustive,

@@ -37,6 +37,10 @@ const make = MediaPlayerFactory.of({
         togglePlayback: Effect.sync(() => {
           audioElement.paused ? audioElement.play() : audioElement.pause();
         }),
+        stop: Effect.sync(() => {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+        }),
         observe: Stream.async((emit) => {
           // TODO: Keep track in the state? If something, it can be done via a ref.
           audioElement.onplay = () => emit.single("trackPlaying");

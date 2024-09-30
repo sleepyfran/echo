@@ -310,8 +310,11 @@ const syncPlayerState = (
     yield* pipe(
       mediaPlayer.observe,
       Stream.ensuring(
-        Effect.log(`Stream from player ${mediaPlayer.id} has stopped.`),
+        Effect.log(
+          `Stream from player ${mediaPlayer.id} has stopped, stopping current playback...`,
+        ),
       ),
+      Stream.ensuring(mediaPlayer.stop),
       Stream.runForEach((event) =>
         Match.value(event).pipe(
           Match.when("trackPlaying", () =>

@@ -118,7 +118,12 @@ export type MediaPlayer = (FileBasedMediaPlayer | ApiBasedMediaPlayer) & {
   /**
    * Toggles the playback of the current track.
    */
-  togglePlayback: Effect<void>;
+  readonly togglePlayback: Effect<void>;
+
+  /**
+   * Stops the playback of the current track.
+   */
+  readonly stop: Effect<void>;
 
   /**
    * Returns a stream that emits events from the media player.
