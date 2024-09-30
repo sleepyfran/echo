@@ -14,27 +14,35 @@ import {
   Match,
   pipe,
   Queue,
+  Scope,
   Stream,
 } from "effect";
 import { loadSpotifyPlaybackSDK } from "./src/lib";
-import { PlayerApi } from "./src/apis/player-api";
+import {
+  SpotifyPlayerApi,
+  SpotifyPlayerApiLive,
+  type ISpotifyPlayerApi,
+} from "./src/apis/player-api";
 
 type InitCommand =
   | { _tag: "CallbackRegistered" }
-  | { _tag: "PlayerReady"; player: Spotify.Player };
+  | { _tag: "PlayerCreated"; player: Spotify.Player }
+  | { _tag: "PlayerReady"; player: Spotify.Player; deviceId: string };
 
 type SpotifyPlayerCommand =
   | { _tag: "PlayTrack"; trackId: TrackId }
   | { _tag: "TogglePlayback" }
   | { _tag: "Dispose" };
 
-const { CallbackRegistered, PlayerReady } = Data.taggedEnum<InitCommand>();
+const { CallbackRegistered, PlayerCreated, PlayerReady } =
+  Data.taggedEnum<InitCommand>();
 
 const { PlayTrack, TogglePlayback, Dispose } =
   Data.taggedEnum<SpotifyPlayerCommand>();
 
 const make = Effect.gen(function* () {
-  const playerApi = yield* PlayerApi;
+  const playerApi = yield* SpotifyPlayerApi;
+  const layerScope = yield* Scope.make();
 
   return MediaPlayerFactory.of({
     createMediaPlayer: (authInfo) =>
@@ -68,9 +76,11 @@ const make = Effect.gen(function* () {
               volume: 1.0,
             });
 
-            player.addListener("ready", () => {
-              emit.single(PlayerReady({ player }));
+            player.addListener("ready", ({ device_id }) => {
+              emit.single(PlayerReady({ player, deviceId: device_id }));
             });
+
+            emit.single(PlayerCreated({ player }));
           };
 
           emit.single(CallbackRegistered());
@@ -78,26 +88,39 @@ const make = Effect.gen(function* () {
           Stream.runForEach((command) =>
             Match.value(command).pipe(
               Match.tag("CallbackRegistered", () =>
-                Deferred.succeed(deferredUntilRegistered, undefined),
-              ),
-              Match.tag("PlayerReady", ({ player }) =>
-                consumeCommandsInBackground(
-                  { authInfo },
-                  { playerApi, player },
-                  commandQueue,
-                ).pipe(
+                Effect.log("SDK callback registered").pipe(
                   Effect.andThen(() =>
-                    setupListeners(player, mediaPlayerEventQueue),
+                    Deferred.succeed(deferredUntilRegistered, undefined),
                   ),
+                ),
+              ),
+              Match.tag("PlayerCreated", ({ player }) =>
+                Effect.log("Player created, calling connect...").pipe(
+                  Effect.andThen(() => Effect.promise(() => player.connect())),
+                ),
+              ),
+              Match.tag("PlayerReady", ({ player, deviceId }) =>
+                Effect.log("Player is ready, setting up listeners").pipe(
                   Effect.andThen(() =>
-                    Effect.log("Player ready and listeners set up"),
+                    consumeCommandsInBackground(
+                      { authInfo, deviceId },
+                      { playerApi, player },
+                      commandQueue,
+                    ).pipe(
+                      Effect.andThen(() =>
+                        setupListeners(player, mediaPlayerEventQueue),
+                      ),
+                      Effect.andThen(() =>
+                        Effect.log("Player ready and listeners set up"),
+                      ),
+                    ),
                   ),
                 ),
               ),
               Match.exhaustive,
             ),
           ),
-          Effect.fork,
+          Effect.forkIn(layerScope),
         );
 
         yield* Effect.log(
@@ -122,33 +145,27 @@ const make = Effect.gen(function* () {
 
 type Dependencies = {
   authInfo: AuthenticationInfo;
+  deviceId: string;
 };
 
 type Api = {
-  playerApi: PlayerApi;
+  playerApi: ISpotifyPlayerApi;
   player: Spotify.Player;
 };
 
 const consumeCommandsInBackground = (
-  { authInfo }: Dependencies,
+  { authInfo, deviceId }: Dependencies,
   { playerApi, player }: Api,
   commandQueue: Queue.Queue<SpotifyPlayerCommand>,
 ) =>
   pipe(
     Stream.fromQueue(commandQueue),
+    Stream.tap((command) => Effect.log(`Received command: ${command._tag}`)),
     Stream.runForEach((command) =>
       Match.value(command).pipe(
         Match.tag("PlayTrack", ({ trackId }) =>
-          playerApi.player
-            .playTrack({
-              headers: {
-                Authorization: `Bearer ${authInfo.accessToken}`,
-              },
-              path: {
-                context_uri: trackId,
-                position_ms: "0",
-              },
-            })
+          playerApi
+            .playTrack(deviceId, trackId, authInfo)
             .pipe(
               Effect.catchAll((e) =>
                 Effect.logError("Failed to play track, error", e),
@@ -194,4 +211,4 @@ const setupListeners = (
 export const SpotifyMediaPlayerFactoryLive = Layer.scoped(
   MediaPlayerFactory,
   make,
-);
+).pipe(Layer.provide(SpotifyPlayerApiLive));
