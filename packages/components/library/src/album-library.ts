@@ -19,6 +19,19 @@ export class AlbumLibrary extends LitElement {
       justify-content: center;
       align-items: center;
       height: 100%;
+      animation: blinking 1s infinite;
+    }
+
+    @keyframes blinking {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+      100% {
+        opacity: 1;
+      }
     }
 
     div {
