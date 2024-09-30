@@ -163,7 +163,7 @@ const resolveMetadataFromStream = (
           ),
           Effect.map((metadata) => ({ metadata, file })),
           Effect.tap(({ file }) =>
-            Effect.log(`Downloaded and processed ${file.name}`),
+            Effect.logDebug(`Downloaded and processed ${file.name}`),
           ),
           Effect.tapError((error) =>
             Effect.logError(
