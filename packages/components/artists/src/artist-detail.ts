@@ -29,12 +29,14 @@ export class ArtistDetail extends LitElement {
 
     img.artist-image {
       border-radius: 10%;
-      height: 20rem;
       object-fit: cover;
+      aspect-ratio: 3 / 4;
+      width: 15rem;
     }
 
     div.artist-info {
       display: flex;
+      align-items: center;
       flex-direction: column;
       box-sizing: border-box;
       width: 100%;
