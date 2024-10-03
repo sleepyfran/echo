@@ -6,6 +6,7 @@ import { customElement, property } from "lit/decorators.js";
  */
 export enum ButtonType {
   Regular = "regular",
+  Secondary = "secondary",
   Icon = "icon",
 }
 
@@ -44,7 +45,7 @@ export class EchoButton extends LitElement {
       cursor: not-allowed;
     }
 
-    button[icon-only] {
+    button[type="icon"] {
       background: none;
       border: none;
       color: var(--text-color);
@@ -54,13 +55,24 @@ export class EchoButton extends LitElement {
       transition: color var(--short-transition-duration);
     }
 
-    button[icon-only]:hover {
+    button[type="icon"]:hover {
       color: var(--accent-color);
     }
 
-    button[icon-only]:disabled {
+    button[type="icon"]:disabled {
       color: var(--disabled-background-color);
       cursor: not-allowed;
+    }
+
+    button[type="secondary"] {
+      background-color: transparent;
+      border: 2px solid var(--button-background-color);
+      color: var(--button-background-color);
+    }
+
+    button[type="secondary"]:hover {
+      background-color: var(--button-background-color);
+      color: var(--button-text-color);
     }
 
     button:focus {
@@ -71,10 +83,7 @@ export class EchoButton extends LitElement {
 
   render() {
     return html`
-      <button
-        ?icon-only=${this.type === ButtonType.Icon}
-        ?disabled=${this.disabled}
-      >
+      <button type=${this.type} ?disabled=${this.disabled}>
         <slot></slot>
       </button>
     `;

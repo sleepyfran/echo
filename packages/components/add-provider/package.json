@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
+    "@echo/components-icons": "^1.0.0",
     "@echo/components-shared-controllers": "^1.0.0",
     "@echo/components-ui-atoms": "^1.0.0",
     "@echo/services-bootstrap-runtime": "^1.0.0",

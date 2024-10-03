@@ -3,8 +3,10 @@ import { AddProviderWorkflow, type ProviderMetadata } from "@echo/core-types";
 import { Match } from "effect";
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import "@echo/components-ui-atoms";
 import { ProviderStartedEvent, ProviderWaitingForRoot } from "./events";
+import "@echo/components-icons";
+import "@echo/components-ui-atoms";
+import { ButtonType } from "@echo/components-ui-atoms";
 
 type LoaderStatus =
   | { _tag: "Initial" }
@@ -55,7 +57,8 @@ export class ProviderLoader extends LitElement {
   static styles = css`
     .available-provider-list {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       gap: 1rem;
     }
 
@@ -63,6 +66,13 @@ export class ProviderLoader extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
+    }
+
+    echo-button > .button-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-width: 15rem;
     }
   `;
 
@@ -82,9 +92,15 @@ export class ProviderLoader extends LitElement {
                 ${this.availableProviders.map(
                   (provider) => html`
                     <echo-button
+                      type=${ButtonType.Secondary}
                       @click=${() => this._loadProvider.run(provider)}
                     >
-                      ${provider.id}
+                      <div class="button-content">
+                        <provider-icon
+                          .providerId=${provider.id}
+                        ></provider-icon>
+                        ${provider.id}
+                      </div>
                     </echo-button>
                   `,
                 )}
