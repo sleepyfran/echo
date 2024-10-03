@@ -27,7 +27,7 @@ mkcert -install
 yarn setup
 ```
 
-Once you've done this, make sure you have a `.env` file on the web package that
+Once you've done this, make sure you have a `.env.local` file on the web package that
 contains the configuration for the backends you want to connect to. A full example
 of this file would be:
 
