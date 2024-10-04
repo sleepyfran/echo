@@ -73,13 +73,14 @@ export class AllProvidersStatusBar extends LitElement {
           ${map(
             status,
             ([providerId, providerStatus]) => html`
-              <div
-                class="provider-status"
-                title=${this._providerStatusTitle(providerId, providerStatus)}
+              <echo-tooltip
+                content=${this._providerStatusTitle(providerId, providerStatus)}
               >
-                <provider-icon .providerId=${providerId}></provider-icon>
-                ${this._renderProviderStatus(providerStatus)}
-              </div>
+                <div class="provider-status">
+                  <provider-icon .providerId=${providerId}></provider-icon>
+                  ${this._renderProviderStatus(providerStatus)}
+                </div>
+              </echo-tooltip>
             `,
           )}
           <echo-button

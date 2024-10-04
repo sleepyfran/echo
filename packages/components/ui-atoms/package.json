@@ -12,6 +12,7 @@
     "@echo/services-bootstrap-runtime": "^1.0.0",
     "effect": "^3.8.3",
     "lit": "^3.2.0",
-    "@lit/task": "^1.0.1"
+    "@lit/task": "^1.0.1",
+    "@lion/ui": "^0.7.8"
   }
 }
