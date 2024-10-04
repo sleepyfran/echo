@@ -1,0 +1,15 @@
+{
+  "name": "@echo/services-resolver",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains the implementation for the Resolver service",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "effect": "^3.8.3"
+  }
+}

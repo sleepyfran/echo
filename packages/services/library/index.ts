@@ -3,12 +3,12 @@ import {
   Library,
   NonExistingArtistReferenced,
   type Album,
-  type AlbumInfo,
   type Artist,
   type DatabaseAlbum,
   type DatabaseArtist,
   type DatabaseTrack,
   type Table,
+  type Track,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Stream } from "effect";
 
@@ -25,12 +25,11 @@ export const LibraryLive = Layer.effect(
         Effect.gen(function* () {
           const albumsTable = yield* database.table("albums");
           const artistsTable = yield* database.table("artists");
-          const tracksTable = yield* database.table("tracks");
           const allAlbums = yield* albumsTable.observe();
 
           return allAlbums.pipe(
             Stream.mapEffect((albums) =>
-              resolveAllAlbums(albums, artistsTable, tracksTable),
+              resolveAllAlbums(albums, artistsTable),
             ),
             Stream.map(sortAlbumsByArtistName),
           );
@@ -39,7 +38,6 @@ export const LibraryLive = Layer.effect(
         Effect.gen(function* () {
           const artistsTable = yield* database.table("artists");
           const albumsTable = yield* database.table("albums");
-          const tracksTable = yield* database.table("tracks");
 
           const artist = yield* artistsTable.byId(artistId);
           const albums = yield* albumsTable
@@ -54,7 +52,7 @@ export const LibraryLive = Layer.effect(
             })
             .pipe(
               Effect.flatMap((albums) =>
-                resolveAllAlbums(albums, artistsTable, tracksTable),
+                resolveAllAlbums(albums, artistsTable),
               ),
             );
 
@@ -76,15 +74,31 @@ export const LibraryLive = Layer.effect(
             return Option.none();
           }
 
-          const artist = yield* artistsTable.byId(maybeAlbum.value.artistId);
+          const maybeArtist = yield* artistsTable.byId(
+            maybeAlbum.value.artistId,
+          );
+          if (Option.isNone(maybeArtist)) {
+            return yield* Effect.fail(
+              new NonExistingArtistReferenced(
+                maybeAlbum.value.name,
+                maybeAlbum.value.artistId,
+              ),
+            );
+          }
+
           const tracks = yield* tracksTable.filtered({
             filter: {
               albumId,
             },
           });
 
-          const album = yield* toAlbumSchema(maybeAlbum.value, artist, tracks);
-          return Option.some(album);
+          const album = yield* toAlbumSchema(maybeAlbum.value, maybeArtist);
+          return Option.some({
+            ...album,
+            tracks: tracks
+              .sort((a, b) => a.trackNumber - b.trackNumber)
+              .map((track) => toTrackSchema(track, album, album.artist)),
+          });
         }),
       observeArtists: () =>
         Effect.gen(function* () {
@@ -105,20 +119,12 @@ export const LibraryLive = Layer.effect(
 const resolveAllAlbums = (
   albums: DatabaseAlbum[],
   artistsTable: Table<"artists", DatabaseArtist>,
-  tracksTable: Table<"tracks", DatabaseTrack>,
 ): Effect.Effect<Album[], NonExistingArtistReferenced> =>
   Effect.all(
     albums.map((album) =>
-      Effect.gen(function* () {
-        const artist = yield* artistsTable.byId(album.artistId);
-        const tracks = yield* tracksTable.filtered({
-          filter: {
-            albumId: album.id,
-          },
-        });
-
-        return yield* toAlbumSchema(album, artist, tracks);
-      }),
+      artistsTable
+        .byId(album.artistId)
+        .pipe(Effect.flatMap((artist) => toAlbumSchema(album, artist))),
     ),
     {
       concurrency: 4,
@@ -128,7 +134,6 @@ const resolveAllAlbums = (
 const toAlbumSchema = (
   album: DatabaseAlbum,
   artist: Option.Option<DatabaseArtist>,
-  tracks: DatabaseTrack[],
 ): Effect.Effect<Album, NonExistingArtistReferenced> => {
   if (Option.isNone(artist)) {
     return Effect.fail(
@@ -136,30 +141,28 @@ const toAlbumSchema = (
     );
   }
 
-  const albumInfo: AlbumInfo = {
+  return Effect.succeed({
     ...album,
     artist: toArtistSchema(artist.value),
     embeddedCover: Option.fromNullable(album.embeddedCover),
     releaseYear: Option.fromNullable(album.releaseYear),
-  };
-
-  return Effect.succeed({
-    ...albumInfo,
-    artist: toArtistSchema(artist.value),
-    tracks: tracks
-      .sort((a, b) => a.trackNumber - b.trackNumber)
-      .map((track) => ({
-        ...track,
-        albumInfo,
-        mainArtist: toArtistSchema(artist.value),
-        secondaryArtists: [],
-      })),
   });
 };
 
 const toArtistSchema = (artist: DatabaseArtist): Artist => ({
   ...artist,
   image: Option.fromNullable(artist.image),
+});
+
+const toTrackSchema = (
+  track: DatabaseTrack,
+  album: Album,
+  artist: Artist,
+): Track => ({
+  ...track,
+  albumInfo: album,
+  mainArtist: artist,
+  secondaryArtists: [],
 });
 
 const sortAlbumsByArtistName = (albums: Album[]): Album[] =>

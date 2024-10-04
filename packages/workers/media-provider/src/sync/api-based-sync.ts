@@ -1,6 +1,6 @@
 import {
   ProviderError,
-  type Album,
+  type AlbumWithTracks,
   type ApiBasedProvider,
   type Artist,
   type BroadcastChannel,
@@ -78,7 +78,7 @@ export const syncApiBasedProvider = ({
 
 const normalizeData = (
   { database }: Pick<SyncApiBasedProviderInput, "database">,
-  albums: Album[],
+  albums: AlbumWithTracks[],
 ) =>
   Stream.fromIterable(albums).pipe(
     Stream.runFoldEffect(

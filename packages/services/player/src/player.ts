@@ -6,6 +6,7 @@ import {
   PlayNotFoundError,
   ProviderNotReady,
   ProviderType,
+  EntityResolver,
   Stopped,
   type IActiveMediaProviderCache,
   type MediaPlayer,
@@ -59,21 +60,26 @@ const makePlayer = Effect.gen(function* () {
   const state = yield* PlayerStateRef;
   const providerCache = yield* ActiveMediaProviderCache;
   const activeMediaPlayer = yield* CurrentlyActivePlayerRef;
+  const resolver = yield* EntityResolver;
 
   const commandQueue = yield* Queue.sliding<PlayerCommand>(10);
   yield* consumeCommandsInBackground(commandQueue);
 
   return Player.of({
     playAlbum: (album) =>
-      playTracks({
-        tracks: album.tracks,
-        providerCache,
-        commandQueue,
-        preservePreviousTracks: false,
-      }).pipe(
-        Effect.catchTag("NoMoreTracksAvailable", () =>
-          Effect.logError(
-            `Attempted to play album ${album.name}, but it has no tracks.`,
+      resolver.albumWithTracks(album).pipe(
+        Effect.flatMap((albumWithTracks) =>
+          playTracks({
+            tracks: albumWithTracks.tracks,
+            providerCache,
+            commandQueue,
+            preservePreviousTracks: false,
+          }).pipe(
+            Effect.catchTag("NoMoreTracksAvailable", () =>
+              Effect.logError(
+                `Attempted to play album ${album.name}, but it has no tracks.`,
+              ),
+            ),
           ),
         ),
       ),

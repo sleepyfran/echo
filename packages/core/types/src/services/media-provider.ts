@@ -5,8 +5,8 @@ import type {
   FolderContentMetadata,
   FileId,
   TrackId,
-  Album,
   ProviderType,
+  AlbumWithTracks,
 } from "../model";
 import type { Authentication } from "./authentication";
 import { Brand, Context, Stream } from "effect";
@@ -63,7 +63,7 @@ export type ApiBasedProvider = {
   /**
    * Lists the albums available in the provider.
    */
-  readonly listAlbums: Effect<Album[], ApiBasedProviderError>;
+  readonly listAlbums: Effect<AlbumWithTracks[], ApiBasedProviderError>;
 };
 
 /**

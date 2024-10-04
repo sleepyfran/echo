@@ -7,7 +7,7 @@ import {
   ArtistId,
   TrackId,
   type Album,
-  type AlbumInfo,
+  type AlbumWithTracks,
   type Artist,
   type AuthenticationInfo,
   type Track,
@@ -17,7 +17,7 @@ import type { SpotifyAlbumResponse } from "./types";
 const initialState = {
   maybeOffset: Option.some(0),
   albums: [],
-} as { maybeOffset: Option.Option<number>; albums: Album[] };
+} as { maybeOffset: Option.Option<number>; albums: AlbumWithTracks[] };
 
 /**
  * Creates an effect that retrieves all the albums in the user's library.
@@ -70,7 +70,7 @@ export const createListAlbums = (
 
 const resolveAlbum = (
   spotifyAlbum: SpotifyAlbumResponse,
-): Effect.Effect<Album> =>
+): Effect.Effect<AlbumWithTracks> =>
   Effect.gen(function* () {
     const albumCover = yield* downloadImage(spotifyAlbum.images[0]?.url);
     // TODO: Should we check for empty arrays here?
@@ -80,7 +80,7 @@ const resolveAlbum = (
       ? Option.some(Number(parsedYear))
       : Option.none();
 
-    const albumInfo: AlbumInfo = {
+    const albumInfo: Album = {
       artist,
       embeddedCover: albumCover,
       id: AlbumId(spotifyAlbum.id),
@@ -106,7 +106,7 @@ const toArtistSchema = (
 });
 
 const toTrackSchema = (
-  albumInfo: AlbumInfo,
+  albumInfo: Album,
   artist: Artist,
   spotifyTrack: SpotifyAlbumResponse["tracks"]["items"][0],
 ): Track => ({
