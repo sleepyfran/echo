@@ -45,7 +45,7 @@ export class EchoButton extends LitElement {
       cursor: not-allowed;
     }
 
-    button[type="icon"] {
+    button[echo-type="icon"] {
       background: none;
       border: none;
       color: var(--text-color);
@@ -55,23 +55,23 @@ export class EchoButton extends LitElement {
       transition: color var(--short-transition-duration);
     }
 
-    button[type="icon"]:hover {
+    button[echo-type="icon"]:hover {
       color: var(--accent-color);
     }
 
-    button[type="icon"]:disabled {
+    button[echo-type="icon"]:disabled {
       color: var(--disabled-background-color);
       cursor: not-allowed;
     }
 
-    button[type="secondary"] {
+    button[echo-type="secondary"] {
       background-color: transparent;
-      border: 2px solid var(--button-background-color);
-      color: var(--button-background-color);
+      border: 2px solid var(--button-secondary-hover-background-color);
+      color: var(--button-secondary-text-color);
     }
 
-    button[type="secondary"]:hover {
-      background-color: var(--button-background-color);
+    button[echo-type="secondary"]:hover {
+      background-color: var(--button-secondary-hover-background-color);
       color: var(--button-text-color);
     }
 
@@ -83,7 +83,7 @@ export class EchoButton extends LitElement {
 
   render() {
     return html`
-      <button type=${this.type} ?disabled=${this.disabled}>
+      <button echo-type=${this.type} ?disabled=${this.disabled}>
         <slot></slot>
       </button>
     `;
