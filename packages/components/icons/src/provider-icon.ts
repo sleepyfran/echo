@@ -1,5 +1,9 @@
-import type { ProviderId } from "@echo/core-types";
-import { LitElement, css, html } from "lit";
+import {
+  ApiBasedProviderId,
+  FileBasedProviderId,
+  type ProviderId,
+} from "@echo/core-types";
+import { LitElement, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 /**
@@ -10,18 +14,21 @@ export class ProviderIcon extends LitElement {
   @property({ type: String }) providerId!: ProviderId;
   @property({ type: Number }) size = 24;
 
-  static styles = css`
-    img {
-      height: 2rem;
-      object-fit: contain;
-      width: 2rem;
-    }
-  `;
-
   render() {
-    return html`
-      <img type=${this.providerId} src="/icons/${this.providerId}.png" />
-    `;
+    switch (this.providerId) {
+      case FileBasedProviderId.OneDrive:
+        return html`<img
+          style="width: 3rem; height: 2rem;"
+          src="/icons/onedrive.png"
+        />`;
+      case ApiBasedProviderId.Spotify:
+        return html`<img
+          style="width: 2rem; height: 2rem;"
+          src="/icons/spotify.png"
+        />`;
+      default:
+        return nothing;
+    }
   }
 }
 
