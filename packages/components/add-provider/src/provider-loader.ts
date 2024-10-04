@@ -5,7 +5,6 @@ import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ProviderStartedEvent, ProviderWaitingForRoot } from "./events";
 import "@echo/components-icons";
-import "@echo/components-ui-atoms";
 import { ButtonType } from "@echo/components-ui-atoms";
 
 type LoaderStatus =
