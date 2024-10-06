@@ -1,6 +1,5 @@
 import {
   ProviderError,
-  type ProviderMetadata,
   type BroadcastChannel,
   MetadataProvider,
   type MediaProviderBroadcastSchema,
@@ -9,9 +8,10 @@ import {
   ProviderType,
   type FileBasedProvider,
   type ApiBasedProvider,
+  type ProviderStartArgs,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
-import { Effect, Match, Ref } from "effect";
+import { DateTime, Effect, Match, Option, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
@@ -47,11 +47,26 @@ export const startMediaProviderResolver = ({
       return;
     }
 
+    if (Option.isSome(input.lastSyncedAt)) {
+      const lastSyncDate = DateTime.unsafeFromDate(input.lastSyncedAt.value);
+      const aDayAgo = DateTime.unsafeNow().pipe(
+        DateTime.subtractDuration("1 day"),
+      );
+
+      const lessThanADayAgo = aDayAgo.pipe(DateTime.greaterThan(lastSyncDate));
+      if (lessThanADayAgo) {
+        yield* Effect.log(
+          `Provider with ID ${input.metadata.id} was synced less than a day ago. Ignoring command.`,
+        );
+        return;
+      }
+    }
+
     if (!isValidToken(input.authInfo)) {
       yield* Effect.logError(
         `Token for provider with ID ${input.metadata.id} is expired. Aborting initialization.`,
       );
-      yield* notifyMainThreadOfExpiredToken(broadcastChannel, input.metadata);
+      yield* notifyMainThreadOfExpiredToken(input, broadcastChannel);
       return;
     }
 
@@ -70,8 +85,8 @@ export const startMediaProviderResolver = ({
       Match.tag(ProviderType.FileBased, (input) =>
         Effect.fork(
           syncFileBasedProvider({
+            startArgs: input,
             broadcastChannel,
-            metadata: input.metadata,
             metadataProvider,
             /*
             Provider loader guarantees this.
@@ -84,10 +99,10 @@ export const startMediaProviderResolver = ({
           }),
         ),
       ),
-      Match.tag(ProviderType.ApiBased, (_input) =>
+      Match.tag(ProviderType.ApiBased, (input) =>
         Effect.fork(
           syncApiBasedProvider({
-            metadata: input.metadata,
+            startArgs: input,
             broadcastChannel,
             /*
             Provider loader guarantees this.
@@ -109,12 +124,12 @@ export const startMediaProviderResolver = ({
   });
 
 export const notifyMainThreadOfExpiredToken = (
+  startArgs: ProviderStartArgs,
   broadcastChannel: TBroadcastChannel,
-  metadata: ProviderMetadata,
 ) =>
   Effect.gen(function* () {
     return yield* broadcastChannel.send("reportStatus", {
-      metadata,
+      startArgs,
       status: { _tag: "errored", error: ProviderError.TokenExpired },
     });
   });

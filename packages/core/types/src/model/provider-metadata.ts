@@ -1,3 +1,4 @@
+import type { Option } from "effect";
 import type { AuthenticationInfo } from "./authentication";
 import type { FolderMetadata } from "./file-system";
 
@@ -93,23 +94,31 @@ export type ProviderStatus =
   | { _tag: "stopped" };
 
 /**
+ * Defines the parameters required to start a provider, regardless of whether it is
+ * file-based or API-based.
+ */
+type CommonStartArgs = {
+  lastSyncedAt: Option.Option<Date>;
+};
+
+/**
  * Defines the parameters required to start a file-based provider.
  */
-type FileBasedStartArgs = {
+export type FileBasedStartArgs = {
   _tag: ProviderType.FileBased;
   metadata: ProviderMetadata;
   authInfo: AuthenticationInfo;
   rootFolder: FolderMetadata;
-};
+} & CommonStartArgs;
 
 /**
  * Defines the parameters required to start an API-based provider.
  */
-type ApiBasedStartArgs = {
+export type ApiBasedStartArgs = {
   _tag: ProviderType.ApiBased;
   metadata: ProviderMetadata;
   authInfo: AuthenticationInfo;
-};
+} & CommonStartArgs;
 
 /**
  * Defines the parameters required to start a provider, which can be either file-based

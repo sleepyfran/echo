@@ -20,6 +20,7 @@ import {
   TrackId,
   FileBasedProviderId,
   type ProviderId,
+  type FileBasedStartArgs,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { head } from "effect/Array";
@@ -30,7 +31,7 @@ import {
 } from "./partial-downloader";
 
 type SyncFileBasedProviderInput = {
-  metadata: ProviderMetadata;
+  startArgs: FileBasedStartArgs;
   provider: FileBasedProvider;
   broadcastChannel: BroadcastChannel<MediaProviderBroadcastSchema["worker"]>;
   metadataProvider: MetadataProvider;
@@ -46,8 +47,8 @@ type SyncState = {
 };
 
 export const syncFileBasedProvider = ({
+  startArgs,
   broadcastChannel,
-  metadata,
   metadataProvider,
   provider,
   rootFolder,
@@ -55,10 +56,10 @@ export const syncFileBasedProvider = ({
   crypto,
 }: SyncFileBasedProviderInput) =>
   Effect.gen(function* () {
-    yield* Effect.log(`Starting sync for provider ${metadata.id}`);
+    yield* Effect.log(`Starting sync for provider ${startArgs.metadata.id}`);
 
     yield* broadcastChannel.send("reportStatus", {
-      metadata,
+      startArgs,
       status: { _tag: "syncing" },
     });
 
@@ -74,14 +75,14 @@ export const syncFileBasedProvider = ({
 
     const normalizedData = yield* normalizeData(
       { database, crypto },
-      metadata,
+      startArgs.metadata,
       processed,
     );
 
     yield* saveToDatabase({ database }, normalizedData);
 
     return yield* broadcastChannel.send("reportStatus", {
-      metadata,
+      startArgs,
       status: {
         _tag: "synced",
         lastSyncedAt: new Date(),
@@ -93,13 +94,13 @@ export const syncFileBasedProvider = ({
     Effect.catchAll(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
-          `Sync of ${metadata.id} has failed, reporting error with API to main thread.`,
+          `Sync of ${startArgs.metadata.id} has failed, reporting error with API to main thread.`,
         );
 
         // If we end up here, the provider has failed to retrieve any
         // files, since the stream is made to never fail. Report back an error.
         yield* broadcastChannel.send("reportStatus", {
-          metadata,
+          startArgs,
           status: { _tag: "errored", error: ProviderError.ApiGatewayError },
         });
       }),

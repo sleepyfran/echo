@@ -11,6 +11,7 @@ import {
   type ProviderId,
   ActiveMediaProviderCache,
   type IActiveMediaProviderCache,
+  MediaProviderArgsStorage,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
@@ -26,6 +27,7 @@ const make = Effect.gen(function* () {
   const lazyLoadedProvider = yield* LazyLoadedProvider;
   const lazyLoaderMediaPlayer = yield* LazyLoadedMediaPlayer;
   const localStorage = yield* LocalStorage;
+  const mediaProviderArgsStorage = yield* MediaProviderArgsStorage;
 
   return AppInit.of({
     init: Effect.gen(function* () {
@@ -34,6 +36,8 @@ const make = Effect.gen(function* () {
       );
       yield* initializeWorkers;
       yield* Effect.log("Worker initialization finished, starting app...");
+
+      yield* mediaProviderArgsStorage.keepInSync;
 
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 

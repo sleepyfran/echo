@@ -10,7 +10,10 @@ import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";
 import { LazyLoadedMediaPlayerLive } from "./loaders/player";
 import { ActiveMediaProviderCacheLive } from "@echo/services-active-media-provider-cache";
-import { MediaProviderStatusLive } from "@echo/services-media-provider-status";
+import {
+  MediaProviderStatusLive,
+  MediaProviderArgStorageLive,
+} from "@echo/services-media-provider-status";
 import { BrowserLocalStorageLive } from "@echo/infrastructure-browser-local-storage";
 import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-image-provider";
 
@@ -19,6 +22,7 @@ import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-
  * main thread (web-app).
  */
 export const MainLive = ActiveMediaProviderCacheLive.pipe(
+  Layer.provideMerge(MediaProviderArgStorageLive),
   Layer.provideMerge(MediaProviderStatusLive),
   Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
   Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),

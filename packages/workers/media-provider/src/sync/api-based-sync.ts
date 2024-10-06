@@ -2,6 +2,7 @@ import {
   ProviderError,
   type AlbumWithTracks,
   type ApiBasedProvider,
+  type ApiBasedStartArgs,
   type Artist,
   type BroadcastChannel,
   type Database,
@@ -9,13 +10,12 @@ import {
   type DatabaseArtist,
   type DatabaseTrack,
   type MediaProviderBroadcastSchema,
-  type ProviderMetadata,
 } from "@echo/core-types";
 import { Effect, Option, Stream } from "effect";
 import { head } from "effect/Array";
 
 type SyncApiBasedProviderInput = {
-  metadata: ProviderMetadata;
+  startArgs: ApiBasedStartArgs;
   broadcastChannel: BroadcastChannel<MediaProviderBroadcastSchema["worker"]>;
   provider: ApiBasedProvider;
   database: Database;
@@ -28,16 +28,16 @@ type SyncState = {
 };
 
 export const syncApiBasedProvider = ({
-  metadata,
+  startArgs,
   broadcastChannel,
   provider,
   database,
 }: SyncApiBasedProviderInput) =>
   Effect.gen(function* () {
-    yield* Effect.log(`Starting sync for provider ${metadata.id}`);
+    yield* Effect.log(`Starting sync for provider ${startArgs.metadata.id}`);
 
     yield* broadcastChannel.send("reportStatus", {
-      metadata,
+      startArgs,
       status: { _tag: "syncing" },
     });
 
@@ -51,7 +51,7 @@ export const syncApiBasedProvider = ({
     yield* saveToDatabase({ database }, { albums, artists, tracks });
 
     yield* broadcastChannel.send("reportStatus", {
-      metadata,
+      startArgs,
       status: {
         _tag: "synced",
         lastSyncedAt: new Date(),
@@ -63,13 +63,13 @@ export const syncApiBasedProvider = ({
     Effect.catchAll(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
-          `Sync of ${metadata.id} has failed, reporting error with API to main thread.`,
+          `Sync of ${startArgs.metadata.id} has failed, reporting error with API to main thread.`,
         );
 
         // If we end up here, the provider has failed to communicate with the
         // API.
         yield* broadcastChannel.send("reportStatus", {
-          metadata,
+          startArgs,
           status: { _tag: "errored", error: ProviderError.ApiGatewayError },
         });
       }),

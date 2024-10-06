@@ -1,4 +1,4 @@
-import { Effect, Layer, Request, Schedule } from "effect";
+import { Effect, Layer, Option, Request, Schedule } from "effect";
 import * as Machine from "@effect/experimental/Machine";
 import {
   ActiveMediaProviderCache,
@@ -17,6 +17,7 @@ import {
   type MediaProviderFactory,
   type ProviderMetadata,
   type ProviderStartArgs,
+  type ProviderWithMetadata,
 } from "@echo/core-types";
 import {
   LazyLoadedProvider,
@@ -56,6 +57,7 @@ class AddProvider extends Request.TaggedClass("AddProvider")<
   never,
   {
     readonly startArgs: ProviderStartArgs;
+    readonly providerWithMetadata: ProviderWithMetadata;
   }
 > {}
 
@@ -73,7 +75,7 @@ type MachineState =
   | {
       _tag: "WaitingForRoot";
       authInfo: AuthenticationInfo;
-      providerMetadata: ProviderMetadata;
+      providerWithMetadata: ProviderWithMetadata;
     }
   | { _tag: "Done" };
 
@@ -103,6 +105,11 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                 "media-provider-start-args",
                 request.startArgs.metadata.id,
                 request.startArgs,
+              );
+              yield* activeMediaProviderCache.add(
+                request.providerWithMetadata.metadata,
+                request.providerWithMetadata.provider,
+                request.providerWithMetadata.player,
               );
 
               return [{}, { _tag: "Done" as const }];
@@ -161,14 +168,11 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
               const mediaPlayer =
                 yield* state.loadedProvider.createMediaPlayer(authInfo);
 
-              // Cache the provider and the player so that it can be used
-              // later on by other services without going through the initialization
-              // process again.
-              yield* activeMediaProviderCache.add(
-                state.loadedProvider.metadata,
-                mediaProvider,
-                mediaPlayer,
-              );
+              const providerWithMetadata: ProviderWithMetadata = {
+                metadata: state.loadedProvider.metadata,
+                provider: mediaProvider,
+                player: mediaPlayer,
+              };
 
               if (mediaProvider._tag === ProviderType.FileBased) {
                 const rootFolder = yield* mediaProvider.listRoot;
@@ -181,7 +185,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                   {
                     _tag: "WaitingForRoot" as const,
                     authInfo,
-                    providerMetadata: state.loadedProvider.metadata,
+                    providerWithMetadata,
                   },
                 ];
               }
@@ -191,10 +195,11 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
               const startArgs: ProviderStartArgs = {
                 _tag: ProviderType.ApiBased,
                 authInfo,
+                lastSyncedAt: Option.none(),
                 metadata: state.loadedProvider.metadata,
               };
 
-              yield* send(new AddProvider({ startArgs }));
+              yield* send(new AddProvider({ startArgs, providerWithMetadata }));
 
               return [
                 { requiresRootFolderSelection: false },
@@ -217,12 +222,18 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
 
               const startArgs: ProviderStartArgs = {
                 _tag: ProviderType.FileBased,
-                metadata: state.providerMetadata,
                 authInfo: state.authInfo,
+                lastSyncedAt: Option.none(),
+                metadata: state.providerWithMetadata.metadata,
                 rootFolder: request.rootFolder,
               };
 
-              yield* send(new AddProvider({ startArgs }));
+              yield* send(
+                new AddProvider({
+                  startArgs,
+                  providerWithMetadata: state.providerWithMetadata,
+                }),
+              );
               return [{}, { _tag: "Done" as const }];
             }),
         ),

@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { AppInit, MediaProviderStatus } from "@echo/core-types";
+import { ActiveMediaProviderCache, AppInit } from "@echo/core-types";
 import {
   EffectConsumer,
   StreamConsumer,
@@ -17,9 +17,9 @@ import "@echo/components-router";
 @customElement("app-root")
 export class AppRoot extends LitElement {
   private _init = new EffectConsumer(this, AppInit.init);
-  private _providerStatus = new StreamConsumer(
+  private _activeProviders = new StreamConsumer(
     this,
-    MediaProviderStatus.observe,
+    ActiveMediaProviderCache.observe,
   );
 
   render() {
@@ -28,9 +28,9 @@ export class AppRoot extends LitElement {
         initial: () => html`<h1>Initializing Echo...</h1>`,
         complete: () =>
           cache(
-            this._providerStatus.render({
-              item: (status) =>
-                status.size > 0
+            this._activeProviders.render({
+              item: (activeProviders) =>
+                activeProviders.length > 0
                   ? this._renderMainPage()
                   : html`<initial-setup></initial-setup>`,
             }),

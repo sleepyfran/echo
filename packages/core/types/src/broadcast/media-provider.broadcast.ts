@@ -32,7 +32,7 @@ type WorkerActionsSchema = {
    * Reports the status of a provider to the main thread.
    */
   reportStatus: {
-    metadata: ProviderMetadata;
+    startArgs: ProviderStartArgs;
     status: ProviderStatus;
   };
 };
