@@ -2,6 +2,7 @@ import {
   LocalStorage,
   MediaProviderArgsStorage,
   MediaProviderMainThreadBroadcastChannel,
+  ProviderStartArgs,
 } from "@echo/core-types";
 import { Effect, Layer, Match, Option } from "effect";
 
@@ -24,10 +25,11 @@ export const MediaProviderArgStorageLive = Layer.effect(
               localStorage.set(
                 "media-provider-start-args",
                 startArgs.metadata.id,
+                ProviderStartArgs,
                 {
                   ...startArgs,
                   lastSyncedAt: Option.some(lastSyncedAt),
-                },
+                } satisfies ProviderStartArgs,
               ),
             ),
             Match.orElse(() => Effect.void),

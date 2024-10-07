@@ -1,4 +1,5 @@
 import { Effect, Option } from "effect";
+import * as S from "@effect/schema/Schema";
 
 /**
  * Defines all the possible namespaces that can be used to store data in the
@@ -13,23 +14,25 @@ export type LocalStorageNamespace = "media-provider-start-args";
 export type ILocalStorage = {
   /**
    * Sets the given value in the local storage under the specified namespace and
-   * key, overwriting any existing value. The value must be serializable, since
-   * it will always be stored as a string.
+   * key, using the provided schema to serialize it. If the value already exists,
+   * it will be overwritten.
    */
-  readonly set: <T>(
+  readonly set: <T, I>(
     namespace: LocalStorageNamespace,
     key: string,
+    schema: S.Schema<T, I>,
     value: T,
   ) => Effect.Effect<void>;
 
   /**
    * Attempts to retrieve and deserialize a value from the local storage under
-   * the specified namespace and key. If the value does not exist, `None` will
-   * be returned.
+   * the specified namespace and key using the provided schema. If the value
+   * does not exist or cannot be deserialized using the schema, it returns none.
    */
-  readonly get: <T>(
+  readonly get: <T, I>(
     namespace: LocalStorageNamespace,
     key: string,
+    schema: S.Schema<T, I>,
   ) => Effect.Effect<Option.Option<T>>;
 
   /**

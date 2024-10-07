@@ -4,7 +4,6 @@ import {
   LocalStorage,
   MediaPlayerFactory,
   MediaProviderMainThreadBroadcastChannel,
-  type ProviderStartArgs,
   type BroadcastChannel,
   type ILocalStorage,
   type MediaProviderBroadcastSchema,
@@ -12,6 +11,7 @@ import {
   ActiveMediaProviderCache,
   type IActiveMediaProviderCache,
   MediaProviderArgsStorage,
+  ProviderStartArgs,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
@@ -86,7 +86,7 @@ const retrieveProviderArgs = (
   providerId: ProviderId,
   localStorage: ILocalStorage,
 ) =>
-  localStorage.get<ProviderStartArgs>("media-provider-start-args", providerId);
+  localStorage.get("media-provider-start-args", providerId, ProviderStartArgs);
 
 const reinitializeProvider = (
   startArgs: ProviderStartArgs,

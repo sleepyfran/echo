@@ -6,6 +6,7 @@ import {
   AvailableProviders,
   LocalStorage,
   MediaProviderMainThreadBroadcastChannel,
+  ProviderStartArgs,
   ProviderType,
   type Authentication,
   type AuthenticationError,
@@ -16,7 +17,6 @@ import {
   type MediaPlayerFactory,
   type MediaProviderFactory,
   type ProviderMetadata,
-  type ProviderStartArgs,
   type ProviderWithMetadata,
 } from "@echo/core-types";
 import {
@@ -104,6 +104,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
               yield* localStorage.set(
                 "media-provider-start-args",
                 request.startArgs.metadata.id,
+                ProviderStartArgs,
                 request.startArgs,
               );
               yield* activeMediaProviderCache.add(
