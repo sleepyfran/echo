@@ -3,15 +3,15 @@ import {
   AvailableProviders,
   LocalStorage,
   MediaPlayerFactory,
-  MediaProviderMainThreadBroadcastChannel,
-  type BroadcastChannel,
   type ILocalStorage,
-  type MediaProviderBroadcastSchema,
   type ProviderId,
   ActiveMediaProviderCache,
   type IActiveMediaProviderCache,
   MediaProviderArgsStorage,
   ProviderStartArgs,
+  Broadcaster,
+  type IBroadcaster,
+  StartProvider,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
@@ -23,7 +23,7 @@ import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
   const activeMediaProviderCache = yield* ActiveMediaProviderCache;
-  const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
+  const broadcaster = yield* Broadcaster;
   const lazyLoadedProvider = yield* LazyLoadedProvider;
   const lazyLoaderMediaPlayer = yield* LazyLoadedMediaPlayer;
   const localStorage = yield* LocalStorage;
@@ -62,7 +62,7 @@ const make = Effect.gen(function* () {
               providerStartArgs.value,
               providerFactory,
               mediaPlayerFactory.createMediaPlayer,
-              broadcastChannel,
+              broadcaster,
               activeMediaProviderCache,
             ).pipe(Effect.orElseSucceed(() => {}));
           }),
@@ -92,9 +92,7 @@ const reinitializeProvider = (
   startArgs: ProviderStartArgs,
   providerFactory: ILoadedProvider,
   createMediaPlayer: MediaPlayerFactory["createMediaPlayer"],
-  broadcastChannel: BroadcastChannel<
-    MediaProviderBroadcastSchema["mainThread"]
-  >,
+  broadcaster: IBroadcaster,
   activeMediaProviderCache: IActiveMediaProviderCache,
 ) =>
   Effect.gen(function* () {
@@ -111,10 +109,15 @@ const reinitializeProvider = (
     const mediaProvider = providerFactory.createMediaProvider(authResult);
     const mediaPlayer = yield* createMediaPlayer(authResult);
 
-    yield* broadcastChannel.send("start", {
-      ...startArgs,
-      authInfo: authResult,
-    });
+    yield* broadcaster.broadcast(
+      "mediaProvider",
+      new StartProvider({
+        args: {
+          ...startArgs,
+          authInfo: authResult,
+        },
+      }),
+    );
     yield* activeMediaProviderCache.add(
       startArgs.metadata,
       mediaProvider,

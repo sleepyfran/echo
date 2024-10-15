@@ -1,6 +1,7 @@
 import {
   ActiveMediaProviderCache,
-  MediaProviderMainThreadBroadcastChannel,
+  BroadcastListener,
+  ProviderStatusChanged,
   type MediaProviderById,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Ref, Stream, SubscriptionRef } from "effect";
@@ -9,13 +10,17 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
   const providerByIdRef = yield* SubscriptionRef.make<MediaProviderById>(
     new Map(),
   );
-  const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
+  const broadcastListener = yield* BroadcastListener;
+
+  const statusStream = yield* broadcastListener.listen(
+    "mediaProvider",
+    ProviderStatusChanged,
+  );
 
   // Listen to status updates of the media providers and remove them from the
   // cache once they become inactive.
-  yield* broadcastChannel.registerResolver(
-    "reportStatus",
-    ({ startArgs, status }) => {
+  yield* statusStream.pipe(
+    Stream.runForEach(({ startArgs, status }) => {
       if (status._tag !== "stopped") {
         return Effect.void;
       }
@@ -31,7 +36,8 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
           ),
         ),
       );
-    },
+    }),
+    Effect.forkScoped,
   );
 
   return ActiveMediaProviderCache.of({
@@ -71,7 +77,7 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
   });
 });
 
-export const ActiveMediaProviderCacheLive = Layer.effect(
+export const ActiveMediaProviderCacheLive = Layer.scoped(
   ActiveMediaProviderCache,
   makeActiveMediaProviderCache,
 );

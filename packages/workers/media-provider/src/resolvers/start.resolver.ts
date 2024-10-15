@@ -1,14 +1,14 @@
 import {
   ProviderError,
-  type BroadcastChannel,
   MetadataProvider,
-  type MediaProviderBroadcastSchema,
   Database,
   Crypto,
   ProviderStartArgs,
   ProviderType,
   type FileBasedProvider,
   type ApiBasedProvider,
+  type IBroadcaster,
+  ProviderStatusChanged,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
 import { DateTime, Effect, Match, Option, Ref } from "effect";
@@ -17,18 +17,14 @@ import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
 import { syncApiBasedProvider } from "../sync/api-based-sync";
 
-type Input = MediaProviderBroadcastSchema["worker"]["resolvers"]["start"];
-type TBroadcastChannel = BroadcastChannel<
-  MediaProviderBroadcastSchema["worker"]
->;
 type StartMediaProviderResolverInput = {
-  input: Input;
-  broadcastChannel: TBroadcastChannel;
+  input: ProviderStartArgs;
+  broadcaster: IBroadcaster;
   workerStateRef: Ref.Ref<WorkerState>;
 };
 
 export const startMediaProviderResolver = ({
-  broadcastChannel,
+  broadcaster,
   input,
   workerStateRef,
 }: StartMediaProviderResolverInput) =>
@@ -66,7 +62,7 @@ export const startMediaProviderResolver = ({
       yield* Effect.logError(
         `Token for provider with ID ${input.metadata.id} is expired. Aborting initialization.`,
       );
-      yield* notifyMainThreadOfExpiredToken(input, broadcastChannel);
+      yield* notifyMainThreadOfExpiredToken(input, broadcaster);
       return;
     }
 
@@ -81,12 +77,12 @@ export const startMediaProviderResolver = ({
     const database = yield* Database;
     const crypto = yield* Crypto;
 
-    const runtimeFiber = yield* Match.type<Input>().pipe(
+    const runtimeFiber = yield* Match.type<ProviderStartArgs>().pipe(
       Match.tag(ProviderType.FileBased, (input) =>
         Effect.fork(
           syncFileBasedProvider({
             startArgs: input,
-            broadcastChannel,
+            broadcaster,
             metadataProvider,
             /*
             Provider loader guarantees this.
@@ -103,7 +99,7 @@ export const startMediaProviderResolver = ({
         Effect.fork(
           syncApiBasedProvider({
             startArgs: input,
-            broadcastChannel,
+            broadcaster,
             /*
             Provider loader guarantees this.
             FIXME: Can we type this better?
@@ -125,11 +121,14 @@ export const startMediaProviderResolver = ({
 
 export const notifyMainThreadOfExpiredToken = (
   startArgs: ProviderStartArgs,
-  broadcastChannel: TBroadcastChannel,
+  broadcaster: IBroadcaster,
 ) =>
   Effect.gen(function* () {
-    return yield* broadcastChannel.send("reportStatus", {
-      startArgs,
-      status: { _tag: "errored", error: ProviderError.TokenExpired },
-    });
+    return yield* broadcaster.broadcast(
+      "mediaProvider",
+      new ProviderStatusChanged({
+        startArgs,
+        status: { _tag: "errored", error: ProviderError.TokenExpired },
+      }),
+    );
   });

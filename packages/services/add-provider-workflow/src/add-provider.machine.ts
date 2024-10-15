@@ -4,10 +4,11 @@ import {
   ActiveMediaProviderCache,
   AddProviderWorkflow,
   AvailableProviders,
+  Broadcaster,
   LocalStorage,
-  MediaProviderMainThreadBroadcastChannel,
   ProviderStartArgs,
   ProviderType,
+  StartProvider,
   type Authentication,
   type AuthenticationError,
   type AuthenticationInfo,
@@ -85,7 +86,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
       const state = previousState ?? { _tag: "Idle" };
 
       const activeMediaProviderCache = yield* ActiveMediaProviderCache;
-      const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
+      const broadcaster = yield* Broadcaster;
       const providerLazyLoader = yield* LazyLoadedProvider;
       const mediaPlayerLazyLoader = yield* LazyLoadedMediaPlayer;
       const localStorage = yield* LocalStorage;
@@ -100,7 +101,15 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
           "AddProvider",
           ({ request }) =>
             Effect.gen(function* () {
-              yield* broadcastChannel.send("start", request.startArgs);
+              yield* broadcaster
+                .broadcast(
+                  "mediaProvider",
+                  new StartProvider({
+                    args: request.startArgs,
+                  }),
+                )
+                .pipe(Effect.orDie);
+
               yield* localStorage.set(
                 "media-provider-start-args",
                 request.startArgs.metadata.id,

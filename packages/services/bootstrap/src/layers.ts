@@ -1,8 +1,8 @@
 import { Layer, Logger } from "effect";
 import {
-  MediaProviderMainThreadBroadcastChannelLive,
-  MediaProviderWorkerBroadcastChannelLive,
-} from "@echo/infrastructure-broadcast-channel";
+  BroadcastListenerLive,
+  BroadcasterLive,
+} from "@echo/infrastructure-browser-broadcast";
 import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
 import { DexieDatabaseLive } from "@echo/infrastructure-dexie-database";
 import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provider";
@@ -24,8 +24,8 @@ import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-
 export const MainLive = ActiveMediaProviderCacheLive.pipe(
   Layer.provideMerge(MediaProviderArgStorageLive),
   Layer.provideMerge(MediaProviderStatusLive),
-  Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
-  Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
+  Layer.provideMerge(BroadcasterLive),
+  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
   Layer.provideMerge(BrowserLocalStorageLive),
@@ -40,8 +40,8 @@ export const MainLive = ActiveMediaProviderCacheLive.pipe(
  * web worker.
  */
 export const WorkerLive = MediaProviderStatusLive.pipe(
-  Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
-  Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
+  Layer.provideMerge(BroadcasterLive),
+  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(DexieDatabaseLive),

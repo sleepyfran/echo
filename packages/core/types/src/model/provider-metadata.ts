@@ -83,20 +83,29 @@ export enum ProviderError {
   ApiGatewayError = "api-gateway-error",
 }
 
+const ProviderNotStarted = S.TaggedStruct("not-started", {});
+const ProviderSyncing = S.TaggedStruct("syncing", {});
+const ProviderSynced = S.TaggedStruct("synced", {
+  lastSyncedAt: S.Date,
+  syncedTracks: S.Number,
+  tracksWithError: S.Number,
+});
+const ProviderErrored = S.TaggedStruct("errored", {
+  error: S.Enums(ProviderError),
+});
+const ProviderStopped = S.TaggedStruct("stopped", {});
+
 /**
- * Defines all the possible states that a provider can be in.
+ * Defines the status of a provider.
  */
-export type ProviderStatus =
-  | { _tag: "not-started" }
-  | { _tag: "syncing" }
-  | {
-      _tag: "synced";
-      lastSyncedAt: Date;
-      syncedTracks: number;
-      tracksWithError: number;
-    }
-  | { _tag: "errored"; error: ProviderError }
-  | { _tag: "stopped" };
+export const ProviderStatus = S.Union(
+  ProviderNotStarted,
+  ProviderSyncing,
+  ProviderSynced,
+  ProviderErrored,
+  ProviderStopped,
+);
+export type ProviderStatus = S.Schema.Type<typeof ProviderStatus>;
 
 /**
  * Defines the parameters required to start a provider, regardless of whether it is

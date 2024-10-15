@@ -1,5 +1,9 @@
-import { MediaProviderWorkerBroadcastChannel } from "@echo/core-types";
-import { Effect, Fiber } from "effect";
+import {
+  Broadcaster,
+  BroadcastListener,
+  StartProvider,
+} from "@echo/core-types";
+import { Effect, Stream } from "effect";
 import { startMediaProviderResolver } from "./resolvers/start.resolver";
 import * as S from "@effect/schema/Schema";
 import { WorkerStateRef } from "./state";
@@ -19,21 +23,22 @@ export const init = () =>
     yield* Effect.log("Initializing media provider worker...");
 
     const workerStateRef = yield* WorkerStateRef;
-    const broadcastChannel = yield* MediaProviderWorkerBroadcastChannel;
+    const broadcaster = yield* Broadcaster;
+    const broadcastListener = yield* BroadcastListener;
 
-    const startResolverFiber = yield* broadcastChannel.registerResolver(
-      "start",
-      (input) =>
+    const startStream = yield* broadcastListener.listen(
+      "mediaProvider",
+      StartProvider,
+    );
+    yield* startStream.pipe(
+      Stream.runForEach((request) =>
         startMediaProviderResolver({
-          broadcastChannel: broadcastChannel,
-          input,
+          broadcaster,
+          input: request.args,
           workerStateRef,
         }),
-    );
-
-    const stopResolverFiber = yield* broadcastChannel.registerResolver(
-      "stop",
-      (_input) => Effect.succeed(() => {}),
+      ),
+      Effect.forkScoped,
     );
 
     yield* Effect.log(
@@ -41,5 +46,4 @@ export const init = () =>
     );
 
     yield* Effect.sync(() => self.postMessage(InitFinishedMessage.make({})));
-    Fiber.joinAll([startResolverFiber, stopResolverFiber]);
   });

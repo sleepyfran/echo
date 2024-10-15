@@ -2,6 +2,7 @@ export * from "./app-config";
 export * from "./album";
 export * from "./artist";
 export * from "./authentication";
+export * from "./broadcast-requests";
 export * from "./common";
 export * from "./file-system";
 export * from "./player-state";
