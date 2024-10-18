@@ -1,4 +1,4 @@
-import { Effect, SubscriptionRef } from "effect";
+import { Effect, Scope, SubscriptionRef } from "effect";
 import type { ProviderId, ProviderStatus } from "../model";
 
 /**
@@ -29,7 +29,7 @@ export type IMediaProviderArgsStorage = {
    * Listens to the success status of all providers and keeps the status in sync
    * in the local storage.
    */
-  readonly keepInSync: Effect.Effect<void>;
+  readonly keepInSync: Effect.Effect<void, never, Scope.Scope>;
 };
 
 /**

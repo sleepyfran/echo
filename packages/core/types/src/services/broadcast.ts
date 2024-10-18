@@ -1,7 +1,7 @@
 import type { Serializable } from "@effect/schema";
 import type { ParseError } from "@effect/schema/ParseResult";
 import * as S from "@effect/schema/Schema";
-import { Context, type Effect, type Stream } from "effect";
+import { Context, Scope, type Effect, type Stream } from "effect";
 
 /**
  * Defines all available channels.
@@ -43,7 +43,7 @@ export type IBroadcastListener = {
   listen: <TValue, TEncoded>(
     channel: ChannelName,
     schema: S.Schema<TValue, TEncoded, never>,
-  ) => Effect.Effect<Stream.Stream<TValue>>;
+  ) => Effect.Effect<Stream.Stream<TValue>, never, Scope.Scope>;
 };
 
 /**

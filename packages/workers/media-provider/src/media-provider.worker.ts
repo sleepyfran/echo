@@ -19,6 +19,9 @@ const initialState = Ref.make<WorkerState>({
  * thread.
  */
 const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
+  Stream.ensuring(
+    Effect.logError("Media worker stopped listening to messages"),
+  ),
   Stream.runForEach((event) =>
     Effect.gen(function* () {
       const message = yield* decodeWorkerMessage(event.data);

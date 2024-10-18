@@ -22,6 +22,13 @@ export const MediaProviderArgStorageLive = Layer.effect(
         .listen("mediaProvider", ProviderStatusChanged)
         .pipe(
           Effect.map(
+            Stream.ensuring(
+              Effect.logError(
+                "[Media provider args storage] No longer listening to provider status changes",
+              ),
+            ),
+          ),
+          Effect.map(
             Stream.runForEach(({ status, startArgs }) =>
               Match.value(status).pipe(
                 Match.tag("synced", ({ lastSyncedAt }) =>

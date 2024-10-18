@@ -18,7 +18,7 @@ import {
   LazyLoadedProvider,
 } from "@echo/services-bootstrap";
 import type { ILoadedProvider } from "@echo/services-bootstrap/src/loaders/provider";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Scope } from "effect";
 import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
@@ -28,6 +28,9 @@ const make = Effect.gen(function* () {
   const lazyLoaderMediaPlayer = yield* LazyLoadedMediaPlayer;
   const localStorage = yield* LocalStorage;
   const mediaProviderArgsStorage = yield* MediaProviderArgsStorage;
+  const globalScope = yield* Scope.make();
+
+  yield* Effect.addFinalizer(() => Effect.logError("AppInit finalizer called"));
 
   return AppInit.of({
     init: Effect.gen(function* () {
@@ -37,7 +40,9 @@ const make = Effect.gen(function* () {
       yield* initializeWorkers;
       yield* Effect.log("Worker initialization finished, starting app...");
 
-      yield* mediaProviderArgsStorage.keepInSync;
+      yield* mediaProviderArgsStorage.keepInSync.pipe(
+        Scope.extend(globalScope),
+      );
 
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 
@@ -129,4 +134,4 @@ const reinitializeProvider = (
     );
   });
 
-export const AppInitLive = Layer.effect(AppInit, make);
+export const AppInitLive = Layer.scoped(AppInit, make);
