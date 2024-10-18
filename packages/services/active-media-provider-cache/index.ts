@@ -20,11 +20,6 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
   // Listen to status updates of the media providers and remove them from the
   // cache once they become inactive.
   yield* statusStream.pipe(
-    Stream.ensuring(
-      Effect.logError(
-        "[Active media provider cache] No longer listening to provider status changes",
-      ),
-    ),
     Stream.runForEach(({ startArgs, status }) => {
       if (status._tag !== "stopped") {
         return Effect.void;

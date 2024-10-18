@@ -22,11 +22,6 @@ export const MediaProviderStatusLive = Layer.scoped(
       ProviderStatusChanged,
     );
     yield* statusStream.pipe(
-      Stream.ensuring(
-        Effect.logError(
-          "[Media provider status] No longer listening to provider status changes",
-        ),
-      ),
       Stream.runForEach(({ startArgs, status }) => {
         return Ref.update(stateByProviderRef, (current) => {
           return new Map(current).set(startArgs.metadata.id, status);

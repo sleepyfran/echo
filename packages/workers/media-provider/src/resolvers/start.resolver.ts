@@ -49,10 +49,15 @@ export const startMediaProviderResolver = ({
         DateTime.subtractDuration("1 day"),
       );
 
-      const lessThanADayAgo = aDayAgo.pipe(DateTime.greaterThan(lastSyncDate));
+      const lessThanADayAgo = aDayAgo.pipe(DateTime.lessThan(lastSyncDate));
       if (lessThanADayAgo) {
         yield* Effect.log(
           `Provider with ID ${input.metadata.id} was synced less than a day ago. Ignoring command.`,
+        );
+        yield* notifyMainThreadOfSyncSkipped(
+          input,
+          input.lastSyncedAt.value,
+          broadcaster,
         );
         return;
       }
@@ -132,3 +137,16 @@ export const notifyMainThreadOfExpiredToken = (
       }),
     );
   });
+
+export const notifyMainThreadOfSyncSkipped = (
+  startArgs: ProviderStartArgs,
+  lastSyncDate: Date,
+  broadcaster: IBroadcaster,
+) =>
+  broadcaster.broadcast(
+    "mediaProvider",
+    new ProviderStatusChanged({
+      startArgs,
+      status: { _tag: "sync-skipped", lastSyncedAt: lastSyncDate },
+    }),
+  );

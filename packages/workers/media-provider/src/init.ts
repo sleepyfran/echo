@@ -31,9 +31,6 @@ export const init = () =>
       StartProvider,
     );
     yield* startStream.pipe(
-      Stream.ensuring(
-        Effect.logError("[init] No longer listening to start requests"),
-      ),
       Stream.runForEach((request) =>
         startMediaProviderResolver({
           broadcaster,

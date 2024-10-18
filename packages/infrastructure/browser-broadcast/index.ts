@@ -5,7 +5,7 @@ import {
 } from "@echo/core-types";
 import { Serializable } from "@effect/schema";
 import * as S from "@effect/schema/Schema";
-import { Effect, Either, Layer, Option, Stream } from "effect";
+import { Effect, Layer, Stream } from "effect";
 
 const createChannel = (channelName: ChannelName) =>
   Effect.acquireRelease(
@@ -26,10 +26,6 @@ const makeBroadcaster = Broadcaster.of({
         ),
       );
 
-      yield* Effect.log(
-        `Broadcasting message to channel ${channel}: ${JSON.stringify(serializedRequest)}`,
-      );
-
       yield* Effect.sync(() => broadcastChannel.postMessage(serializedRequest));
     }).pipe(Effect.scoped),
 });
@@ -48,27 +44,28 @@ const makeBroadcastListener = BroadcastListener.of({
       );
 
       const broadcastChannel = yield* createChannel(channel);
-      const decode = S.decodeUnknown(schema);
+      const decode = S.decodeUnknownSync(schema);
 
-      return Stream.fromEventListener<MessageEvent<unknown>>(
-        broadcastChannel,
-        "message",
-      ).pipe(
-        Stream.tap((event) =>
-          Effect.log(`Received message: ${JSON.stringify(event.data)}`),
-        ),
-        Stream.mapEffect((event) => decode(event.data)),
-        Stream.tap((decoded) =>
-          Effect.log(`Decoded message: ${JSON.stringify(decoded)}`),
-        ),
-        Stream.either,
-        Stream.filterMap(
-          Either.match({
-            onLeft: () => Option.none(),
-            onRight: (value) => Option.some(value),
-          }),
-        ),
-      );
+      return Stream.asyncPush((emit) => {
+        const messageHandler = (message: MessageEvent) => {
+          try {
+            const decoded = decode(message.data);
+            emit.single(decoded);
+          } catch {
+            return;
+          }
+        };
+
+        return Effect.acquireRelease(
+          Effect.sync(() =>
+            broadcastChannel.addEventListener("message", messageHandler),
+          ),
+          () =>
+            Effect.sync(() =>
+              broadcastChannel.removeEventListener("message", messageHandler),
+            ),
+        );
+      });
     }),
 });
 

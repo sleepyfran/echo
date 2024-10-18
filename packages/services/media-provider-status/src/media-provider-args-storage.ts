@@ -18,35 +18,33 @@ export const MediaProviderArgStorageLive = Layer.effect(
     const localStorage = yield* LocalStorage;
 
     return MediaProviderArgsStorage.of({
-      keepInSync: broadcastChannel
-        .listen("mediaProvider", ProviderStatusChanged)
-        .pipe(
-          Effect.map(
-            Stream.ensuring(
-              Effect.logError(
-                "[Media provider args storage] No longer listening to provider status changes",
-              ),
-            ),
-          ),
-          Effect.map(
-            Stream.runForEach(({ status, startArgs }) =>
-              Match.value(status).pipe(
-                Match.tag("synced", ({ lastSyncedAt }) =>
-                  localStorage.set(
-                    "media-provider-start-args",
-                    startArgs.metadata.id,
-                    ProviderStartArgs,
-                    {
-                      ...startArgs,
-                      lastSyncedAt: Option.some(lastSyncedAt),
-                    } satisfies ProviderStartArgs,
-                  ),
+      keepInSync: Effect.gen(function* () {
+        const statusStream = yield* broadcastChannel.listen(
+          "mediaProvider",
+          ProviderStatusChanged,
+        );
+
+        yield* statusStream.pipe(
+          Stream.ensuring(Effect.logError("Args storage no longer listening")),
+          Stream.runForEach(({ status, startArgs }) =>
+            Match.value(status).pipe(
+              Match.tag("synced", ({ lastSyncedAt }) =>
+                localStorage.set(
+                  "media-provider-start-args",
+                  startArgs.metadata.id,
+                  ProviderStartArgs,
+                  {
+                    ...startArgs,
+                    lastSyncedAt: Option.some(lastSyncedAt),
+                  } satisfies ProviderStartArgs,
                 ),
-                Match.orElse(() => Effect.void),
               ),
+              Match.orElse(() => Effect.void),
             ),
           ),
-        ),
+          Effect.forkScoped,
+        );
+      }),
     });
   }),
 );

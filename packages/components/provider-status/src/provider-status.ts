@@ -108,6 +108,7 @@ export class AllProvidersStatusBar extends LitElement {
       ),
       Match.tag(
         "synced",
+        "sync-skipped",
         () => html`<done-icon class="provider-status-icon"></done-icon>`,
       ),
       Match.tag(
@@ -130,6 +131,11 @@ export class AllProvidersStatusBar extends LitElement {
         "synced",
         (status) =>
           `${providerId} has finished syncing. Synced ${status.syncedTracks} tracks`,
+      ),
+      Match.tag(
+        "sync-skipped",
+        () =>
+          `${providerId} has skipped syncing because it was updated recently`,
       ),
       Match.tag(
         "errored",

@@ -90,6 +90,9 @@ const ProviderSynced = S.TaggedStruct("synced", {
   syncedTracks: S.Number,
   tracksWithError: S.Number,
 });
+const ProviderSyncSkipped = S.TaggedStruct("sync-skipped", {
+  lastSyncedAt: S.Date,
+});
 const ProviderErrored = S.TaggedStruct("errored", {
   error: S.Enums(ProviderError),
 });
@@ -102,6 +105,7 @@ export const ProviderStatus = S.Union(
   ProviderNotStarted,
   ProviderSyncing,
   ProviderSynced,
+  ProviderSyncSkipped,
   ProviderErrored,
   ProviderStopped,
 );
