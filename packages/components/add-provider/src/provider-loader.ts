@@ -9,6 +9,7 @@ import { ButtonType } from "@echo/components-ui-atoms";
 
 type LoaderStatus =
   | { _tag: "Initial" }
+  | { _tag: "Errored" }
   | { _tag: "LoadingProvider" }
   | { _tag: "WaitingToConnect"; metadata: ProviderMetadata }
   | { _tag: "ConnectingToProvider" }
@@ -50,6 +51,9 @@ export class ProviderLoader extends LitElement {
             : new ProviderStartedEvent(),
         );
       },
+      error: () => {
+        this._loaderStatus = { _tag: "Errored" };
+      },
     },
   );
 
@@ -72,6 +76,10 @@ export class ProviderLoader extends LitElement {
       align-items: center;
       gap: 1rem;
       min-width: 15rem;
+    }
+
+    .error {
+      color: var(--error-color);
     }
   `;
 
@@ -125,6 +133,13 @@ export class ProviderLoader extends LitElement {
           ),
           Match.tag("ConnectingToProvider", () => html`<h5>Connecting...</h5>`),
           Match.tag("Connected", () => html`<h5>Connected!</h5>`),
+          Match.tag(
+            "Errored",
+            () =>
+              html`<h5 class="error">
+                Something went wrong... If this keeps on happening, report this!
+              </h5>`,
+          ),
           Match.exhaustive,
         )}
       </div>

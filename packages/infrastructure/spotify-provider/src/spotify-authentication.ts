@@ -151,17 +151,21 @@ const openLoginPopup = (appConfig: AppConfig) => {
  */
 const retrieveCodeOrErrorFromWindow = (window: Window) =>
   Effect.sync(() => {
-    const parsedUrl = new URL(window.location.href);
-    const code = parsedUrl.searchParams.get("code");
-    const error = parsedUrl.searchParams.get("error");
+    try {
+      const parsedUrl = new URL(window.location.href);
+      const code = parsedUrl.searchParams.get("code");
+      const error = parsedUrl.searchParams.get("error");
 
-    if (code) {
-      return Option.some(Either.right(code));
-    } else if (error) {
-      return Option.some(Either.left(error));
+      if (code) {
+        return Option.some(Either.right(code));
+      } else if (error) {
+        return Option.some(Either.left(error));
+      }
+
+      return Option.none();
+    } catch {
+      return Option.none();
     }
-
-    return Option.none();
   });
 
 const createAuthUrl = (appConfig: AppConfig) =>
