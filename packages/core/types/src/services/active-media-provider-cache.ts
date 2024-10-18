@@ -1,8 +1,8 @@
-import { Effect, Option } from "effect";
+import { Effect, Option, Stream } from "effect";
 import type { ProviderId, ProviderMetadata } from "../model";
 import type { MediaPlayer, MediaProvider } from "./media-provider";
 
-type ProviderWithMetadata = {
+export type ProviderWithMetadata = {
   readonly metadata: ProviderMetadata;
   readonly provider: MediaProvider;
   readonly player: MediaPlayer;
@@ -43,13 +43,13 @@ export type IActiveMediaProviderCache = {
   /**
    * Returns all currently active media providers.
    */
-  readonly getAll: Effect.Effect<
-    {
-      metadata: ProviderMetadata;
-      provider: MediaProvider;
-      player: MediaPlayer;
-    }[]
-  >;
+  readonly getAll: Effect.Effect<ProviderWithMetadata[]>;
+
+  /**
+   * Returns a stream of all currently active media providers, emitting new
+   * values whenever the cache changes.
+   */
+  readonly observe: Stream.Stream<ProviderWithMetadata[]>;
 };
 
 /**

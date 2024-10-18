@@ -36,7 +36,7 @@ export type ProviderSpecificAuthenticationInfo = S.Schema.Type<
  * Defines the result of a successfully authenticated user, with the information
  * that is needed to use a service that requires authentication.
  */
-export const AuthenticationInfoSchema = S.Struct({
+export const AuthenticationInfo = S.Struct({
   /**
    * Token that can be used to authenticate the user.
    */
@@ -53,7 +53,7 @@ export const AuthenticationInfoSchema = S.Struct({
    */
   expiresOn: S.Date,
 });
-export type AuthenticationInfo = S.Schema.Type<typeof AuthenticationInfoSchema>;
+export type AuthenticationInfo = S.Schema.Type<typeof AuthenticationInfo>;
 
 /**
  * Defines the error that can occur when authenticating a user.

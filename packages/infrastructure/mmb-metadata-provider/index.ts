@@ -1,5 +1,5 @@
 import { MetadataProviderError, MetadataProvider } from "@echo/core-types";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 import { Buffer } from "buffer";
 import process from "process";
 import { parseWebStream, type IAudioMetadata } from "music-metadata";
@@ -21,7 +21,7 @@ const mmbMetadataProvider = MetadataProvider.of({
     Effect.tryPromise({
       try: () =>
         parseWebStream(stream, {
-          mimeType: file.mimeType ?? "",
+          mimeType: Option.getOrElse(file.mimeType, () => ""),
           size: file.byteSize,
         }),
       catch: () => MetadataProviderError.MalformedFile,

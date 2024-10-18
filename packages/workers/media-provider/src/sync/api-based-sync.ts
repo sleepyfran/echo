@@ -1,22 +1,22 @@
 import {
   ProviderError,
+  ProviderStatusChanged,
   type AlbumWithTracks,
   type ApiBasedProvider,
+  type ApiBasedStartArgs,
   type Artist,
-  type BroadcastChannel,
   type Database,
   type DatabaseAlbum,
   type DatabaseArtist,
   type DatabaseTrack,
-  type MediaProviderBroadcastSchema,
-  type ProviderMetadata,
+  type IBroadcaster,
 } from "@echo/core-types";
 import { Effect, Option, Stream } from "effect";
 import { head } from "effect/Array";
 
 type SyncApiBasedProviderInput = {
-  metadata: ProviderMetadata;
-  broadcastChannel: BroadcastChannel<MediaProviderBroadcastSchema["worker"]>;
+  startArgs: ApiBasedStartArgs;
+  broadcaster: IBroadcaster;
   provider: ApiBasedProvider;
   database: Database;
 };
@@ -28,18 +28,21 @@ type SyncState = {
 };
 
 export const syncApiBasedProvider = ({
-  metadata,
-  broadcastChannel,
+  startArgs,
+  broadcaster,
   provider,
   database,
 }: SyncApiBasedProviderInput) =>
   Effect.gen(function* () {
-    yield* Effect.log(`Starting sync for provider ${metadata.id}`);
+    yield* Effect.log(`Starting sync for provider ${startArgs.metadata.id}`);
 
-    yield* broadcastChannel.send("reportStatus", {
-      metadata,
-      status: { _tag: "syncing" },
-    });
+    yield* broadcaster.broadcast(
+      "mediaProvider",
+      new ProviderStatusChanged({
+        startArgs,
+        status: { _tag: "syncing" },
+      }),
+    );
 
     yield* Effect.log("Listing remote albums on the provider");
     const providerAlbums = yield* provider.listAlbums;
@@ -50,28 +53,34 @@ export const syncApiBasedProvider = ({
 
     yield* saveToDatabase({ database }, { albums, artists, tracks });
 
-    yield* broadcastChannel.send("reportStatus", {
-      metadata,
-      status: {
-        _tag: "synced",
-        lastSyncedAt: new Date(),
-        syncedTracks: tracks.length,
-        tracksWithError: 0,
-      },
-    });
+    yield* broadcaster.broadcast(
+      "mediaProvider",
+      new ProviderStatusChanged({
+        startArgs,
+        status: {
+          _tag: "synced",
+          lastSyncedAt: new Date(),
+          syncedTracks: tracks.length,
+          tracksWithError: 0,
+        },
+      }),
+    );
   }).pipe(
     Effect.catchAll(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
-          `Sync of ${metadata.id} has failed, reporting error with API to main thread.`,
+          `Sync of ${startArgs.metadata.id} has failed, reporting error with API to main thread.`,
         );
 
         // If we end up here, the provider has failed to communicate with the
         // API.
-        yield* broadcastChannel.send("reportStatus", {
-          metadata,
-          status: { _tag: "errored", error: ProviderError.ApiGatewayError },
-        });
+        yield* broadcaster.broadcast(
+          "mediaProvider",
+          new ProviderStatusChanged({
+            startArgs,
+            status: { _tag: "errored", error: ProviderError.ApiGatewayError },
+          }),
+        );
       }),
     ),
   );

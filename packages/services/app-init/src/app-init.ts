@@ -3,29 +3,34 @@ import {
   AvailableProviders,
   LocalStorage,
   MediaPlayerFactory,
-  MediaProviderMainThreadBroadcastChannel,
-  type ProviderStartArgs,
-  type BroadcastChannel,
   type ILocalStorage,
-  type MediaProviderBroadcastSchema,
   type ProviderId,
   ActiveMediaProviderCache,
   type IActiveMediaProviderCache,
+  MediaProviderArgsStorage,
+  ProviderStartArgs,
+  Broadcaster,
+  type IBroadcaster,
+  StartProvider,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
   LazyLoadedProvider,
 } from "@echo/services-bootstrap";
 import type { ILoadedProvider } from "@echo/services-bootstrap/src/loaders/provider";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Scope } from "effect";
 import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
   const activeMediaProviderCache = yield* ActiveMediaProviderCache;
-  const broadcastChannel = yield* MediaProviderMainThreadBroadcastChannel;
+  const broadcaster = yield* Broadcaster;
   const lazyLoadedProvider = yield* LazyLoadedProvider;
   const lazyLoaderMediaPlayer = yield* LazyLoadedMediaPlayer;
   const localStorage = yield* LocalStorage;
+  const mediaProviderArgsStorage = yield* MediaProviderArgsStorage;
+  const globalScope = yield* Scope.make();
+
+  yield* Effect.addFinalizer(() => Effect.logError("AppInit finalizer called"));
 
   return AppInit.of({
     init: Effect.gen(function* () {
@@ -34,6 +39,10 @@ const make = Effect.gen(function* () {
       );
       yield* initializeWorkers;
       yield* Effect.log("Worker initialization finished, starting app...");
+
+      yield* mediaProviderArgsStorage.keepInSync.pipe(
+        Scope.extend(globalScope),
+      );
 
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 
@@ -58,7 +67,7 @@ const make = Effect.gen(function* () {
               providerStartArgs.value,
               providerFactory,
               mediaPlayerFactory.createMediaPlayer,
-              broadcastChannel,
+              broadcaster,
               activeMediaProviderCache,
             ).pipe(Effect.orElseSucceed(() => {}));
           }),
@@ -82,15 +91,13 @@ const retrieveProviderArgs = (
   providerId: ProviderId,
   localStorage: ILocalStorage,
 ) =>
-  localStorage.get<ProviderStartArgs>("media-provider-start-args", providerId);
+  localStorage.get("media-provider-start-args", providerId, ProviderStartArgs);
 
 const reinitializeProvider = (
   startArgs: ProviderStartArgs,
   providerFactory: ILoadedProvider,
   createMediaPlayer: MediaPlayerFactory["createMediaPlayer"],
-  broadcastChannel: BroadcastChannel<
-    MediaProviderBroadcastSchema["mainThread"]
-  >,
+  broadcaster: IBroadcaster,
   activeMediaProviderCache: IActiveMediaProviderCache,
 ) =>
   Effect.gen(function* () {
@@ -107,10 +114,15 @@ const reinitializeProvider = (
     const mediaProvider = providerFactory.createMediaProvider(authResult);
     const mediaPlayer = yield* createMediaPlayer(authResult);
 
-    yield* broadcastChannel.send("start", {
-      ...startArgs,
-      authInfo: authResult,
-    });
+    yield* broadcaster.broadcast(
+      "mediaProvider",
+      new StartProvider({
+        args: {
+          ...startArgs,
+          authInfo: authResult,
+        },
+      }),
+    );
     yield* activeMediaProviderCache.add(
       startArgs.metadata,
       mediaProvider,
@@ -122,4 +134,4 @@ const reinitializeProvider = (
     );
   });
 
-export const AppInitLive = Layer.effect(AppInit, make);
+export const AppInitLive = Layer.scoped(AppInit, make);

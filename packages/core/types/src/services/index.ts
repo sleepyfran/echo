@@ -2,7 +2,7 @@ export * from "./active-media-provider-cache";
 export * from "./artist-image-provider";
 export * from "./app-init";
 export * from "./authentication";
-export * from "./broadcast-channel";
+export * from "./broadcast";
 export * from "./crypto";
 export * from "./database";
 export * from "./library";

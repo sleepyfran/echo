@@ -1,34 +1,30 @@
 import {
   ProviderError,
-  type ProviderMetadata,
-  type BroadcastChannel,
   MetadataProvider,
-  type MediaProviderBroadcastSchema,
   Database,
   Crypto,
+  ProviderStartArgs,
   ProviderType,
   type FileBasedProvider,
   type ApiBasedProvider,
+  type IBroadcaster,
+  ProviderStatusChanged,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
-import { Effect, Match, Ref } from "effect";
+import { DateTime, Effect, Match, Option, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
 import { syncApiBasedProvider } from "../sync/api-based-sync";
 
-type Input = MediaProviderBroadcastSchema["worker"]["resolvers"]["start"];
-type TBroadcastChannel = BroadcastChannel<
-  MediaProviderBroadcastSchema["worker"]
->;
 type StartMediaProviderResolverInput = {
-  input: Input;
-  broadcastChannel: TBroadcastChannel;
+  input: ProviderStartArgs;
+  broadcaster: IBroadcaster;
   workerStateRef: Ref.Ref<WorkerState>;
 };
 
 export const startMediaProviderResolver = ({
-  broadcastChannel,
+  broadcaster,
   input,
   workerStateRef,
 }: StartMediaProviderResolverInput) =>
@@ -47,11 +43,31 @@ export const startMediaProviderResolver = ({
       return;
     }
 
+    if (Option.isSome(input.lastSyncedAt)) {
+      const lastSyncDate = DateTime.unsafeFromDate(input.lastSyncedAt.value);
+      const aDayAgo = DateTime.unsafeNow().pipe(
+        DateTime.subtractDuration("1 day"),
+      );
+
+      const lessThanADayAgo = aDayAgo.pipe(DateTime.lessThan(lastSyncDate));
+      if (lessThanADayAgo) {
+        yield* Effect.log(
+          `Provider with ID ${input.metadata.id} was synced less than a day ago. Ignoring command.`,
+        );
+        yield* notifyMainThreadOfSyncSkipped(
+          input,
+          input.lastSyncedAt.value,
+          broadcaster,
+        );
+        return;
+      }
+    }
+
     if (!isValidToken(input.authInfo)) {
       yield* Effect.logError(
         `Token for provider with ID ${input.metadata.id} is expired. Aborting initialization.`,
       );
-      yield* notifyMainThreadOfExpiredToken(broadcastChannel, input.metadata);
+      yield* notifyMainThreadOfExpiredToken(input, broadcaster);
       return;
     }
 
@@ -66,12 +82,12 @@ export const startMediaProviderResolver = ({
     const database = yield* Database;
     const crypto = yield* Crypto;
 
-    const runtimeFiber = yield* Match.type<Input>().pipe(
+    const runtimeFiber = yield* Match.type<ProviderStartArgs>().pipe(
       Match.tag(ProviderType.FileBased, (input) =>
         Effect.fork(
           syncFileBasedProvider({
-            broadcastChannel,
-            metadata: input.metadata,
+            startArgs: input,
+            broadcaster,
             metadataProvider,
             /*
             Provider loader guarantees this.
@@ -84,11 +100,11 @@ export const startMediaProviderResolver = ({
           }),
         ),
       ),
-      Match.tag(ProviderType.ApiBased, (_input) =>
+      Match.tag(ProviderType.ApiBased, (input) =>
         Effect.fork(
           syncApiBasedProvider({
-            metadata: input.metadata,
-            broadcastChannel,
+            startArgs: input,
+            broadcaster,
             /*
             Provider loader guarantees this.
             FIXME: Can we type this better?
@@ -109,12 +125,28 @@ export const startMediaProviderResolver = ({
   });
 
 export const notifyMainThreadOfExpiredToken = (
-  broadcastChannel: TBroadcastChannel,
-  metadata: ProviderMetadata,
+  startArgs: ProviderStartArgs,
+  broadcaster: IBroadcaster,
 ) =>
   Effect.gen(function* () {
-    return yield* broadcastChannel.send("reportStatus", {
-      metadata,
-      status: { _tag: "errored", error: ProviderError.TokenExpired },
-    });
+    return yield* broadcaster.broadcast(
+      "mediaProvider",
+      new ProviderStatusChanged({
+        startArgs,
+        status: { _tag: "errored", error: ProviderError.TokenExpired },
+      }),
+    );
   });
+
+export const notifyMainThreadOfSyncSkipped = (
+  startArgs: ProviderStartArgs,
+  lastSyncDate: Date,
+  broadcaster: IBroadcaster,
+) =>
+  broadcaster.broadcast(
+    "mediaProvider",
+    new ProviderStatusChanged({
+      startArgs,
+      status: { _tag: "sync-skipped", lastSyncedAt: lastSyncDate },
+    }),
+  );

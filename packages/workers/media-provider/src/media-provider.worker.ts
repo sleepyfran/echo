@@ -29,6 +29,7 @@ const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
       )(message);
     }),
   ),
+  Effect.scoped,
   Effect.provide(WorkerLive),
   Effect.provideServiceEffect(WorkerStateRef, initialState),
 );

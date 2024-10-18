@@ -1,5 +1,6 @@
-import type { AuthenticationInfo } from "./authentication";
-import type { FolderMetadata } from "./file-system";
+import * as S from "@effect/schema/Schema";
+import { AuthenticationInfo } from "./authentication";
+import { FolderMetadata } from "./file-system";
 
 /**
  * ID of a file-based provider.
@@ -18,7 +19,11 @@ export enum ApiBasedProviderId {
 /**
  * ID of the provider that the metadata is for.
  */
-export type ProviderId = FileBasedProviderId | ApiBasedProviderId;
+export const ProviderId = S.Union(
+  S.Enums(FileBasedProviderId),
+  S.Enums(ApiBasedProviderId),
+);
+export type ProviderId = S.Schema.Type<typeof ProviderId>;
 
 /**
  * Defines whether the provider connects to the data via a file system (e.g. OneDrive)
@@ -33,10 +38,11 @@ export enum ProviderType {
  * Metadata of a provider that can identify the provider and the capabilities
  * it supports.
  */
-export type ProviderMetadata = {
-  id: ProviderId;
-  type: ProviderType;
-};
+export const ProviderMetadata = S.Struct({
+  id: ProviderId,
+  type: S.Enums(ProviderType),
+});
+export type ProviderMetadata = S.Schema.Type<typeof ProviderMetadata>;
 
 /**
  * Metadata of the OneDrive provider.
@@ -77,42 +83,70 @@ export enum ProviderError {
   ApiGatewayError = "api-gateway-error",
 }
 
+const ProviderNotStarted = S.TaggedStruct("not-started", {});
+const ProviderSyncing = S.TaggedStruct("syncing", {});
+const ProviderSynced = S.TaggedStruct("synced", {
+  lastSyncedAt: S.Date,
+  syncedTracks: S.Number,
+  tracksWithError: S.Number,
+});
+const ProviderSyncSkipped = S.TaggedStruct("sync-skipped", {
+  lastSyncedAt: S.Date,
+});
+const ProviderErrored = S.TaggedStruct("errored", {
+  error: S.Enums(ProviderError),
+});
+const ProviderStopped = S.TaggedStruct("stopped", {});
+
 /**
- * Defines all the possible states that a provider can be in.
+ * Defines the status of a provider.
  */
-export type ProviderStatus =
-  | { _tag: "not-started" }
-  | { _tag: "syncing" }
-  | {
-      _tag: "synced";
-      lastSyncedAt: Date;
-      syncedTracks: number;
-      tracksWithError: number;
-    }
-  | { _tag: "errored"; error: ProviderError }
-  | { _tag: "stopped" };
+export const ProviderStatus = S.Union(
+  ProviderNotStarted,
+  ProviderSyncing,
+  ProviderSynced,
+  ProviderSyncSkipped,
+  ProviderErrored,
+  ProviderStopped,
+);
+export type ProviderStatus = S.Schema.Type<typeof ProviderStatus>;
+
+/**
+ * Defines the parameters required to start a provider, regardless of whether it is
+ * file-based or API-based.
+ */
+const CommonStartArgs = S.Struct({
+  lastSyncedAt: S.Option(S.Date),
+});
 
 /**
  * Defines the parameters required to start a file-based provider.
  */
-type FileBasedStartArgs = {
-  _tag: ProviderType.FileBased;
-  metadata: ProviderMetadata;
-  authInfo: AuthenticationInfo;
-  rootFolder: FolderMetadata;
-};
+export const FileBasedStartArgs = S.extend(
+  CommonStartArgs,
+  S.TaggedStruct(ProviderType.FileBased, {
+    metadata: ProviderMetadata,
+    authInfo: AuthenticationInfo,
+    rootFolder: FolderMetadata,
+  }),
+);
+export type FileBasedStartArgs = S.Schema.Type<typeof FileBasedStartArgs>;
 
 /**
  * Defines the parameters required to start an API-based provider.
  */
-type ApiBasedStartArgs = {
-  _tag: ProviderType.ApiBased;
-  metadata: ProviderMetadata;
-  authInfo: AuthenticationInfo;
-};
+export const ApiBasedStartArgs = S.extend(
+  CommonStartArgs,
+  S.TaggedStruct(ProviderType.ApiBased, {
+    metadata: ProviderMetadata,
+    authInfo: AuthenticationInfo,
+  }),
+);
+export type ApiBasedStartArgs = S.Schema.Type<typeof ApiBasedStartArgs>;
 
 /**
  * Defines the parameters required to start a provider, which can be either file-based
  * or API-based.
  */
-export type ProviderStartArgs = FileBasedStartArgs | ApiBasedStartArgs;
+export const ProviderStartArgs = S.Union(FileBasedStartArgs, ApiBasedStartArgs);
+export type ProviderStartArgs = S.Schema.Type<typeof ProviderStartArgs>;

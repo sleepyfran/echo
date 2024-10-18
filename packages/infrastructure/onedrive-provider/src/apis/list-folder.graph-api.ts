@@ -8,7 +8,7 @@ import {
   FileId,
 } from "@echo/core-types";
 import type { CollectionResult } from "./types.ts";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 type FolderItem = Pick<
   DriveItem,
@@ -48,7 +48,7 @@ export const createListFolder =
                   id: FileId(item.id),
                   name: item.name,
                   byteSize: item.size ?? 0,
-                  mimeType: item.file.mimeType ?? undefined,
+                  mimeType: Option.fromNullable(item.file.mimeType),
                   downloadUrl: item["@microsoft.graph.downloadUrl"],
                 }
               : [];

@@ -1,8 +1,8 @@
 import { Layer, Logger } from "effect";
 import {
-  MediaProviderMainThreadBroadcastChannelLive,
-  MediaProviderWorkerBroadcastChannelLive,
-} from "@echo/infrastructure-broadcast-channel";
+  BroadcastListenerLive,
+  BroadcasterLive,
+} from "@echo/infrastructure-browser-broadcast";
 import { BrowserCryptoLive } from "@echo/infrastructure-browser-crypto";
 import { DexieDatabaseLive } from "@echo/infrastructure-dexie-database";
 import { MmbMetadataProviderLive } from "@echo/infrastructure-mmb-metadata-provider";
@@ -10,7 +10,10 @@ import { LazyLoadedProviderLive } from "./loaders/provider";
 import { AppConfigLive } from "./app-config";
 import { LazyLoadedMediaPlayerLive } from "./loaders/player";
 import { ActiveMediaProviderCacheLive } from "@echo/services-active-media-provider-cache";
-import { MediaProviderStatusLive } from "@echo/services-media-provider-status";
+import {
+  MediaProviderStatusLive,
+  MediaProviderArgStorageLive,
+} from "@echo/services-media-provider-status";
 import { BrowserLocalStorageLive } from "@echo/infrastructure-browser-local-storage";
 import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-image-provider";
 
@@ -19,9 +22,10 @@ import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-
  * main thread (web-app).
  */
 export const MainLive = ActiveMediaProviderCacheLive.pipe(
+  Layer.provideMerge(MediaProviderArgStorageLive),
   Layer.provideMerge(MediaProviderStatusLive),
-  Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
-  Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
+  Layer.provideMerge(BroadcasterLive),
+  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
   Layer.provideMerge(BrowserLocalStorageLive),
@@ -36,8 +40,8 @@ export const MainLive = ActiveMediaProviderCacheLive.pipe(
  * web worker.
  */
 export const WorkerLive = MediaProviderStatusLive.pipe(
-  Layer.provideMerge(MediaProviderWorkerBroadcastChannelLive),
-  Layer.provideMerge(MediaProviderMainThreadBroadcastChannelLive),
+  Layer.provideMerge(BroadcasterLive),
+  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(DexieDatabaseLive),

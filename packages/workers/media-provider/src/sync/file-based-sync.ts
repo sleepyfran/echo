@@ -3,10 +3,8 @@ import {
   type FolderMetadata,
   type FileMetadata,
   FileBasedProviderError,
-  type MediaProviderBroadcastSchema,
   type ProviderMetadata,
   ProviderError,
-  type BroadcastChannel,
   type MetadataProvider,
   type TrackMetadata,
   type Crypto,
@@ -20,6 +18,9 @@ import {
   TrackId,
   FileBasedProviderId,
   type ProviderId,
+  type FileBasedStartArgs,
+  type IBroadcaster,
+  ProviderStatusChanged,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { head } from "effect/Array";
@@ -30,9 +31,9 @@ import {
 } from "./partial-downloader";
 
 type SyncFileBasedProviderInput = {
-  metadata: ProviderMetadata;
+  startArgs: FileBasedStartArgs;
   provider: FileBasedProvider;
-  broadcastChannel: BroadcastChannel<MediaProviderBroadcastSchema["worker"]>;
+  broadcaster: IBroadcaster;
   metadataProvider: MetadataProvider;
   database: Database;
   crypto: Crypto;
@@ -46,8 +47,8 @@ type SyncState = {
 };
 
 export const syncFileBasedProvider = ({
-  broadcastChannel,
-  metadata,
+  startArgs,
+  broadcaster,
   metadataProvider,
   provider,
   rootFolder,
@@ -55,12 +56,15 @@ export const syncFileBasedProvider = ({
   crypto,
 }: SyncFileBasedProviderInput) =>
   Effect.gen(function* () {
-    yield* Effect.log(`Starting sync for provider ${metadata.id}`);
+    yield* Effect.log(`Starting sync for provider ${startArgs.metadata.id}`);
 
-    yield* broadcastChannel.send("reportStatus", {
-      metadata,
-      status: { _tag: "syncing" },
-    });
+    yield* broadcaster.broadcast(
+      "mediaProvider",
+      new ProviderStatusChanged({
+        startArgs,
+        status: { _tag: "syncing" },
+      }),
+    );
 
     const supportedContentStream = yield* retrieveSupportedFilesFromFolder(
       provider,
@@ -74,34 +78,40 @@ export const syncFileBasedProvider = ({
 
     const normalizedData = yield* normalizeData(
       { database, crypto },
-      metadata,
+      startArgs.metadata,
       processed,
     );
 
     yield* saveToDatabase({ database }, normalizedData);
 
-    return yield* broadcastChannel.send("reportStatus", {
-      metadata,
-      status: {
-        _tag: "synced",
-        lastSyncedAt: new Date(),
-        tracksWithError: errors.length,
-        syncedTracks: normalizedData.tracks.length,
-      },
-    });
+    return yield* broadcaster.broadcast(
+      "mediaProvider",
+      new ProviderStatusChanged({
+        startArgs,
+        status: {
+          _tag: "synced",
+          lastSyncedAt: new Date(),
+          tracksWithError: errors.length,
+          syncedTracks: normalizedData.tracks.length,
+        },
+      }),
+    );
   }).pipe(
     Effect.catchAll(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
-          `Sync of ${metadata.id} has failed, reporting error with API to main thread.`,
+          `Sync of ${startArgs.metadata.id} has failed, reporting error with API to main thread.`,
         );
 
         // If we end up here, the provider has failed to retrieve any
         // files, since the stream is made to never fail. Report back an error.
-        yield* broadcastChannel.send("reportStatus", {
-          metadata,
-          status: { _tag: "errored", error: ProviderError.ApiGatewayError },
-        });
+        yield* broadcaster.broadcast(
+          "mediaProvider",
+          new ProviderStatusChanged({
+            startArgs,
+            status: { _tag: "errored", error: ProviderError.ApiGatewayError },
+          }),
+        );
       }),
     ),
   );

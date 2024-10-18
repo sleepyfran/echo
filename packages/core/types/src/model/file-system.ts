@@ -1,3 +1,4 @@
+import * as S from "@effect/schema/Schema";
 import { Brand } from "effect";
 
 /**
@@ -15,25 +16,28 @@ export const FileId = Brand.nominal<FileId>();
 /**
  * Defines a folder in a media provider's file system.
  */
-export type FolderMetadata = {
-  _tag: "folder";
-  id: FolderId;
-  name: string;
-};
+export const FolderMetadata = S.TaggedStruct("folder", {
+  id: S.String.pipe(S.fromBrand(FolderId)),
+  name: S.NonEmptyString,
+});
+export type FolderMetadata = S.Schema.Type<typeof FolderMetadata>;
 
 /**
  * Defines a file in a media provider's file system.
  */
-export type FileMetadata = {
-  _tag: "file";
-  id: FileId;
-  name: string;
-  byteSize: number;
-  mimeType: string | undefined;
-  downloadUrl: string;
-};
+export const FileMetadata = S.TaggedStruct("file", {
+  id: S.String.pipe(S.fromBrand(FileId)),
+  name: S.NonEmptyString,
+  byteSize: S.Number,
+  mimeType: S.Option(S.String),
+  downloadUrl: S.NonEmptyString,
+});
+export type FileMetadata = S.Schema.Type<typeof FileMetadata>;
 
 /**
  * Defines the content of a folder in a media provider's file system.
  */
-export type FolderContentMetadata = (FolderMetadata | FileMetadata)[];
+export const FolderContentMetadata = S.Array(
+  S.Union(FolderMetadata, FileMetadata),
+);
+export type FolderContentMetadata = S.Schema.Type<typeof FolderContentMetadata>;
