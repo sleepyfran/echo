@@ -69,7 +69,6 @@ export type Track = {
 
   /**
    * Duration of the track in milliseconds. It must be greater than zero.
-   * TODO: We would need to download the entire track to get this information. Consider re-adding this field when we have a way to get this information.
    */
-  // durationInMilliseconds: number,
+  durationInSeconds: number;
 };

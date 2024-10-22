@@ -120,6 +120,7 @@ const toTrackSchema = (
   },
   secondaryArtists: [],
   trackNumber: spotifyTrack.track_number,
+  durationInSeconds: spotifyTrack.duration_ms / 1000,
 });
 
 const downloadImage = (url?: string) =>

@@ -421,5 +421,6 @@ const createTrack = (
         provider: FileBasedProviderId.OneDrive /* TODO: Take from metadata. */,
         fileId: file.id,
       },
+      durationInSeconds: metadata.lengthInSeconds ?? 0,
     };
   });

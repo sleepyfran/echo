@@ -48,6 +48,7 @@ const mmbMetadataProvider = MetadataProvider.of({
             trackNumber: metadata.common.track.no ?? undefined,
             embeddedCover,
             year: metadata.common.year,
+            lengthInSeconds: metadata.format.duration,
           };
         }),
       ),

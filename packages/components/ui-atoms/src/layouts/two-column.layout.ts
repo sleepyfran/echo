@@ -9,7 +9,7 @@ export class TwoColumnLayout extends LitElement {
   static styles = css`
     div.container {
       display: flex;
-      height: 100vh;
+      padding-bottom: 2rem;
     }
 
     .left-column {

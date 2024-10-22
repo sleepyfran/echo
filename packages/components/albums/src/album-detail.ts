@@ -59,6 +59,22 @@ export class AlbumDetail extends LitElement {
       padding-bottom: 1rem;
       font-size: 1rem;
     }
+
+    h6 {
+      margin: 0;
+      padding-bottom: 1rem;
+      font-size: 0.8rem;
+      color: var(--secondary-text-color);
+    }
+
+    div.track {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    div.track > .duration {
+      color: var(--secondary-text-color);
+    }
   `;
 
   constructor() {
@@ -82,16 +98,46 @@ export class AlbumDetail extends LitElement {
               ? html`(${this.album.releaseYear.value})`
               : nothing}
           </h5>
+          <h6>${this._formatAlbumDuration()}</h6>
         </div>
 
         <div class="track-list-container" slot="right-column">
           <h2>Tracks</h2>
           <ol class="track-list">
-            ${map(this.album.tracks, (track) => html`<li>${track.name}</li>`)}
+            ${map(
+              this.album.tracks,
+              (track) =>
+                html`<div class="track">
+                  <li>${track.name}</li>
+                  <span class="duration"
+                    >${this._formatDuration(track.durationInSeconds)}</span
+                  >
+                </div>`,
+            )}
           </ol>
         </div>
       </two-column-layout>
     `;
+  }
+
+  private _formatDuration(durationInSeconds: number): string {
+    if (durationInSeconds === 0) return "";
+
+    const date = new Date(0);
+    date.setSeconds(durationInSeconds);
+    return date.toLocaleTimeString("en-US", {
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  }
+
+  private _formatAlbumDuration(): string {
+    const durationInSeconds = this.album.tracks.reduce(
+      (acc, track) => acc + track.durationInSeconds,
+      0,
+    );
+    const durationInMinutes = Math.floor(durationInSeconds / 60);
+    return `${durationInMinutes} min`;
   }
 }
 

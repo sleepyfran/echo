@@ -59,6 +59,11 @@ export type TrackMetadata = {
    * Keywords to reflect the mood of the audio, e.g. 'Romantic' or 'Sad'
    */
   mood?: string | undefined;
+
+  /**
+   * Length of the track in seconds.
+   */
+  lengthInSeconds?: number | undefined;
 };
 
 /**
