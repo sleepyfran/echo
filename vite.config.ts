@@ -1,38 +1,45 @@
 import { defineConfig } from "vite";
 import fs from "fs";
 
-export default defineConfig({
-  build: {
-    outDir: "../../dist",
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (
-            id.includes("node_modules/music-metadata") ||
-            id.includes("node_modules/buffer")
-          ) {
-            return "vendor-music-metadata";
-          }
+export default defineConfig(({ command }) => {
+  const serverOptions =
+    command == "serve"
+      ? {
+          https: {
+            key: fs.readFileSync("./tools/certificates/key.pem"),
+            cert: fs.readFileSync("./tools/certificates/cert.pem"),
+          },
+          port: 4443,
+        }
+      : {};
 
-          if (
-            id.includes("node_modules/effect") ||
-            id.includes("node_modules/@effect")
-          ) {
-            return "vendor-effect";
-          }
+  return {
+    build: {
+      outDir: "../../dist",
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (
+              id.includes("node_modules/music-metadata") ||
+              id.includes("node_modules/buffer")
+            ) {
+              return "vendor-music-metadata";
+            }
+
+            if (
+              id.includes("node_modules/effect") ||
+              id.includes("node_modules/@effect")
+            ) {
+              return "vendor-effect";
+            }
+          },
         },
       },
     },
-  },
-  root: "./packages/web",
-  worker: {
-    format: "es",
-  },
-  server: {
-    https: {
-      key: fs.readFileSync("./tools/certificates/key.pem"),
-      cert: fs.readFileSync("./tools/certificates/cert.pem"),
+    root: "./packages/web",
+    worker: {
+      format: "es",
     },
-    port: 4443,
-  },
+    server: serverOptions,
+  };
 });

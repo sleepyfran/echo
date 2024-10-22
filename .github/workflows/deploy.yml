@@ -1,0 +1,57 @@
+name: Deploy Echo
+
+on:
+  push:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    environment:
+      name: Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn
+      - name: Build
+        run: yarn build
+        env:
+          VITE_ECHO_BASE_URL: ${{ vars.ECHO_BASE_URL }}
+          VITE_GRAPH_CLIENT_ID: ${{ secrets.GRAPH_CLIENT_ID }}
+          VITE_GRAPH_REDIRECT_URI: ${{ vars.GRAPH_REDIRECT_URI }}
+          VITE_GRAPH_SCOPES: ${{ secrets.GRAPH_SCOPES }}
+          VITE_SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          VITE_SPOTIFY_SECRET: ${{ secrets.SPOTIFY_SECRET }}
+          VITE_SPOTIFY_REDIRECT_URI: ${{ secrets.SPOTIFY_REDIRECT_URI }}
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./dist"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
