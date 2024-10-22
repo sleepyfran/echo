@@ -105,9 +105,10 @@ export class EchoPlayer extends LitElement {
     trackName: string,
   ) {
     return html`
-      <div class="current-track">
+      <div id="player" class="current-track">
         ${Option.isSome(cover)
           ? html` <img
+              id="current-track-cover"
               src="${URL.createObjectURL(cover.value)}"
               height="40"
               width="40"
@@ -115,8 +116,8 @@ export class EchoPlayer extends LitElement {
             />`
           : nothing}
         <div class="track-info">
-          <h4>${trackName}</h4>
-          <h6>${artistName}</h6>
+          <h4 id="track-name">${trackName}</h4>
+          <h6 id="artist-name">${artistName}</h6>
         </div>
         ${player.status._tag !== "Stopped"
           ? html`
@@ -132,8 +133,8 @@ export class EchoPlayer extends LitElement {
                 @click=${this._onTogglePlayback}
               >
                 ${player.status._tag === "Paused"
-                  ? html` <play-icon></play-icon> `
-                  : html` <pause-icon></pause-icon> `}
+                  ? html` <play-icon id="play"></play-icon> `
+                  : html` <pause-icon id="pause"></pause-icon> `}
               </echo-button>
               <echo-button
                 .type=${ButtonType.Icon}
