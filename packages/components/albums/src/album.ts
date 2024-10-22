@@ -63,11 +63,12 @@ export class LibraryAlbum extends LitElement {
     }
 
     img.album-cover {
+      aspect-ratio: 1 / 1;
       border-radius: 2%;
-      width: 100%;
       height: 100%;
       object-fit: cover;
       position: relative;
+      width: 100%;
     }
 
     div.album-info {
