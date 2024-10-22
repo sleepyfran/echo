@@ -1,6 +1,5 @@
 import { Data, Effect } from "effect";
 import { InitMessage } from "./src/init";
-import ImageProviderWorker from "./src/image-provider.worker?worker";
 
 export class WorkerInitializationError extends Data.TaggedError(
   "@echo/workers-image-provider/WorkerInitializationError",
@@ -10,6 +9,9 @@ export class WorkerInitializationError extends Data.TaggedError(
  * Creates the ImageProvider worker and initializes it.
  */
 export const initializeImageProviderWorker = Effect.sync(() => {
-  const worker = new ImageProviderWorker();
+  const worker = new Worker(
+    new URL("./src/image-provider.worker", import.meta.url),
+    { type: "module" },
+  );
   worker.postMessage(InitMessage.make({}));
 });

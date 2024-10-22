@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "ci": "yarn typecheck && yarn lint && yarn format",
-    "dev": "yarn workspace @echo/web vite",
-    "build": "yarn workspace @echo/web tsc && vite build",
+    "dev": "vite",
+    "build": "yarn workspace @echo/web tsc && vite build --emptyOutDir",
     "format": "prettier --check \"packages/**/*.{ts, tsx}\"",
     "gen": "yarn plop",
     "lint": "yarn workspaces run lint",

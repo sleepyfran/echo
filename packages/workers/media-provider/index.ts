@@ -1,7 +1,6 @@
 import * as S from "@effect/schema/Schema";
 import { Data, Effect, Match } from "effect";
 import { InitFinishedMessage, InitMessage } from "./src/init";
-import MediaProviderWorker from "./src/media-provider.worker?worker";
 
 export class WorkerInitializationError extends Data.TaggedError(
   "@echo/workers-media-provider/WorkerInitializationError",
@@ -13,7 +12,10 @@ export class WorkerInitializationError extends Data.TaggedError(
  */
 export const initializeMediaProviderWorker = Effect.async<void>(
   (resolveEff) => {
-    const worker = new MediaProviderWorker();
+    const worker = new Worker(
+      new URL("./src/media-provider.worker", import.meta.url),
+      { type: "module" },
+    );
 
     worker.onmessage = (message: MessageEvent<unknown>) => {
       const decoder = S.decodeUnknownEither(InitFinishedMessage);
