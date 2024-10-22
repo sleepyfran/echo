@@ -1,15 +1,33 @@
-# Echo
+# echo
+
+<p align="center">
+  <img src="./resources/app-screenshot.jpg" width="600" />
+</p>
 
 Echo is a music app that allows you to connect to multiple sources of music and
 play them directly through the app. It's album focused, meaning that instead of
 treating your library as a list of songs, it treats it as a list of albums, allowing
 you to shuffle albums, browse them based on genres, and more.
 
-Echo is currently in development and is not yet ready for use.
+> The app is currently in a very alpha-ish state, so expect things to break
+> and features to be missing. Nonetheless, it's already usable for basic music
+> browsing and playing.
 
-## Local setup
+## 🛣️ Features and roadmap
 
-Echo is built using TypeScript, Lit and [Effect](https://effect.website) as the
+- [x] Multiple provider support & sync (currently Spotify and OneDrive, but most of the scaffolding is in place for more)
+- [x] Album browser
+- [x] Artist browser
+- [x] Album details
+- [ ] Scrobbling support
+- [ ] Shuffling
+- [ ] Queue management
+- [ ] Genre fetching and browsing
+- [ ] More providers (YouTube Music, Google Drive, etc.)
+
+## 🔧 Local setup
+
+Echo is built using [TypeScript](https://typescriptlang.org), [Lit](https://lit.dev) and [Effect](https://effect.website) as the
 backbone of most of the app logic. To get started, clone the repository and install
 the dependencies:
 
