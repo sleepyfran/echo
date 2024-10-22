@@ -12,13 +12,15 @@ import {
   Broadcaster,
   type IBroadcaster,
   StartProvider,
+  Player,
+  type IPlayer,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
   LazyLoadedProvider,
 } from "@echo/services-bootstrap";
 import type { ILoadedProvider } from "@echo/services-bootstrap/src/loaders/provider";
-import { Effect, Layer, Option, Scope } from "effect";
+import { Effect, Layer, Match, Option, Scope, Stream } from "effect";
 import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
@@ -28,6 +30,7 @@ const make = Effect.gen(function* () {
   const lazyLoaderMediaPlayer = yield* LazyLoadedMediaPlayer;
   const localStorage = yield* LocalStorage;
   const mediaProviderArgsStorage = yield* MediaProviderArgsStorage;
+  const player = yield* Player;
   const globalScope = yield* Scope.make();
 
   yield* Effect.addFinalizer(() => Effect.logError("AppInit finalizer called"));
@@ -43,6 +46,8 @@ const make = Effect.gen(function* () {
       yield* mediaProviderArgsStorage.keepInSync.pipe(
         Scope.extend(globalScope),
       );
+
+      yield* syncPageTitleWithPlayer(player).pipe(Scope.extend(globalScope));
 
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 
@@ -131,6 +136,28 @@ const reinitializeProvider = (
 
     yield* Effect.log(
       `Successfully reinitialized ${startArgs.metadata.id} provider`,
+    );
+  });
+
+const syncPageTitleWithPlayer = (player: IPlayer) =>
+  Effect.gen(function* () {
+    const playerState = yield* player.observe;
+
+    yield* playerState.changes.pipe(
+      Stream.runForEach((state) =>
+        Match.value(state.status).pipe(
+          Match.tag("Stopped", () =>
+            Effect.sync(() => (document.title = "Echo")),
+          ),
+          Match.tag("Playing", "Paused", ({ track }) =>
+            Effect.sync(() => {
+              document.title = `${track.name} - ${track.mainArtist.name} | Echo`;
+            }),
+          ),
+          Match.exhaustive,
+        ),
+      ),
+      Effect.forkScoped,
     );
   });
 

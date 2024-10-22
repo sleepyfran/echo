@@ -14,12 +14,8 @@ import { globalValue } from "effect/GlobalValue";
 export const getOrCreateRuntime = () =>
   globalValue("echo-runtime", () =>
     ManagedRuntime.make(
-      Layer.mergeAll(
-        AppInitLive,
-        AddProviderWorkflowLive,
-        PlayerLive,
-        LibraryLive,
-      ).pipe(
+      Layer.mergeAll(AppInitLive, AddProviderWorkflowLive, LibraryLive).pipe(
+        Layer.provideMerge(PlayerLive),
         Layer.provideMerge(EntityResolverLive),
         Layer.provideMerge(MainLive),
       ),
