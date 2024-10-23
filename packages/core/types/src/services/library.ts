@@ -1,6 +1,16 @@
 import { Effect, Option, Stream } from "effect";
 import type { Album, AlbumId, Artist, ArtistId } from "../model";
-import type { NonExistingArtistReferenced } from "./database";
+
+/**
+ * Error that is thrown when an album references an artist that does not exist.
+ */
+export class NonExistingArtistReferenced extends Error {
+  constructor(albumName: string, artistId: ArtistId) {
+    super(
+      `The artist with ID "${artistId}" referenced by the album "${albumName}" does not exist`,
+    );
+  }
+}
 
 /**
  * Detail of an artist, including their albums.
