@@ -11,6 +11,7 @@ export type DatabaseAlbum = Omit<
   artistId: Artist["id"];
   embeddedCover: Blob | null;
   releaseYear: number | null;
+  tracks: DatabaseTrack[];
 };
 
 /**
@@ -24,11 +25,7 @@ export type DatabaseArtist = Omit<Artist, "image"> & {
  * Represents a track in the database, which is synced with the model but
  * references other tables by their IDs instead of duplicating the data.
  */
-export type DatabaseTrack = Omit<
-  Track,
-  "mainArtist" | "secondaryArtists" | "albumInfo"
-> & {
+export type DatabaseTrack = Omit<Track, "mainArtist" | "secondaryArtists"> & {
   mainArtistId: Artist["id"];
   secondaryArtistIds: Artist["id"][];
-  albumId: Album["id"];
 };

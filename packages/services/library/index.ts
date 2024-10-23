@@ -6,9 +6,7 @@ import {
   type Artist,
   type DatabaseAlbum,
   type DatabaseArtist,
-  type DatabaseTrack,
   type Table,
-  type Track,
 } from "@echo/core-types";
 import { Effect, Layer, Option, Stream } from "effect";
 
@@ -67,7 +65,6 @@ export const LibraryLive = Layer.effect(
         Effect.gen(function* () {
           const albumsTable = yield* database.table("albums");
           const artistsTable = yield* database.table("artists");
-          const tracksTable = yield* database.table("tracks");
 
           const maybeAlbum = yield* albumsTable.byId(albumId);
           if (Option.isNone(maybeAlbum)) {
@@ -86,18 +83,10 @@ export const LibraryLive = Layer.effect(
             );
           }
 
-          const tracks = yield* tracksTable.filtered({
-            filter: {
-              albumId,
-            },
-          });
-
           const album = yield* toAlbumSchema(maybeAlbum.value, maybeArtist);
           return Option.some({
             ...album,
-            tracks: tracks
-              .sort((a, b) => a.trackNumber - b.trackNumber)
-              .map((track) => toTrackSchema(track, album, album.artist)),
+            tracks: album.tracks.sort((a, b) => a.trackNumber - b.trackNumber),
           });
         }),
       observeArtists: () =>
@@ -141,28 +130,23 @@ const toAlbumSchema = (
     );
   }
 
+  const resolvedArtist = toArtistSchema(artist.value);
   return Effect.succeed({
     ...album,
-    artist: toArtistSchema(artist.value),
+    artist: resolvedArtist,
     embeddedCover: Option.fromNullable(album.embeddedCover),
     releaseYear: Option.fromNullable(album.releaseYear),
+    tracks: album.tracks.map((track) => ({
+      ...track,
+      mainArtist: resolvedArtist,
+      secondaryArtists: [],
+    })),
   });
 };
 
 const toArtistSchema = (artist: DatabaseArtist): Artist => ({
   ...artist,
   image: Option.fromNullable(artist.image),
-});
-
-const toTrackSchema = (
-  track: DatabaseTrack,
-  album: Album,
-  artist: Artist,
-): Track => ({
-  ...track,
-  albumInfo: album,
-  mainArtist: artist,
-  secondaryArtists: [],
 });
 
 const sortAlbumsByArtistName = (albums: Album[]): Album[] =>

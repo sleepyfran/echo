@@ -6,13 +6,13 @@ import {
   PlayNotFoundError,
   ProviderNotReady,
   ProviderType,
-  EntityResolver,
   Stopped,
   type IActiveMediaProviderCache,
   type MediaPlayer,
   type MediaProvider,
   type PlayerState,
   type Track,
+  type Album,
 } from "@echo/core-types";
 import {
   Array,
@@ -60,26 +60,21 @@ const makePlayer = Effect.gen(function* () {
   const state = yield* PlayerStateRef;
   const providerCache = yield* ActiveMediaProviderCache;
   const activeMediaPlayer = yield* CurrentlyActivePlayerRef;
-  const resolver = yield* EntityResolver;
 
   const commandQueue = yield* Queue.sliding<PlayerCommand>(10);
   yield* consumeCommandsInBackground(commandQueue);
 
   return Player.of({
     playAlbum: (album) =>
-      resolver.albumWithTracks(album).pipe(
-        Effect.flatMap((albumWithTracks) =>
-          playTracks({
-            tracks: albumWithTracks.tracks,
-            providerCache,
-            commandQueue,
-            preservePreviousTracks: false,
-          }).pipe(
-            Effect.catchTag("NoMoreTracksAvailable", () =>
-              Effect.logError(
-                `Attempted to play album ${album.name}, but it has no tracks.`,
-              ),
-            ),
+      playTracks({
+        album,
+        providerCache,
+        commandQueue,
+        preservePreviousTracks: false,
+      }).pipe(
+        Effect.catchTag("NoMoreTracksAvailable", () =>
+          Effect.logError(
+            `Attempted to play album ${album.name}, but it has no tracks.`,
           ),
         ),
       ),
@@ -95,47 +90,97 @@ const makePlayer = Effect.gen(function* () {
       yield* mediaPlayer.value.player.togglePlayback;
     }),
     previous: Effect.gen(function* () {
-      // TODO: Refactor this to avoid duplication with other play commands.
-      const { previouslyPlayedTracks, comingUpTracks, status } =
-        yield* Ref.get(state);
-      const lastPlayedTrack = Array.last(previouslyPlayedTracks);
-      if (Option.isNone(lastPlayedTrack)) {
-        yield* Effect.logWarning(
-          "Attempted to play previous track, but the previous queue is empty",
-        );
-        return;
-      }
+      const { previouslyPlayedAlbums, status } = yield* Ref.get(state);
 
-      const { provider, player } = yield* resolveDependenciesForTrack(
-        providerCache,
-        lastPlayedTrack.value,
-      );
+      yield* Match.value(status).pipe(
+        Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
+          Effect.gen(function* () {
+            const previousTrack = trackIndex - 1;
+            if (previousTrack < 0) {
+              yield* Effect.log(
+                "No previous track to play, attempting to play last album",
+              );
+              return yield* playLastFromPreviouslyPlayed(
+                previouslyPlayedAlbums,
+                providerCache,
+                commandQueue,
+              );
+            }
 
-      const currentTrack = Match.value(status).pipe(
-        Match.tag("Playing", ({ track }) => [track]),
-        Match.tag("Paused", ({ track }) => [track]),
-        Match.tag("Stopped", () => []),
-        Match.exhaustive,
-      );
-      const previousWithoutLast = Array.dropRight(previouslyPlayedTracks, 1);
-      const comingUpWithCurrent = [...currentTrack, ...comingUpTracks];
-
-      yield* playTrack(provider, player, lastPlayedTrack.value);
-      yield* commandQueue.offer(
-        UpdateState({
-          updateFn: (state) => ({
-            ...state,
-            status: Playing({ track: lastPlayedTrack.value }),
-            previouslyPlayedTracks: previousWithoutLast,
-            comingUpTracks: comingUpWithCurrent,
+            yield* playTracks({
+              album,
+              trackIndex: previousTrack,
+              providerCache,
+              commandQueue,
+              preservePreviousTracks: false,
+            });
           }),
-        }),
+        ),
+        Match.orElse(() =>
+          playLastFromPreviouslyPlayed(
+            previouslyPlayedAlbums,
+            providerCache,
+            commandQueue,
+          ),
+        ),
       );
     }),
     skip: commandQueue.offer(NextTrack()),
     observe: Effect.sync(() => state),
   });
 });
+
+const playLastFromPreviouslyPlayed = (
+  previouslyPlayedAlbums: Album[],
+  providerCache: IActiveMediaProviderCache,
+  commandQueue: Queue.Enqueue<PlayerCommand>,
+) =>
+  Effect.gen(function* () {
+    const lastPlayedAlbum = Array.last(previouslyPlayedAlbums);
+    if (Option.isNone(lastPlayedAlbum)) {
+      yield* Effect.logWarning(
+        "Requested to play previous track, but there's nothing playing nor any previously played albums.",
+      );
+      return;
+    }
+
+    const lastTrack = Array.last(lastPlayedAlbum.value.tracks);
+    if (Option.isNone(lastTrack)) {
+      yield* Effect.logWarning(
+        "Requested to play previous track, but the last played album has no tracks.",
+      );
+      return;
+    }
+
+    yield* playTracks({
+      album: lastPlayedAlbum.value,
+      trackIndex: lastPlayedAlbum.value.tracks.length - 1,
+      providerCache,
+      commandQueue,
+      preservePreviousTracks: false,
+    });
+  });
+
+const playNextFromComingUp = (
+  comingUpAlbums: Album[],
+  providerCache: IActiveMediaProviderCache,
+  commandQueue: Queue.Enqueue<PlayerCommand>,
+) =>
+  Effect.gen(function* () {
+    const nextAlbum = Array.head(comingUpAlbums);
+    if (Option.isNone(nextAlbum)) {
+      yield* Effect.logWarning(
+        "Requested to play next track, but there are no more tracks coming up.",
+      );
+      return;
+    }
+
+    yield* playTracks({
+      album: nextAlbum.value,
+      providerCache,
+      commandQueue,
+    });
+  });
 
 /**
  * Consumes the player commands in the background, triggering the appropriate
@@ -153,14 +198,37 @@ const consumeCommandsInBackground = (
             const state = yield* PlayerStateRef;
             const providerCache = yield* ActiveMediaProviderCache;
 
-            const { comingUpTracks } = yield* Ref.get(state);
-            yield* playTracks({
-              tracks: comingUpTracks,
-              providerCache,
-              commandQueue,
-            }).pipe(
-              Effect.catchTag("NoMoreTracksAvailable", () =>
-                Effect.logWarning("There are no more tracks to play."),
+            const { status, comingUpAlbums } = yield* Ref.get(state);
+            yield* Match.value(status).pipe(
+              Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
+                Effect.gen(function* () {
+                  const nextTrack = trackIndex + 1;
+                  if (nextTrack >= album.tracks.length) {
+                    yield* Effect.log(
+                      "No more tracks to play, attempting to play next album",
+                    );
+                    return yield* playNextFromComingUp(
+                      comingUpAlbums,
+                      providerCache,
+                      commandQueue,
+                    );
+                  }
+
+                  yield* playTracks({
+                    album,
+                    trackIndex: nextTrack,
+                    providerCache,
+                    commandQueue,
+                    preservePreviousTracks: false,
+                  });
+                }),
+              ),
+              Match.orElse(() =>
+                playNextFromComingUp(
+                  comingUpAlbums,
+                  providerCache,
+                  commandQueue,
+                ),
               ),
             );
           }),
@@ -175,14 +243,14 @@ const consumeCommandsInBackground = (
               UpdateState({
                 updateFn: (state) =>
                   Match.value(state.status).pipe(
-                    Match.tag("Playing", ({ track }) =>
+                    Match.tag("Playing", ({ album, trackIndex }) =>
                       isPlaying
                         ? state
-                        : { ...state, status: Paused({ track }) },
+                        : { ...state, status: Paused({ album, trackIndex }) },
                     ),
-                    Match.tag("Paused", ({ track }) =>
+                    Match.tag("Paused", ({ album, trackIndex }) =>
                       isPlaying
-                        ? { ...state, status: Playing({ track }) }
+                        ? { ...state, status: Playing({ album, trackIndex }) }
                         : state,
                     ),
                     Match.tag("Stopped", () => state),
@@ -215,7 +283,8 @@ const consumeCommandsInBackground = (
   );
 
 type PlayTracksInput = {
-  tracks: Track[];
+  album: Album;
+  trackIndex?: number;
   providerCache: IActiveMediaProviderCache;
   commandQueue: Queue.Enqueue<PlayerCommand>;
   preservePreviousTracks?: boolean;
@@ -226,31 +295,28 @@ type PlayTracksInput = {
  * the first track in the list and updates the player state accordingly.
  */
 const playTracks = ({
-  tracks,
+  album,
+  trackIndex = 0,
   providerCache,
   commandQueue,
   preservePreviousTracks = true,
 }: PlayTracksInput) =>
   Effect.gen(function* () {
-    const [nextTrack, ...restOfTracks] = tracks;
-    if (!nextTrack) {
+    const requestedTrack = Array.get(album.tracks, trackIndex);
+    if (Option.isNone(requestedTrack)) {
       return yield* Effect.fail(new NoMoreTracksAvailable());
     }
 
     const { provider, player } = yield* resolveDependenciesForTrack(
       providerCache,
-      nextTrack,
+      requestedTrack.value,
     );
 
     yield* commandQueue.offer(SyncPlayerState({ withMediaPlayer: player }));
-    yield* playTrack(provider, player, nextTrack);
+    yield* playTrack(provider, player, requestedTrack.value);
     yield* commandQueue.offer(
       UpdateState({
-        updateFn: toPlayingState(
-          nextTrack,
-          restOfTracks,
-          preservePreviousTracks,
-        ),
+        updateFn: toPlayingState(album, trackIndex, preservePreviousTracks),
       }),
     );
   });
@@ -384,32 +450,43 @@ const playTrack = (
  * also the previously played tracks with the current track, if any.
  */
 const toPlayingState =
-  (currentTrack: Track, comingUpTracks: Track[], preservePrevious = true) =>
-  (currentState: PlayerState): PlayerState =>
-    ({
+  (album: Album, trackIndex: number, preservePrevious = true) =>
+  (currentState: PlayerState) => {
+    const hasNext =
+      trackIndex + 1 < album.tracks.length ||
+      !!currentState.comingUpAlbums.length;
+    const hasPrevious =
+      trackIndex > 0 || !!currentState.previouslyPlayedAlbums.length;
+
+    return {
       ...currentState,
-      status: Playing({ track: currentTrack }),
-      previouslyPlayedTracks: preservePrevious
+      status: Playing({ album, trackIndex }),
+      allowsNext: hasNext,
+      allowsPrevious: hasPrevious,
+      previouslyPlayedAlbums: preservePrevious
         ? [
-            ...currentState.previouslyPlayedTracks,
+            ...currentState.previouslyPlayedAlbums,
             ...Match.value(currentState.status).pipe(
-              Match.tag("Playing", ({ track }) => [track]),
-              Match.tag("Paused", ({ track }) => [track]),
+              Match.tag("Playing", ({ album }) => [album]),
+              Match.tag("Paused", ({ album }) => [album]),
               Match.tag("Stopped", () => []),
               Match.exhaustive,
             ),
           ]
         : [],
-      comingUpTracks,
-    }) satisfies PlayerState;
+      comingUpAlbums: [],
+    } satisfies PlayerState;
+  };
 
 const PlayerLiveWithState = Layer.scoped(Player, makePlayer);
 
 const PlayerStateLive = Layer.effect(
   PlayerStateRef,
   SubscriptionRef.make({
-    comingUpTracks: [],
-    previouslyPlayedTracks: [],
+    allowsNext: false,
+    allowsPrevious: false,
+    comingUpAlbums: [],
+    previouslyPlayedAlbums: [],
     status: Stopped(),
   } as PlayerState),
 );

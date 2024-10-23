@@ -1,5 +1,4 @@
 import type { Artist } from "./artist";
-import type { Album } from "./album";
 import { Brand } from "effect";
 import type {
   ApiBasedProviderId,
@@ -44,11 +43,6 @@ export type Track = {
    * The main artist is not included in this list.
    */
   secondaryArtists: Artist[];
-
-  /**
-   * Album that the track belongs to.
-   */
-  albumInfo: Album;
 
   /**
    * Name of the track.

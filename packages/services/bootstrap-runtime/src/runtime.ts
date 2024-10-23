@@ -3,7 +3,6 @@ import { AppInitLive } from "@echo/services-app-init";
 import { MainLive } from "@echo/services-bootstrap";
 import { LibraryLive } from "@echo/services-library";
 import { PlayerLive } from "@echo/services-player";
-import { EntityResolverLive } from "@echo/services-resolver";
 import { Layer, ManagedRuntime } from "effect";
 import { globalValue } from "effect/GlobalValue";
 
@@ -16,7 +15,6 @@ export const getOrCreateRuntime = () =>
     ManagedRuntime.make(
       Layer.mergeAll(AppInitLive, AddProviderWorkflowLive, LibraryLive).pipe(
         Layer.provideMerge(PlayerLive),
-        Layer.provideMerge(EntityResolverLive),
         Layer.provideMerge(MainLive),
       ),
     ),

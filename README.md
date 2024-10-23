@@ -19,10 +19,10 @@ you to shuffle albums, browse them based on genres, and more.
 - [x] Album browser
 - [x] Artist browser
 - [x] Album details
+- [x] Genre fetching and browsing
 - [ ] Scrobbling support
 - [ ] Shuffling
 - [ ] Queue management
-- [ ] Genre fetching and browsing
 - [ ] More providers (YouTube Music, Google Drive, etc.)
 
 ## 🔧 Local setup

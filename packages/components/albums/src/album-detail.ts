@@ -1,5 +1,5 @@
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import { Library, type AlbumId, type AlbumWithTracks } from "@echo/core-types";
+import { Library, type Album, type AlbumId } from "@echo/core-types";
 import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -14,7 +14,7 @@ import "./playable-album-cover";
 @customElement("album-detail")
 export class AlbumDetail extends LitElement {
   @property({ type: Object })
-  album!: AlbumWithTracks;
+  album!: Album;
 
   static styles = css`
     ol.track-list {
@@ -67,6 +67,19 @@ export class AlbumDetail extends LitElement {
       color: var(--secondary-text-color);
     }
 
+    div.genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-bottom: 1rem;
+    }
+
+    div.genres > .genre {
+      border: 1px solid var(--accent-color);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
     div.track {
       display: flex;
       justify-content: space-between;
@@ -99,6 +112,7 @@ export class AlbumDetail extends LitElement {
               : nothing}
           </h5>
           <h6>${this._formatAlbumDuration()}</h6>
+          <div class="genres">${this._renderGenres()}</div>
         </div>
 
         <div class="track-list-container" slot="right-column">
@@ -138,6 +152,12 @@ export class AlbumDetail extends LitElement {
     );
     const durationInMinutes = Math.floor(durationInSeconds / 60);
     return `${durationInMinutes} min`;
+  }
+
+  private _renderGenres() {
+    return this.album.genres.map(
+      (genre) => html`<span class="genre">${genre}</span>`,
+    );
   }
 }
 

@@ -1,14 +1,13 @@
 import {
   ProviderError,
   ProviderStatusChanged,
-  type AlbumWithTracks,
+  type Album,
   type ApiBasedProvider,
   type ApiBasedStartArgs,
   type Artist,
   type Database,
   type DatabaseAlbum,
   type DatabaseArtist,
-  type DatabaseTrack,
   type IBroadcaster,
 } from "@echo/core-types";
 import { Effect, Option, Stream } from "effect";
@@ -24,7 +23,6 @@ type SyncApiBasedProviderInput = {
 type SyncState = {
   albums: DatabaseAlbum[];
   artists: DatabaseArtist[];
-  tracks: DatabaseTrack[];
 };
 
 export const syncApiBasedProvider = ({
@@ -46,12 +44,18 @@ export const syncApiBasedProvider = ({
 
     yield* Effect.log("Listing remote albums on the provider");
     const providerAlbums = yield* provider.listAlbums;
-    const { albums, artists, tracks } = yield* normalizeData(
+    const { albums, artists } = yield* normalizeData(
       { database },
       providerAlbums,
     );
 
-    yield* saveToDatabase({ database }, { albums, artists, tracks });
+    yield* saveToDatabase({ database }, { albums, artists });
+
+    // TODO: Ignore and use album count.
+    const syncedTracks = albums.reduce(
+      (acc, album) => acc + album.tracks.length,
+      0,
+    );
 
     yield* broadcaster.broadcast(
       "mediaProvider",
@@ -60,7 +64,7 @@ export const syncApiBasedProvider = ({
         status: {
           _tag: "synced",
           lastSyncedAt: new Date(),
-          syncedTracks: tracks.length,
+          syncedTracks,
           tracksWithError: 0,
         },
       }),
@@ -87,14 +91,13 @@ export const syncApiBasedProvider = ({
 
 const normalizeData = (
   { database }: Pick<SyncApiBasedProviderInput, "database">,
-  albums: AlbumWithTracks[],
+  albums: Album[],
 ) =>
   Stream.fromIterable(albums).pipe(
     Stream.runFoldEffect(
       {
         albums: [],
         artists: [],
-        tracks: [],
       } as SyncState,
       (accumulator, album) =>
         Effect.gen(function* () {
@@ -108,20 +111,17 @@ const normalizeData = (
                 artistId: artist.id,
                 embeddedCover: Option.getOrNull(album.embeddedCover),
                 releaseYear: Option.getOrNull(album.releaseYear),
+                tracks: album.tracks.map((track) => ({
+                  ...track,
+                  mainArtistId: artist.id,
+                  secondaryArtistIds: track.secondaryArtists.map(
+                    (artist) => artist.id,
+                  ),
+                  albumId: album.id,
+                })),
               },
             ],
             artists: [...accumulator.artists, artist],
-            tracks: [
-              ...accumulator.tracks,
-              ...album.tracks.map((track) => ({
-                ...track,
-                mainArtistId: artist.id,
-                secondaryArtistIds: track.secondaryArtists.map(
-                  (artist) => artist.id,
-                ),
-                albumId: album.id,
-              })),
-            ],
           };
         }),
     ),
@@ -153,14 +153,12 @@ const tryFindExisting = (
 
 const saveToDatabase = (
   { database }: Pick<SyncApiBasedProviderInput, "database">,
-  { albums, artists, tracks }: SyncState,
+  { albums, artists }: SyncState,
 ) =>
   Effect.gen(function* () {
     const albumTable = yield* database.table("albums");
     const artistTable = yield* database.table("artists");
-    const trackTable = yield* database.table("tracks");
 
     yield* albumTable.putMany(albums);
     yield* artistTable.putMany(artists);
-    yield* trackTable.putMany(tracks);
   });

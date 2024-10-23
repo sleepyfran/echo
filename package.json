@@ -11,6 +11,7 @@
     "gen": "yarn plop",
     "lint": "yarn workspaces run lint",
     "preview": "yarn workspace @echo/web vite preview",
+    "test": "vitest",
     "typecheck": "yarn workspaces run typecheck",
     "prepare": "husky",
     "setup": "node ./tools/certificates/generate-certificates.js"
@@ -32,7 +33,8 @@
     "plop": "^4.0.1",
     "prettier": "^3.2.5",
     "typescript": "^5.2.2",
-    "vite": "^5.4.8"
+    "vite": "^5.4.8",
+    "vitest": "^2.1.3"
   },
   "workspaces": [
     "packages/*",
