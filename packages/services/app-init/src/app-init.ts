@@ -149,8 +149,9 @@ const syncPageTitleWithPlayer = (player: IPlayer) =>
           Match.tag("Stopped", () =>
             Effect.sync(() => (document.title = "Echo")),
           ),
-          Match.tag("Playing", "Paused", ({ track }) =>
+          Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
             Effect.sync(() => {
+              const track = album.tracks[trackIndex];
               document.title = `${track.name} - ${track.mainArtist.name} | Echo`;
             }),
           ),

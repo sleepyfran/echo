@@ -1,11 +1,5 @@
 import { Effect, Option, Stream } from "effect";
-import type {
-  Album,
-  AlbumId,
-  AlbumWithTracks,
-  Artist,
-  ArtistId,
-} from "../model";
+import type { Album, AlbumId, Artist, ArtistId } from "../model";
 import type { NonExistingArtistReferenced } from "./database";
 
 /**
@@ -44,10 +38,7 @@ export type ILibrary = {
    */
   readonly albumDetail: (
     albumId: AlbumId,
-  ) => Effect.Effect<
-    Option.Option<AlbumWithTracks>,
-    NonExistingArtistReferenced
-  >;
+  ) => Effect.Effect<Option.Option<Album>, NonExistingArtistReferenced>;
 };
 
 /**

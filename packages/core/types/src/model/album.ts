@@ -46,9 +46,12 @@ export type Album = {
    * Provider that hosts the album.
    */
   providerId: ProviderId;
-};
 
-export type AlbumWithTracks = Album & {
+  /**
+   * Genres that the album belongs to.
+   */
+  genres: string[];
+
   /**
    * Tracks and all their metadata of the album.
    */

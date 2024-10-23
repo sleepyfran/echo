@@ -1,5 +1,5 @@
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import { Library, type AlbumId, type AlbumWithTracks } from "@echo/core-types";
+import { Library, type Album, type AlbumId } from "@echo/core-types";
 import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -14,7 +14,7 @@ import "./playable-album-cover";
 @customElement("album-detail")
 export class AlbumDetail extends LitElement {
   @property({ type: Object })
-  album!: AlbumWithTracks;
+  album!: Album;
 
   static styles = css`
     ol.track-list {

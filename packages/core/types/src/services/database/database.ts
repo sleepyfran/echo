@@ -1,9 +1,5 @@
 import { Context, Effect, Option, Stream } from "effect";
-import type {
-  DatabaseAlbum,
-  DatabaseArtist,
-  DatabaseTrack,
-} from "./database-models.ts";
+import type { DatabaseAlbum, DatabaseArtist } from "./database-models.ts";
 
 /**
  * Error that is thrown when the database raises an unexpected error while
@@ -24,7 +20,6 @@ export class DatabaseObserveError extends Error {
 export type Tables = {
   albums: DatabaseAlbum;
   artists: DatabaseArtist;
-  tracks: DatabaseTrack;
 };
 
 /**

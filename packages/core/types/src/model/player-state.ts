@@ -1,12 +1,12 @@
 import { Data } from "effect";
-import type { Track } from "./track";
+import type { Album } from "./album";
 
 /**
  * Defines whether the player is playing, paused or stopped.
  */
 export type PlayingStatus =
-  | { _tag: "Playing"; track: Track }
-  | { _tag: "Paused"; track: Track }
+  | { _tag: "Playing"; album: Album; trackIndex: number }
+  | { _tag: "Paused"; album: Album; trackIndex: number }
   | { _tag: "Stopped" };
 
 export const { Playing, Paused, Stopped } = Data.taggedEnum<PlayingStatus>();
@@ -21,12 +21,22 @@ export type PlayerState = {
   status: PlayingStatus;
 
   /**
+   * Whether there's anything to play after the current track.
+   */
+  allowsNext: boolean;
+
+  /**
+   * Whether there's anything to play before the current track.
+   */
+  allowsPrevious: boolean;
+
+  /**
    * List of tracks that have been played before the current track.
    */
-  previouslyPlayedTracks: Track[];
+  previouslyPlayedAlbums: Album[];
 
   /**
    * List of tracks that will be played after the current track.
    */
-  comingUpTracks: Track[];
+  comingUpAlbums: Album[];
 };

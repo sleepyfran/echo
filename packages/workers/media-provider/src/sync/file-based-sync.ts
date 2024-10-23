@@ -43,7 +43,6 @@ type SyncFileBasedProviderInput = {
 type SyncState = {
   albums: Map<string, DatabaseAlbum>;
   artists: Map<string, DatabaseArtist>;
-  tracks: DatabaseTrack[];
 };
 
 export const syncFileBasedProvider = ({
@@ -84,6 +83,12 @@ export const syncFileBasedProvider = ({
 
     yield* saveToDatabase({ database }, normalizedData);
 
+    // TODO: Ignore and use album count.
+    const syncedTracks = Array.from(normalizedData.albums.values()).reduce(
+      (acc, album) => acc + album.tracks.length,
+      0,
+    );
+
     return yield* broadcaster.broadcast(
       "mediaProvider",
       new ProviderStatusChanged({
@@ -92,7 +97,7 @@ export const syncFileBasedProvider = ({
           _tag: "synced",
           lastSyncedAt: new Date(),
           tracksWithError: errors.length,
-          syncedTracks: normalizedData.tracks.length,
+          syncedTracks,
         },
       }),
     );
@@ -223,7 +228,6 @@ const normalizeData = (
       {
         albums: new Map(),
         artists: new Map(),
-        tracks: [],
       } as SyncState,
       (accumulator, { metadata, file }) =>
         Effect.gen(function* () {
@@ -242,12 +246,6 @@ const normalizeData = (
             metadata.year ?? null,
             accumulator.albums,
             providerMetadata.id,
-          );
-
-          const track = yield* tryRetrieveOrCreateTrack(
-            { crypto, database },
-            artist.id,
-            album.id,
             metadata,
             file,
           );
@@ -255,7 +253,6 @@ const normalizeData = (
           return {
             albums: new Map([...accumulator.albums, [album.name, album]]),
             artists: new Map([...accumulator.artists, [artist.name, artist]]),
-            tracks: [...accumulator.tracks, track],
           };
         }),
     ),
@@ -263,16 +260,14 @@ const normalizeData = (
 
 const saveToDatabase = (
   { database }: Pick<SyncFileBasedProviderInput, "database">,
-  { albums, artists, tracks }: SyncState,
+  { albums, artists }: SyncState,
 ) =>
   Effect.gen(function* () {
     const albumsTable = yield* database.table("albums");
     const artistTable = yield* database.table("artists");
-    const trackTable = yield* database.table("tracks");
 
     yield* albumsTable.putMany(Array.from(albums.values()));
     yield* artistTable.putMany(Array.from(artists.values()));
-    yield* trackTable.putMany(tracks);
   });
 
 const tryRetrieveOrCreateArtist = (
@@ -310,6 +305,8 @@ const tryRetrieveOrCreateAlbum = (
   releaseYear: number | null,
   processedAlbums: Map<string, DatabaseAlbum>,
   providerId: ProviderId,
+  trackMetadata: TrackMetadata,
+  fileMetadata: FileMetadata,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const albumTable = yield* database.table("albums");
@@ -327,41 +324,30 @@ const tryRetrieveOrCreateAlbum = (
         ),
       );
 
-    return Option.isNone(existingAlbum)
-      ? yield* createAlbum(
-          { crypto },
-          albumName,
-          artistId,
-          embeddedCover,
-          releaseYear,
-          providerId,
-        )
-      : existingAlbum.value;
-  });
+    if (Option.isNone(existingAlbum)) {
+      return yield* createAlbum(
+        { crypto },
+        albumName,
+        artistId,
+        embeddedCover,
+        releaseYear,
+        providerId,
+        trackMetadata,
+        fileMetadata,
+      );
+    }
 
-const tryRetrieveOrCreateTrack = (
-  { database, crypto }: Pick<SyncFileBasedProviderInput, "database" | "crypto">,
-  artistId: DatabaseArtist["id"],
-  albumId: DatabaseAlbum["id"],
-  metadata: TrackMetadata,
-  file: FileMetadata,
-): Effect.Effect<DatabaseTrack> =>
-  Effect.gen(function* () {
-    const trackTable = yield* database.table("tracks");
-    const existingTrack = yield* trackTable
-      .filtered({
-        filter: {
-          name: metadata.title ?? "Unknown Title",
-          mainArtistId: artistId,
-          albumId,
-        },
-        limit: 1,
-      })
-      .pipe(Effect.map(head));
+    const track = yield* createTrack(
+      { crypto },
+      artistId,
+      trackMetadata,
+      fileMetadata,
+    );
 
-    return Option.isNone(existingTrack)
-      ? yield* createTrack({ crypto }, artistId, albumId, metadata, file)
-      : existingTrack.value;
+    return {
+      ...existingAlbum.value,
+      tracks: [...existingAlbum.value.tracks, track],
+    };
   });
 
 const createArtist = (
@@ -385,9 +371,17 @@ const createAlbum = (
   embeddedCover: Blob | null,
   releaseYear: number | null,
   providerId: ProviderId,
+  trackMetadata: TrackMetadata,
+  fileMetadata: FileMetadata,
 ): Effect.Effect<DatabaseAlbum> =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
+    const initialTrack = yield* createTrack(
+      { crypto },
+      artistId,
+      trackMetadata,
+      fileMetadata,
+    );
 
     return {
       id: AlbumId(id),
@@ -396,23 +390,23 @@ const createAlbum = (
       embeddedCover,
       releaseYear,
       providerId,
+      genres: [],
+      tracks: [initialTrack],
     };
   });
 
 const createTrack = (
   { crypto }: Pick<SyncFileBasedProviderInput, "crypto">,
   artistId: DatabaseArtist["id"],
-  albumId: DatabaseAlbum["id"],
   metadata: TrackMetadata,
   file: FileMetadata,
-): Effect.Effect<DatabaseTrack> =>
+) =>
   Effect.gen(function* () {
     const id = yield* crypto.generateUuid;
 
     return {
       id: TrackId(id),
       mainArtistId: artistId,
-      albumId,
       secondaryArtistIds: [] /* TODO: Implement this */,
       name: metadata.title ?? "Unknown Title",
       trackNumber: metadata.trackNumber ?? 1,
@@ -422,5 +416,5 @@ const createTrack = (
         fileId: file.id,
       },
       durationInSeconds: metadata.lengthInSeconds ?? 0,
-    };
+    } satisfies DatabaseTrack;
   });

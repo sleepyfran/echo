@@ -163,7 +163,6 @@ class DexieDatabase extends Dexie {
     this.version(1).stores({
       albums: "id, name, artistId",
       artists: "id, name",
-      tracks: "id, mainArtistId, albumId",
     });
   }
 }

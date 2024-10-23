@@ -22,23 +22,6 @@ const make = Effect.gen(function* () {
 
         return yield* toAlbumSchema(album, maybeArtist);
       }),
-    albumWithTracks: (album) =>
-      Effect.gen(function* () {
-        const tracksTable = yield* database.table("tracks");
-
-        const tracks = yield* tracksTable.filtered({
-          filter: {
-            albumId: album.id,
-          },
-        });
-
-        return {
-          ...album,
-          tracks: tracks
-            .sort((a, b) => a.trackNumber - b.trackNumber)
-            .map((track) => toTrackSchema(track, album, album.artist)),
-        };
-      }),
     artist: (artist) => Effect.sync(() => toArtistSchema(artist)),
   });
 });
@@ -53,11 +36,14 @@ const toAlbumSchema = (
     );
   }
 
+  const resolvedArtist = toArtistSchema(artist.value);
+
   return Effect.succeed({
     ...album,
-    artist: toArtistSchema(artist.value),
+    artist: resolvedArtist,
     embeddedCover: Option.fromNullable(album.embeddedCover),
     releaseYear: Option.fromNullable(album.releaseYear),
+    tracks: album.tracks.map((track) => toTrackSchema(track, resolvedArtist)),
   });
 };
 
@@ -66,13 +52,8 @@ const toArtistSchema = (artist: DatabaseArtist): Artist => ({
   image: Option.fromNullable(artist.image),
 });
 
-const toTrackSchema = (
-  track: DatabaseTrack,
-  album: Album,
-  artist: Artist,
-): Track => ({
+const toTrackSchema = (track: DatabaseTrack, artist: Artist): Track => ({
   ...track,
-  albumInfo: album,
   mainArtist: artist,
   secondaryArtists: [],
 });

@@ -1,5 +1,5 @@
 import { Context, type Effect } from "effect";
-import type { Album, AlbumWithTracks, Artist, ArtistId } from "../../model";
+import type { Album, Artist, ArtistId } from "../../model";
 import type { DatabaseAlbum, DatabaseArtist } from "./database-models";
 
 /**
@@ -24,12 +24,6 @@ export type EntityResolver = {
   readonly album: (
     album: DatabaseAlbum,
   ) => Effect.Effect<Album, NonExistingArtistReferenced>;
-
-  /**
-   * Resolves an album ID into the full album information, which includes
-   * the full information about the artists and the tracks.
-   */
-  readonly albumWithTracks: (album: Album) => Effect.Effect<AlbumWithTracks>;
 
   /**
    * Resolves an artist ID into the full artist information.

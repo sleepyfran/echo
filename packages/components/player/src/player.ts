@@ -5,7 +5,6 @@ import {
   Player as PlayerService,
   type Album,
   type PlayerState,
-  type Track,
 } from "@echo/core-types";
 import { Match, Option } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
@@ -88,11 +87,13 @@ export class EchoPlayer extends LitElement {
 
   private _renderActivePlayer(
     player: PlayerState,
-    { track }: { track: Track },
+    { album, trackIndex }: { album: Album; trackIndex: number },
   ) {
+    const track = album.tracks[trackIndex];
+
     return this._renderPlayer(
       player,
-      track.albumInfo.embeddedCover,
+      album.embeddedCover,
       track.mainArtist.name,
       track.name,
     );
@@ -124,7 +125,7 @@ export class EchoPlayer extends LitElement {
               <echo-button
                 .type=${ButtonType.Icon}
                 @click=${this._onPreviousTrack}
-                ?disabled=${!player.previouslyPlayedTracks.length}
+                ?disabled=${!player.allowsPrevious}
               >
                 <prev-icon></prev-icon>
               </echo-button>
@@ -139,7 +140,7 @@ export class EchoPlayer extends LitElement {
               <echo-button
                 .type=${ButtonType.Icon}
                 @click=${this._onSkipTrack}
-                ?disabled=${!player.comingUpTracks.length}
+                ?disabled=${!player.allowsNext}
               >
                 <next-icon></next-icon>
               </echo-button>
