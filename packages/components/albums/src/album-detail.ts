@@ -67,6 +67,19 @@ export class AlbumDetail extends LitElement {
       color: var(--secondary-text-color);
     }
 
+    div.genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-bottom: 1rem;
+    }
+
+    div.genres > .genre {
+      border: 1px solid var(--accent-color);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
     div.track {
       display: flex;
       justify-content: space-between;
@@ -99,6 +112,7 @@ export class AlbumDetail extends LitElement {
               : nothing}
           </h5>
           <h6>${this._formatAlbumDuration()}</h6>
+          <div class="genres">${this._renderGenres()}</div>
         </div>
 
         <div class="track-list-container" slot="right-column">
@@ -138,6 +152,12 @@ export class AlbumDetail extends LitElement {
     );
     const durationInMinutes = Math.floor(durationInSeconds / 60);
     return `${durationInMinutes} min`;
+  }
+
+  private _renderGenres() {
+    return this.album.genres.map(
+      (genre) => html`<span class="genre">${genre}</span>`,
+    );
   }
 }
 
