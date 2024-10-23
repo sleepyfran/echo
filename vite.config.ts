@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import fs from "fs";
 
@@ -41,5 +42,9 @@ export default defineConfig(({ command }) => {
       format: "es",
     },
     server: serverOptions,
+    test: {
+      server: {},
+      root: ".",
+    },
   };
 });

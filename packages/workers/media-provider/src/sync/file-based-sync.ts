@@ -29,6 +29,7 @@ import {
   DownloadError,
   partiallyDownloadIntoStream,
 } from "./partial-downloader";
+import { Genres } from "@echo/core-genres";
 
 type SyncFileBasedProviderInput = {
   startArgs: FileBasedStartArgs;
@@ -344,8 +345,14 @@ const tryRetrieveOrCreateAlbum = (
       fileMetadata,
     );
 
+    const genres = Genres.addTo(
+      existingAlbum.value.genres,
+      Genres.flatten(trackMetadata.genre ?? []),
+    );
+
     return {
       ...existingAlbum.value,
+      genres,
       tracks: [...existingAlbum.value.tracks, track],
     };
   });
@@ -390,7 +397,7 @@ const createAlbum = (
       embeddedCover,
       releaseYear,
       providerId,
-      genres: [],
+      genres: Genres.flatten(trackMetadata.genre ?? []),
       tracks: [initialTrack],
     };
   });
