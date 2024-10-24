@@ -5,6 +5,7 @@ import {
   Player as PlayerService,
   type Album,
   type PlayerState,
+  type Track,
 } from "@echo/core-types";
 import { Match, Option } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
@@ -90,35 +91,30 @@ export class EchoPlayer extends LitElement {
     { album, trackIndex }: { album: Album; trackIndex: number },
   ) {
     const track = album.tracks[trackIndex];
-
-    return this._renderPlayer(
-      player,
-      album.embeddedCover,
-      track.mainArtist.name,
-      track.name,
-    );
+    return this._renderPlayer(player, album, track);
   }
 
-  private _renderPlayer(
-    player: PlayerState,
-    cover: Album["embeddedCover"],
-    artistName: string,
-    trackName: string,
-  ) {
+  private _renderPlayer(player: PlayerState, album: Album, track: Track) {
     return html`
-      <div id="player" class="current-track">
-        ${Option.isSome(cover)
+      <div
+        id="player"
+        class="current-track"
+        data-album-name=${album.name}
+        data-artist-name=${track.mainArtist.name}
+        data-track-name=${track.name}
+      >
+        ${Option.isSome(album.embeddedCover)
           ? html` <img
               id="current-track-cover"
-              src="${URL.createObjectURL(cover.value)}"
+              src="${URL.createObjectURL(album.embeddedCover.value)}"
               height="40"
               width="40"
               alt="Album cover"
             />`
           : nothing}
         <div class="track-info">
-          <h4 id="track-name">${trackName}</h4>
-          <h6 id="artist-name">${artistName}</h6>
+          <h4 id="track-name">${track.name}</h4>
+          <h6 id="artist-name">${track.mainArtist.name}</h6>
         </div>
         ${player.status._tag !== "Stopped"
           ? html`
