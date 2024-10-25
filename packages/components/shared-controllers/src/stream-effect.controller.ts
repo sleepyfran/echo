@@ -63,6 +63,7 @@ export class StreamConsumer<A, E> implements ReactiveController {
     private readonly _streamEffect:
       | OutputEffect<A, E>
       | (() => OutputEffect<A, E>),
+    private readonly _listeners?: Omit<StatusRenderer<A, E>, "initial">,
   ) {
     (this.host = host).addController(this);
   }
@@ -116,6 +117,18 @@ export class StreamConsumer<A, E> implements ReactiveController {
 
   private handleUpdate$(state: StreamStatus<A, E>) {
     return Effect.sync(() => {
+      switch (state._tag) {
+        case "Item":
+          this._listeners?.item?.(state.item);
+          break;
+        case "Complete":
+          this._listeners?.complete?.();
+          break;
+        case "Error":
+          this._listeners?.error?.(state.error);
+          break;
+      }
+
       this._status = state;
       this.host.requestUpdate();
     });

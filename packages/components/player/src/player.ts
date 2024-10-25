@@ -17,7 +17,37 @@ import "@echo/components-icons";
  */
 @customElement("echo-player")
 export class EchoPlayer extends LitElement {
-  private _player = new StreamConsumer(this, PlayerService.observe);
+  private _player = new StreamConsumer(this, PlayerService.observe, {
+    item: (playerState) => {
+      /*
+      This pattern matches against the player state and dispatches custom events
+      that can be used to react to changes in the playing/stopped state of the player.
+
+      This is not really meant to be used in the app itself, but mostly to
+      properly broadcast the player state to external components that might need
+      it, like WebScrobbler to scrobble tracks.
+      */
+      Match.value(playerState.status).pipe(
+        Match.tag("Playing", ({ album, trackIndex }) => {
+          const track = album.tracks[trackIndex];
+          this.dispatchEvent(
+            new CustomEvent("track-playing", {
+              detail: {
+                trackName: track.name,
+                artistName: album.artist.name,
+                albumName: album.name,
+                providerId: track.resource.provider,
+              },
+            }),
+          );
+        }),
+        Match.tag("Paused", "Stopped", () => {
+          this.dispatchEvent(new CustomEvent("track-paused"));
+        }),
+        Match.exhaustive,
+      );
+    },
+  });
   private _togglePlayback = new EffectFn(
     this,
     () => PlayerService.togglePlayback,
@@ -96,13 +126,7 @@ export class EchoPlayer extends LitElement {
 
   private _renderPlayer(player: PlayerState, album: Album, track: Track) {
     return html`
-      <div
-        id="player"
-        class="current-track"
-        data-album-name=${album.name}
-        data-artist-name=${track.mainArtist.name}
-        data-track-name=${track.name}
-      >
+      <div id="player" class="current-track">
         ${Option.isSome(album.embeddedCover)
           ? html` <img
               id="current-track-cover"
