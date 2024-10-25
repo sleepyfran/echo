@@ -20,10 +20,12 @@ you to shuffle albums, browse them based on genres, and more.
 - [x] Artist browser
 - [x] Album details
 - [x] Genre fetching and browsing
-- [ ] Scrobbling support
+- [x] Scrobbling support (upcoming via WebScrobbler, see [PR for tracking](https://github.com/web-scrobbler/web-scrobbler/pull/4996))
+- [ ] Search support
 - [ ] Shuffling
 - [ ] Queue management
 - [ ] More providers (YouTube Music, Google Drive, etc.)
+- [ ] Keyboard-driven navigation
 
 ## 🔧 Local setup
 
