@@ -1,6 +1,10 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import fs from "fs";
+import { viteStaticCopy } from "vite-plugin-static-copy";
+
+const shoelaceIconsPath =
+  "node_modules/@shoelace-style/shoelace/dist/assets/icons";
 
 export default defineConfig(({ command }) => {
   const serverOptions =
@@ -37,6 +41,24 @@ export default defineConfig(({ command }) => {
         },
       },
     },
+    resolve: {
+      alias: [
+        {
+          find: /\/assets\/icons\/(.+)/,
+          replacement: `${shoelaceIconsPath}/$1`,
+        },
+      ],
+    },
+    plugins: [
+      viteStaticCopy({
+        targets: [
+          {
+            src: shoelaceIconsPath,
+            dest: "assets",
+          },
+        ],
+      }),
+    ],
     root: "./packages/web",
     worker: {
       format: "es",

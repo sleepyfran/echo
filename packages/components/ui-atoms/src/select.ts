@@ -1,5 +1,7 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@shoelace-style/shoelace/dist/components/select/select";
+import "@shoelace-style/shoelace/dist/components/option/option";
 
 /**
  * Component that encapsulates the default button of the application.
@@ -16,7 +18,7 @@ export class EchoSelect<T = unknown> extends LitElement {
   displayKey!: keyof T;
 
   static styles = css`
-    select {
+    sl-select::part(combobox) {
       background-color: var(--background-color-muted);
       border: 1px solid var(--border-color);
       color: var(--text-color);
@@ -25,26 +27,42 @@ export class EchoSelect<T = unknown> extends LitElement {
       font-size: 1rem;
       width: 100%;
     }
+
+    sl-select::part(listbox) {
+      background-color: var(--background-color-muted);
+      display: flex;
+      flex-direction: column;
+    }
+
+    sl-option::part(base) {
+      padding: 0.5rem;
+    }
+
+    sl-option::part(base):hover {
+      background-color: var(--background-color);
+    }
   `;
 
   render() {
     return html`
-      <select @change=${this._onSelectChange}>
-        <option value="" selected disabled>${this.placeholder}</option>
+      <sl-select
+        placeholder=${this.placeholder}
+        @sl-input=${this._onSelectChange}
+      >
         ${this.elements.map(
-          (element) =>
-            html`<option value=${JSON.stringify(element)}>
-              ${element[this.displayKey]}
-            </option>`,
+          (element, index) =>
+            html`<sl-option value=${index}>
+              ${this.displayKey ? element[this.displayKey] : element}
+            </sl-option>`,
         )}
-      </select>
+      </sl-select>
     `;
   }
 
   private _onSelectChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    const selectedValue = select.value;
-    const selectedElement = JSON.parse(selectedValue) as T;
+    const selectedValue = Number(select.value);
+    const selectedElement = this.elements[selectedValue];
     this.dispatchEvent(
       new CustomEvent("selected", { detail: selectedElement }),
     );
