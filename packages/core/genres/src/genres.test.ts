@@ -1,3 +1,4 @@
+import { Genre } from "@echo/core-types";
 import * as Genres from "./genres";
 import { describe, test, expect } from "vitest";
 
@@ -7,7 +8,7 @@ describe("flatten", () => {
   });
 
   test("returns the given array as-is if there are no comma-separated values", () => {
-    const genres = ["Alt Rock", "Blackgaze", "Pop-Rock"];
+    const genres = [Genre("Alt Rock"), Genre("Blackgaze"), Genre("Pop-Rock")];
     expect(Genres.flatten(genres)).toEqual(genres);
   });
 
@@ -20,15 +21,15 @@ describe("flatten", () => {
     const genres = [
       "Shoegaze, Post-Rock",
       "Alt-Rock",
-      "Blackgaze",
+      Genre("Blackgaze"),
       "Pop-Rock, Indie",
     ];
     expect(Genres.flatten(genres)).toEqual([
       "Shoegaze",
       "Post-Rock",
       "Alt-Rock",
-      "Blackgaze",
-      "Pop-Rock",
+      Genre("Blackgaze"),
+      Genre("Pop-Rock"),
       "Indie",
     ]);
   });
@@ -36,40 +37,48 @@ describe("flatten", () => {
 
 describe("addTo", () => {
   test("returns the current genres if the new genres are empty", () => {
-    const currentGenres = ["Alt Rock", "Blackgaze", "Pop-Rock"];
+    const currentGenres = [
+      Genre("Alt Rock"),
+      Genre("Blackgaze"),
+      Genre("Pop-Rock"),
+    ];
     expect(Genres.addTo(currentGenres, [])).toEqual([
-      "Alt Rock",
-      "Pop-Rock",
-      "Blackgaze",
+      Genre("Alt Rock"),
+      Genre("Pop-Rock"),
+      Genre("Blackgaze"),
     ]);
   });
 
   test("returns the new genres if the current genres are empty", () => {
-    const newGenres = ["Alt Rock", "Blackgaze", "Pop-Rock"];
+    const newGenres = [
+      Genre("Alt Rock"),
+      Genre("Blackgaze"),
+      Genre("Pop-Rock"),
+    ];
     expect(Genres.addTo([], newGenres)).toEqual([
-      "Alt Rock",
-      "Pop-Rock",
-      "Blackgaze",
+      Genre("Alt Rock"),
+      Genre("Pop-Rock"),
+      Genre("Blackgaze"),
     ]);
   });
 
   test("returns a combined array if none of them contain duplicates", () => {
-    const currentGenres = ["Alt Rock"];
-    const newGenres = ["Blackgaze", "Pop-Rock"];
+    const currentGenres = [Genre("Alt Rock")];
+    const newGenres = [Genre("Blackgaze"), Genre("Pop-Rock")];
     expect(Genres.addTo(currentGenres, newGenres)).toEqual([
-      "Alt Rock",
-      "Pop-Rock",
-      "Blackgaze",
+      Genre("Alt Rock"),
+      Genre("Pop-Rock"),
+      Genre("Blackgaze"),
     ]);
   });
 
   test("returns a combined, deduplicated array with both current and new genres", () => {
-    const currentGenres = ["Alt Rock", "Blackgaze"];
-    const newGenres = ["Blackgaze", "Pop-Rock"];
+    const currentGenres = [Genre("Alt Rock"), Genre("Blackgaze")];
+    const newGenres = [Genre("Blackgaze"), Genre("Pop-Rock")];
     expect(Genres.addTo(currentGenres, newGenres)).toEqual([
-      "Alt Rock",
-      "Pop-Rock",
-      "Blackgaze",
+      Genre("Alt Rock"),
+      Genre("Pop-Rock"),
+      Genre("Blackgaze"),
     ]);
   });
 });
