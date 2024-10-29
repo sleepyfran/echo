@@ -33,6 +33,18 @@ export class AlbumLibrary extends LitElement {
     }
   `;
 
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    // Check if the user was previously browsing a specific genre (URL contains
+    // a genre query string parameter).
+    const url = new URL(window.location.href);
+    const genre = url.searchParams.get("genre");
+    if (genre) {
+      this._selectedGenre = genre as Genre;
+    }
+  }
+
   render() {
     return html`
       <div>
@@ -63,6 +75,12 @@ export class AlbumLibrary extends LitElement {
 
   private _onGenreSelected(event: CustomEvent<Genre>) {
     this._selectedGenre = event.detail;
+
+    // Add the genre as a QSP so that the user can browse back to the same
+    // view.
+    const url = new URL(window.location.href);
+    url.searchParams.set("genre", this._selectedGenre);
+    window.history.pushState({}, "", url.toString());
   }
 }
 
