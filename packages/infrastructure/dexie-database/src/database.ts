@@ -100,7 +100,7 @@ const createTable = <
       return yield* Effect.tryPromise<TSchema[]>(() => {
         const query = table
           .filter((tableRow) =>
-            Object.keys(filter).some((key) => {
+            Object.keys(filter).every((key) => {
               const schemaTable = tableRow as TSchema;
               return normalizeForComparison(
                 schemaTable[key as keyof TSchema] as string,
