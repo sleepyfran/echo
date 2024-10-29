@@ -54,6 +54,13 @@ export type ILibrary = {
   readonly albumDetail: (
     albumId: AlbumId,
   ) => Effect.Effect<Option.Option<Album>, NonExistingArtistReferenced>;
+
+  /**
+   * Searches for albums and artists that match the given term.
+   */
+  readonly search: (
+    term: string,
+  ) => Effect.Effect<[Album[], Artist[]], NonExistingArtistReferenced>;
 };
 
 /**

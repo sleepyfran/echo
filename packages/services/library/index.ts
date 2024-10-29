@@ -119,6 +119,41 @@ export const LibraryLive = Layer.effect(
             Stream.catchAll(() => Stream.empty),
           );
         }),
+      search: (term) =>
+        Effect.gen(function* () {
+          if (term.length === 0) {
+            return [[], []];
+          }
+
+          const albumsTable = yield* database.table("albums");
+          const artistsTable = yield* database.table("artists");
+
+          const matchingAlbums = yield* albumsTable.filtered({
+            filter: {
+              name: term,
+            },
+            limit: 5,
+          });
+
+          const matchingArtists = yield* artistsTable.filtered({
+            filter: {
+              name: term,
+            },
+            limit: 5,
+          });
+
+          const resolvedAlbums = yield* resolveAllAlbums(
+            matchingAlbums,
+            artistsTable,
+          );
+
+          const resolvedArtists = matchingArtists.map(toArtistSchema);
+
+          return [
+            sortAlbumsByArtistName(resolvedAlbums),
+            sortArtistsByName(resolvedArtists),
+          ];
+        }),
     });
   }),
 );
