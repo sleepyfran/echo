@@ -12,8 +12,13 @@ export enum Path {
 /**
  * Navigates the user to the specified path.
  */
-export const navigate = (path: Path) => {
-  Router.go(path);
+export const navigate = (path: Path, searchParams: [string, string][] = []) => {
+  const qsp = new URLSearchParams(searchParams);
+
+  Router.go({
+    pathname: path,
+    search: `?${qsp.toString()}`,
+  });
 };
 
 /**

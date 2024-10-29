@@ -10,6 +10,12 @@ export type AlbumId = string & Brand.Brand<"AlbumId">;
 export const AlbumId = Brand.nominal<AlbumId>();
 
 /**
+ * Wrapper around a string to represent a genre.
+ */
+export type Genre = string & Brand.Brand<"Genre">;
+export const Genre = Brand.nominal<Genre>();
+
+/**
  * Represents an album in the user's library.
  */
 export type Album = {
@@ -50,7 +56,7 @@ export type Album = {
   /**
    * Genres that the album belongs to.
    */
-  genres: string[];
+  genres: Genre[];
 
   /**
    * Tracks and all their metadata of the album.

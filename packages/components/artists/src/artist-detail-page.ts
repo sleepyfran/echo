@@ -68,6 +68,7 @@ export class ArtistDetail extends LitElement {
 
   render() {
     return html`
+      <library-selection></library-selection>
       <two-column-layout>
         <div class="artist-info" slot="left-column">
           ${Option.isSome(this.details.artist.image)

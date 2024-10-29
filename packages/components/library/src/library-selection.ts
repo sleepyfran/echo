@@ -16,10 +16,19 @@ export class LibrarySelection extends LitElement {
   private _routeController = new RouteAwareController(this);
 
   static styles = css`
-    div {
+    nav {
+      display: flex;
+    }
+
+    div.libraries {
       display: flex;
       gap: 1rem;
       padding: 1rem;
+    }
+
+    div.libraries::after {
+      content: "";
+      border-right: 1px solid var(--border-color);
     }
 
     button.pill {
@@ -44,22 +53,26 @@ export class LibrarySelection extends LitElement {
 
   render() {
     return html`
-      <div>
-        <button
-          ?active=${this._routeController.matchesPath(Path.Albums)}
-          class="pill"
-          @click=${this._navigateToAlbums}
-        >
-          Albums
-        </button>
-        <button
-          ?active=${this._routeController.matchesPath(Path.Artists)}
-          class="pill"
-          @click=${this._navigateToArtists}
-        >
-          Artists
-        </button>
-      </div>
+      <nav>
+        <div class="libraries">
+          <button
+            ?active=${this._routeController.matchesPath(Path.Albums)}
+            class="pill"
+            @click=${this._navigateToAlbums}
+          >
+            Albums
+          </button>
+          <button
+            ?active=${this._routeController.matchesPath(Path.Artists)}
+            class="pill"
+            @click=${this._navigateToArtists}
+          >
+            Artists
+          </button>
+        </div>
+
+        <slot></slot>
+      </nav>
     `;
   }
 

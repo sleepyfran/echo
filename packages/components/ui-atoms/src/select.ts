@@ -1,5 +1,19 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@echo/components-icons";
+import "@shoelace-style/shoelace/dist/components/select/select";
+import "@shoelace-style/shoelace/dist/components/option/option";
+
+export class ItemSelected<T> extends CustomEvent<
+  [T | undefined, number | undefined]
+> {
+  constructor(
+    public item: T | undefined,
+    public index: number | undefined,
+  ) {
+    super("selected", { bubbles: true, composed: true, detail: [item, index] });
+  }
+}
 
 /**
  * Component that encapsulates the default button of the application.
@@ -9,14 +23,20 @@ export class EchoSelect<T = unknown> extends LitElement {
   @property({ type: Array })
   elements: T[] = [];
 
+  @property({ type: Object })
+  initialValue: T | undefined;
+
   @property({ type: String })
   placeholder!: string;
 
   @property({ type: String })
   displayKey!: keyof T;
 
+  @property({ type: Boolean })
+  clearable: boolean = false;
+
   static styles = css`
-    select {
+    sl-select::part(combobox) {
       background-color: var(--background-color-muted);
       border: 1px solid var(--border-color);
       color: var(--text-color);
@@ -25,29 +45,80 @@ export class EchoSelect<T = unknown> extends LitElement {
       font-size: 1rem;
       width: 100%;
     }
+
+    sl-select::part(listbox) {
+      background-color: var(--background-color-muted);
+      display: flex;
+      flex-direction: column;
+    }
+
+    sl-option::part(base) {
+      padding: 0.5rem;
+    }
+
+    sl-option::part(base):hover {
+      background-color: var(--background-color);
+    }
+
+    chevron-down-icon,
+    cross-icon {
+      display: flex;
+      justify-content: center;
+    }
   `;
 
   render() {
     return html`
-      <select @change=${this._onSelectChange}>
-        <option value="" selected disabled>${this.placeholder}</option>
+      <sl-select
+        placeholder=${this.placeholder}
+        @sl-input=${this._onSelectChange}
+        value=${this._getInitialIndex()}
+        ?clearable=${this.clearable}
+      >
         ${this.elements.map(
-          (element) =>
-            html`<option value=${JSON.stringify(element)}>
-              ${element[this.displayKey]}
-            </option>`,
+          (element, index) =>
+            html`<sl-option value=${index}>
+              ${this.displayKey ? element[this.displayKey] : element}
+            </sl-option>`,
         )}
-      </select>
+
+        <cross-icon slot="clear-icon" title="Clear filter"></cross-icon>
+        <chevron-down-icon
+          slot="expand-icon"
+          title="Expand/collapse"
+        ></chevron-down-icon>
+      </sl-select>
     `;
+  }
+
+  private _getInitialIndex() {
+    if (this.initialValue) {
+      return this.elements.findIndex(
+        (element) => element === this.initialValue,
+      );
+    }
+
+    return "";
   }
 
   private _onSelectChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    const selectedValue = select.value;
-    const selectedElement = JSON.parse(selectedValue) as T;
-    this.dispatchEvent(
-      new CustomEvent("selected", { detail: selectedElement }),
-    );
+
+    if (select.value === "") {
+      this._dispatchSelectedEvent(undefined);
+      return;
+    }
+
+    const selectedValue = Number(select.value);
+    const selectedElement = this.elements[selectedValue];
+    this._dispatchSelectedEvent(selectedElement, selectedValue);
+  }
+
+  private _dispatchSelectedEvent(
+    selectedElement: T | undefined,
+    index: number | undefined = undefined,
+  ) {
+    this.dispatchEvent(new ItemSelected(selectedElement, index));
   }
 }
 

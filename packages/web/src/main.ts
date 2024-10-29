@@ -46,7 +46,6 @@ export class AppRoot extends LitElement {
   private _renderMainPage() {
     return html`
       <app-header></app-header>
-      <library-selection></library-selection>
       <echo-router></echo-router>
     `;
   }

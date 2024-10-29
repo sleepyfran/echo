@@ -1,3 +1,4 @@
+export * from "./src/chevron-icon";
 export * from "./src/cross-icon";
 export * from "./src/done-icon";
 export * from "./src/next-icon";

@@ -19,17 +19,35 @@ export const LibraryLive = Layer.effect(
     const database = yield* Database;
 
     return Library.of({
-      observeAlbums: () =>
+      observeAlbums: (filter) =>
         Effect.gen(function* () {
           const albumsTable = yield* database.table("albums");
           const artistsTable = yield* database.table("artists");
           const allAlbums = yield* albumsTable.observe();
 
           return allAlbums.pipe(
-            Stream.mapEffect((albums) =>
-              resolveAllAlbums(albums, artistsTable),
-            ),
+            Stream.mapEffect((albums) => {
+              const filteredAlbums = filter
+                ? albums.filter((album) => album.genres.includes(filter.genre))
+                : albums;
+
+              return resolveAllAlbums(filteredAlbums, artistsTable);
+            }),
             Stream.map(sortAlbumsByArtistName),
+          );
+        }),
+      observeGenres: () =>
+        Effect.gen(function* () {
+          const albumsTable = yield* database.table("albums");
+          const allAlbums = yield* albumsTable.observe();
+
+          return allAlbums.pipe(
+            Stream.map((albums) => albums.flatMap((album) => album.genres)),
+            Stream.map((genres) => {
+              const uniqueGenres = [...new Set(genres)];
+              return uniqueGenres.sort();
+            }),
+            Stream.catchAll(() => Stream.empty),
           );
         }),
       artistDetail: (artistId) =>

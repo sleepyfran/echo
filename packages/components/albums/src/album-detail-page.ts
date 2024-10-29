@@ -1,9 +1,13 @@
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import { Library, type Album, type AlbumId } from "@echo/core-types";
+import { Genre, Library, type Album, type AlbumId } from "@echo/core-types";
 import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { type RouterLocation } from "@echo/components-router/index.routing";
+import {
+  Path,
+  type RouterLocation,
+  navigate,
+} from "@echo/components-router/index.routing";
 import { map } from "lit/directives/map.js";
 import "@echo/components-ui-atoms";
 import "./playable-album-cover";
@@ -75,9 +79,18 @@ export class AlbumDetail extends LitElement {
     }
 
     div.genres > .genre {
+      cursor: pointer;
       border: 1px solid var(--accent-color);
       padding: 0.5rem;
       border-radius: 0.5rem;
+      transition:
+        background-color var(--short-transition-duration),
+        color var(--short-transition-duration);
+    }
+
+    div.genres > .genre:hover {
+      background-color: var(--accent-color);
+      color: var(--background-color);
     }
 
     div.track {
@@ -96,6 +109,7 @@ export class AlbumDetail extends LitElement {
 
   render() {
     return html`
+      <library-selection></library-selection>
       <two-column-layout>
         <div class="album-info" slot="left-column">
           <playable-album-cover
@@ -156,8 +170,15 @@ export class AlbumDetail extends LitElement {
 
   private _renderGenres() {
     return this.album.genres.map(
-      (genre) => html`<span class="genre">${genre}</span>`,
+      (genre) =>
+        html`<span class="genre" @click=${() => this._navigateToGenre(genre)}
+          >${genre}</span
+        >`,
     );
+  }
+
+  private _navigateToGenre(genre: Genre) {
+    navigate(Path.Albums, [["genre", genre]]);
   }
 }
 
