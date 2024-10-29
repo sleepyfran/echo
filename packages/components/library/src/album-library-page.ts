@@ -11,8 +11,8 @@ import type { ItemSelected } from "@echo/components-ui-atoms";
  * Component that displays the user's library of albums and allows them to
  * play them.
  */
-@customElement("album-library")
-export class AlbumLibrary extends LitElement {
+@customElement("album-library-page")
+export class AlbumLibraryPage extends LitElement {
   @state()
   private _selectedGenre: Genre | undefined;
 
@@ -49,26 +49,29 @@ export class AlbumLibrary extends LitElement {
   render() {
     return html`
       <div>
-        ${this._genres.render({
-          initial: () => nothing,
-          item: (genres) =>
-            genres.length > 0
-              ? cache(html`
-                  <!-- @ts-ignore -->
-                  <!-- The Lit linter and branded types are not best friends atm. FIXME! -->
-                  <div class="filters">
-                    <label>Filter:</label>
-                    <echo-select
-                      clearable
-                      @selected=${this._onGenreSelected}
-                      placeholder="By genre"
-                      .initialValue=${this._selectedGenre}
-                      .elements=${genres}
-                    ></echo-select>
-                  </div>
-                `)
-              : nothing,
-        })}
+        <library-selection>
+          ${this._genres.render({
+            initial: () => nothing,
+            item: (genres) =>
+              genres.length > 0
+                ? cache(html`
+                    <!-- @ts-ignore -->
+                    <!-- The Lit linter and branded types are not best friends atm. FIXME! -->
+                    <div class="filters">
+                      <label>Filter:</label>
+                      <echo-select
+                        clearable
+                        @selected=${this._onGenreSelected}
+                        placeholder="By genre"
+                        .initialValue=${this._selectedGenre}
+                        .elements=${genres}
+                      ></echo-select>
+                    </div>
+                  `)
+                : nothing,
+          })}
+        </library-selection>
+
         <!-- @ts-ignore -->
         <!-- The Lit linter and branded types are not best friends atm. FIXME! -->
         <genre-library-album
@@ -159,7 +162,7 @@ class GenreAlbumLibrary extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "album-library": AlbumLibrary;
+    "album-library": AlbumLibraryPage;
     "genre-library-album": GenreAlbumLibrary;
   }
 }

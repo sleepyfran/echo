@@ -109,6 +109,7 @@ export class AlbumDetail extends LitElement {
 
   render() {
     return html`
+      <library-selection></library-selection>
       <two-column-layout>
         <div class="album-info" slot="left-column">
           <playable-album-cover
