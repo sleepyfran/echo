@@ -52,6 +52,10 @@ export class EchoSelect<T = unknown> extends LitElement {
       flex-direction: column;
     }
 
+    sl-select::part(display-input) {
+      text-overflow: ellipsis;
+    }
+
     sl-option::part(base) {
       padding: 0.5rem;
     }
