@@ -1,7 +1,5 @@
-# echo
-
 <p align="center">
-  <img src="./resources/app-screenshot.jpg" width="600" />
+  <img src="./resources/promo_photo.png" width="1000" />
 </p>
 
 Echo is a music app that allows you to connect to multiple sources of music and
