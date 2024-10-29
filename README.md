@@ -7,6 +7,7 @@ play them directly through the app. It's album focused, meaning that instead of
 treating your library as a list of songs, it treats it as a list of albums, allowing
 you to shuffle albums, browse them based on genres, and more.
 
+> [!WARNING]
 > The app is currently in a very alpha-ish state, so expect things to break
 > and features to be missing. Nonetheless, it's already usable for basic music
 > browsing and playing.
@@ -19,7 +20,7 @@ you to shuffle albums, browse them based on genres, and more.
 - [x] Album details
 - [x] Genre fetching and browsing
 - [x] Scrobbling support (upcoming via WebScrobbler, see [PR for tracking](https://github.com/web-scrobbler/web-scrobbler/pull/4996))
-- [ ] Search support
+- [x] Search support
 - [ ] Shuffling
 - [ ] Queue management
 - [ ] More providers (YouTube Music, Google Drive, etc.)
