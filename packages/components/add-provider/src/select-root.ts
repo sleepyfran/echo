@@ -4,6 +4,7 @@ import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import "@echo/components-ui-atoms";
 import { ProviderStartedEvent } from "./events";
+import type { ItemSelected } from "@echo/components-ui-atoms";
 
 /**
  * Component that displays a list of available folders and allows the user to
@@ -71,8 +72,9 @@ export class SelectRoot extends LitElement {
     });
   }
 
-  private _onSelectChange(event: CustomEvent<FolderMetadata>) {
-    this._selectedFolder = event.detail;
+  private _onSelectChange(event: ItemSelected<FolderMetadata>) {
+    const [folder] = event.detail;
+    this._selectedFolder = folder;
   }
 
   private _onStartProvider() {
