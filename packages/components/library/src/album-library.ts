@@ -5,6 +5,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 import "@echo/components-albums";
 import { cache } from "lit/directives/cache.js";
+import type { ItemSelected } from "@echo/components-ui-atoms";
 
 /**
  * Component that displays the user's library of albums and allows them to
@@ -53,12 +54,15 @@ export class AlbumLibrary extends LitElement {
           item: (genres) =>
             genres.length > 0
               ? cache(html`
+                  <!-- @ts-ignore -->
+                  <!-- The Lit linter and branded types are not best friends atm. FIXME! -->
                   <div class="filters">
                     <label>Filter:</label>
                     <echo-select
                       clearable
                       @selected=${this._onGenreSelected}
                       placeholder="By genre"
+                      .initialValue=${this._selectedGenre}
                       .elements=${genres}
                     ></echo-select>
                   </div>
@@ -74,8 +78,9 @@ export class AlbumLibrary extends LitElement {
     `;
   }
 
-  private _onGenreSelected(event: CustomEvent<Genre>) {
-    this._selectedGenre = event.detail;
+  private _onGenreSelected(event: ItemSelected<Genre>) {
+    const [selectedGenre] = event.detail;
+    this._selectedGenre = selectedGenre;
 
     // Add the genre as a QSP so that the user can browse back to the same
     // view.

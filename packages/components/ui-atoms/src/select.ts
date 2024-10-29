@@ -4,6 +4,17 @@ import "@echo/components-icons";
 import "@shoelace-style/shoelace/dist/components/select/select";
 import "@shoelace-style/shoelace/dist/components/option/option";
 
+export class ItemSelected<T> extends CustomEvent<
+  [T | undefined, number | undefined]
+> {
+  constructor(
+    public item: T | undefined,
+    public index: number | undefined,
+  ) {
+    super("selected", { bubbles: true, composed: true, detail: [item, index] });
+  }
+}
+
 /**
  * Component that encapsulates the default button of the application.
  */
@@ -11,6 +22,9 @@ import "@shoelace-style/shoelace/dist/components/option/option";
 export class EchoSelect<T = unknown> extends LitElement {
   @property({ type: Array })
   elements: T[] = [];
+
+  @property({ type: Object })
+  initialValue: T | undefined;
 
   @property({ type: String })
   placeholder!: string;
@@ -58,6 +72,7 @@ export class EchoSelect<T = unknown> extends LitElement {
       <sl-select
         placeholder=${this.placeholder}
         @sl-input=${this._onSelectChange}
+        value=${this._getInitialIndex()}
         ?clearable=${this.clearable}
       >
         ${this.elements.map(
@@ -76,6 +91,16 @@ export class EchoSelect<T = unknown> extends LitElement {
     `;
   }
 
+  private _getInitialIndex() {
+    if (this.initialValue) {
+      return this.elements.findIndex(
+        (element) => element === this.initialValue,
+      );
+    }
+
+    return "";
+  }
+
   private _onSelectChange(event: Event) {
     const select = event.target as HTMLSelectElement;
 
@@ -86,13 +111,14 @@ export class EchoSelect<T = unknown> extends LitElement {
 
     const selectedValue = Number(select.value);
     const selectedElement = this.elements[selectedValue];
-    this._dispatchSelectedEvent(selectedElement);
+    this._dispatchSelectedEvent(selectedElement, selectedValue);
   }
 
-  private _dispatchSelectedEvent(selectedElement: T | undefined) {
-    this.dispatchEvent(
-      new CustomEvent("selected", { detail: selectedElement }),
-    );
+  private _dispatchSelectedEvent(
+    selectedElement: T | undefined,
+    index: number | undefined = undefined,
+  ) {
+    this.dispatchEvent(new ItemSelected(selectedElement, index));
   }
 }
 
