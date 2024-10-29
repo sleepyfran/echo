@@ -13,16 +13,33 @@ export class TwoColumnLayout extends LitElement {
     }
 
     .left-column {
-      display: flex;
-      flex-direction: column;
-      padding: 1rem 5rem;
-      box-sizing: border-box;
-      width: 40%;
+      width: 100%;
     }
 
     .right-column {
-      padding-right: 5rem;
-      width: 80%;
+      width: 100%;
+    }
+
+    @media (max-width: 767px) {
+      div.container {
+        padding: 1rem;
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .left-column {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem 5rem;
+        box-sizing: border-box;
+        width: 40%;
+      }
+
+      .right-column {
+        padding-right: 5rem;
+        width: 80%;
+      }
     }
   `;
 

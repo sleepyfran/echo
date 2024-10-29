@@ -18,6 +18,7 @@ export class LibrarySelection extends LitElement {
   static styles = css`
     nav {
       display: flex;
+      flex-wrap: wrap;
     }
 
     div.libraries {
