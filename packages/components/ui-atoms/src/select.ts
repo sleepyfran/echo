@@ -1,5 +1,6 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "@echo/components-icons";
 import "@shoelace-style/shoelace/dist/components/select/select";
 import "@shoelace-style/shoelace/dist/components/option/option";
 
@@ -16,6 +17,9 @@ export class EchoSelect<T = unknown> extends LitElement {
 
   @property({ type: String })
   displayKey!: keyof T;
+
+  @property({ type: Boolean })
+  clearable: boolean = false;
 
   static styles = css`
     sl-select::part(combobox) {
@@ -41,6 +45,12 @@ export class EchoSelect<T = unknown> extends LitElement {
     sl-option::part(base):hover {
       background-color: var(--background-color);
     }
+
+    chevron-down-icon,
+    cross-icon {
+      display: flex;
+      justify-content: center;
+    }
   `;
 
   render() {
@@ -48,6 +58,7 @@ export class EchoSelect<T = unknown> extends LitElement {
       <sl-select
         placeholder=${this.placeholder}
         @sl-input=${this._onSelectChange}
+        ?clearable=${this.clearable}
       >
         ${this.elements.map(
           (element, index) =>
@@ -55,14 +66,30 @@ export class EchoSelect<T = unknown> extends LitElement {
               ${this.displayKey ? element[this.displayKey] : element}
             </sl-option>`,
         )}
+
+        <cross-icon slot="clear-icon" title="Clear filter"></cross-icon>
+        <chevron-down-icon
+          slot="expand-icon"
+          title="Expand/collapse"
+        ></chevron-down-icon>
       </sl-select>
     `;
   }
 
   private _onSelectChange(event: Event) {
     const select = event.target as HTMLSelectElement;
+
+    if (select.value === "") {
+      this._dispatchSelectedEvent(undefined);
+      return;
+    }
+
     const selectedValue = Number(select.value);
     const selectedElement = this.elements[selectedValue];
+    this._dispatchSelectedEvent(selectedElement);
+  }
+
+  private _dispatchSelectedEvent(selectedElement: T | undefined) {
     this.dispatchEvent(
       new CustomEvent("selected", { detail: selectedElement }),
     );

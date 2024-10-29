@@ -56,6 +56,7 @@ export class AlbumLibrary extends LitElement {
                   <div class="filters">
                     <label>Filter:</label>
                     <echo-select
+                      clearable
                       @selected=${this._onGenreSelected}
                       placeholder="By genre"
                       .elements=${genres}
@@ -79,7 +80,12 @@ export class AlbumLibrary extends LitElement {
     // Add the genre as a QSP so that the user can browse back to the same
     // view.
     const url = new URL(window.location.href);
-    url.searchParams.set("genre", this._selectedGenre);
+    if (this._selectedGenre) {
+      url.searchParams.set("genre", this._selectedGenre);
+    } else {
+      url.searchParams.delete("genre");
+    }
+
     window.history.pushState({}, "", url.toString());
   }
 }
