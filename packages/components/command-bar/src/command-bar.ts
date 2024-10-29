@@ -175,10 +175,14 @@ class CommandBarResult extends LitElement {
     .info {
       display: flex;
       flex-direction: column;
+      max-width: calc(100% - 5rem);
     }
 
     .info > * {
       margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   `;
 
