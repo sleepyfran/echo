@@ -55,7 +55,17 @@ export class PlayableAlbumCover extends LitElement {
       width: 4rem;
       box-shadow: var(--large-shadow);
       transform: translate3d(1rem, 1rem, 1rem);
-      transition: all 0.5s;
+      transition:
+        filter var(--long-transition-duration),
+        opacity var(--long-transition-duration);
+    }
+
+    button.play:hover {
+      filter: brightness(1.3);
+    }
+
+    div.img-wrapper:not([always-visible]):hover img.album-cover {
+      filter: brightness(0.8);
     }
 
     div.img-wrapper[always-visible] button.play {
@@ -80,6 +90,7 @@ export class PlayableAlbumCover extends LitElement {
       height: 100%;
       object-fit: cover;
       position: relative;
+      transition: filter var(--long-transition-duration);
     }
 
     div.album-info {

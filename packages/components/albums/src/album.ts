@@ -1,8 +1,7 @@
-import { Option } from "effect";
-import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import { Player, type Album } from "@echo/core-types";
+import type { Album } from "@echo/core-types";
 import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import "./playable-album-cover";
 import "@echo/components-icons";
 import "@echo/components-ui-atoms";
 
@@ -13,8 +12,6 @@ import "@echo/components-ui-atoms";
 export class LibraryAlbum extends LitElement {
   @property({ type: Object })
   album!: Album;
-
-  private _playAlbum = new EffectFn(this, Player.playAlbum);
 
   static styles = css`
     div.album-container {
@@ -35,31 +32,20 @@ export class LibraryAlbum extends LitElement {
       transition: opacity 0.5s;
     }
 
-    button.play {
-      opacity: 0;
-      position: absolute;
-      bottom: 0.5rem;
-      right: 0.5rem;
-      background-color: var(--accent-color);
-      color: var(--text-color);
-      border: none;
-      padding: 0.5rem;
-      border-radius: 100%;
-      font-size: 2rem;
-      cursor: pointer;
-      height: 4rem;
-      width: 4rem;
-      box-shadow: var(--large-shadow);
-      transform: translate3d(1rem, 1rem, 1rem);
-      transition: all 0.5s;
-    }
-
     div.img-wrapper:hover provider-icon {
       opacity: 1;
     }
 
-    div.img-wrapper:hover button.play {
+    div.img-wrapper:hover play-album {
       opacity: 1;
+    }
+
+    play-album {
+      opacity: 0;
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.5rem;
+      transition: opacity var(--long-transition-duration);
     }
 
     img.album-cover {
@@ -107,24 +93,8 @@ export class LibraryAlbum extends LitElement {
   render() {
     return html`
       <echo-hoverable>
-        <div key="{album.id}" class="album-container">
-          <div class="img-wrapper">
-            <provider-icon
-              providerId=${this.album.providerId}
-              title=${`This album is hosted on ${this.album.providerId}`}
-            ></provider-icon>
-            ${Option.isSome(this.album.embeddedCover) &&
-            html`
-              <img
-                src="${URL.createObjectURL(this.album.embeddedCover.value)}"
-                alt="Album cover"
-                class="album-cover"
-              />
-            `}
-            <button class="play" @click=${this._onPlayClick} title="Play">
-              <play-icon size="24"></play-icon>
-            </button>
-          </div>
+        <div key="${this.album.id}" class="album-container">
+          <playable-album-cover .album="${this.album}"></playable-album-cover>
           <a href="/albums/${this.album.id}">
             <div class="album-info">
               <h5>${this.album.name}</h5>
@@ -134,10 +104,6 @@ export class LibraryAlbum extends LitElement {
         </div>
       </echo-hoverable>
     `;
-  }
-
-  private _onPlayClick() {
-    this._playAlbum.run(this.album);
   }
 }
 
