@@ -103,17 +103,13 @@ const make = Effect.gen(function* () {
               Match.tag("PlayerReady", ({ player, deviceId }) =>
                 Effect.log("Player is ready, setting up listeners").pipe(
                   Effect.andThen(() =>
+                    setupListeners(player, mediaPlayerEventQueue),
+                  ),
+                  Effect.andThen(() =>
                     consumeCommandsInBackground(
                       { authInfo, deviceId },
                       { playerApi, player },
                       commandQueue,
-                    ).pipe(
-                      Effect.andThen(() =>
-                        setupListeners(player, mediaPlayerEventQueue),
-                      ),
-                      Effect.andThen(() =>
-                        Effect.log("Player ready and listeners set up"),
-                      ),
                     ),
                   ),
                 ),
@@ -138,7 +134,7 @@ const make = Effect.gen(function* () {
           playTrack: (trackId) => commandQueue.offer(PlayTrack({ trackId })),
           togglePlayback: commandQueue.offer(TogglePlayback()),
           stop: commandQueue.offer(Stop()),
-          observe: mediaPlayerEventQueue,
+          observe: Stream.fromQueue(mediaPlayerEventQueue),
           dispose: commandQueue.offer(Dispose()),
         };
       }),
@@ -193,25 +189,34 @@ const setupListeners = (
   player: Spotify.Player,
   mediaPlayerEventQueue: Queue.Enqueue<MediaPlayerEvent>,
 ) =>
-  Stream.async<MediaPlayerEvent>((emit) => {
+  Effect.sync(() => {
     player.addListener("player_state_changed", (state) => {
+      const currentTrackId = state.track_window.current_track.id;
+      const previousTrackID = state.track_window.previous_tracks[0]?.id;
+
+      /*
+      There's no reliable way of detecting when a track has ended via this listener
+      (or any other API provided via the SDK/Web API). However when a song finishes
+      there's an event that adds the track that was just played to the previous_tracks
+      array, so if we detect that the current track is the same as the previous track
+      and the position is 0 while simultaneously being paused, we can assume that the
+      previous track has ended.
+      */
+      if (
+        state.position === 0 &&
+        state.paused &&
+        currentTrackId === previousTrackID
+      ) {
+        return mediaPlayerEventQueue.unsafeOffer("trackEnded");
+      }
+
       if (state.paused) {
-        emit.single("trackPaused");
-      }
-
-      if (state.position === 0) {
-        emit.single("trackPlaying");
-      }
-
-      if (state.position === state.track_window.current_track.duration_ms) {
-        emit.single("trackEnded");
+        mediaPlayerEventQueue.unsafeOffer("trackPaused");
+      } else {
+        mediaPlayerEventQueue.unsafeOffer("trackPlaying");
       }
     });
-  }).pipe(
-    Stream.runForEach((event: MediaPlayerEvent) =>
-      mediaPlayerEventQueue.offer(event),
-    ),
-  );
+  });
 
 /**
  * Implementation of the media player service using the Spotify Web Playback SDK.
