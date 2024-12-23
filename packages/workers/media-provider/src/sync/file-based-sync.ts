@@ -345,6 +345,17 @@ const tryRetrieveOrCreateAlbum = (
       fileMetadata,
     );
 
+    const includesTrack = existingAlbum.value.tracks.some(
+      (existingTrack) =>
+        existingTrack.name === track.name &&
+        existingTrack.trackNumber === track.trackNumber,
+    );
+    const tracks = includesTrack
+      ? existingAlbum.value.tracks
+      : [...existingAlbum.value.tracks, track];
+
+    tracks.sort((a, b) => a.trackNumber - b.trackNumber);
+
     const genres = Genres.addTo(
       existingAlbum.value.genres,
       Genres.flatten(trackMetadata.genre ?? []),
@@ -353,7 +364,7 @@ const tryRetrieveOrCreateAlbum = (
     return {
       ...existingAlbum.value,
       genres,
-      tracks: [...existingAlbum.value.tracks, track],
+      tracks,
     };
   });
 
