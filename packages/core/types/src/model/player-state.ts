@@ -5,11 +5,13 @@ import type { Album } from "./album";
  * Defines whether the player is playing, paused or stopped.
  */
 export type PlayingStatus =
+  | { _tag: "Loading"; album: Album; trackIndex: number }
   | { _tag: "Playing"; album: Album; trackIndex: number }
   | { _tag: "Paused"; album: Album; trackIndex: number }
   | { _tag: "Stopped" };
 
-export const { Playing, Paused, Stopped } = Data.taggedEnum<PlayingStatus>();
+export const { Loading, Playing, Paused, Stopped } =
+  Data.taggedEnum<PlayingStatus>();
 
 /**
  * Represents the current state of the player.

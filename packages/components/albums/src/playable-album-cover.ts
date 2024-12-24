@@ -8,6 +8,7 @@ import "@echo/components-ui-atoms";
 import { StreamConsumer } from "@echo/components-shared-controllers";
 
 enum PlayStatus {
+  Loading,
   Playing,
   Paused,
   NotPlaying,
@@ -149,7 +150,9 @@ export class PlayableAlbumCover extends LitElement {
         this._playStatus =
           playerStatus.status._tag === "Playing"
             ? PlayStatus.Playing
-            : PlayStatus.Paused;
+            : playerStatus.status._tag === "Loading"
+              ? PlayStatus.Loading
+              : PlayStatus.Paused;
       },
     });
   }
@@ -169,10 +172,17 @@ export class PlayableAlbumCover extends LitElement {
             class="album-cover"
           />
         `}
-        <button class="play" @click=${this._onPlayClick} title="Play">
-          ${this._playStatus === PlayStatus.Playing
-            ? html`<pause-icon size="24"></pause-icon>`
-            : html`<play-icon size="24"></play-icon>`}
+        <button
+          class="play"
+          @click=${this._onPlayClick}
+          ?disabled=${this._playStatus === PlayStatus.Loading}
+          title="Play"
+        >
+          ${this._playStatus === PlayStatus.Loading
+            ? html`<loader-icon size="24"></loader-icon>`
+            : this._playStatus === PlayStatus.Playing
+              ? html`<pause-icon size="24"></pause-icon>`
+              : html`<play-icon size="24"></play-icon>`}
         </button>
       </div>
     `;

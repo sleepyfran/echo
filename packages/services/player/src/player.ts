@@ -13,6 +13,7 @@ import {
   type PlayerState,
   type Track,
   type Album,
+  Loading,
 } from "@echo/core-types";
 import {
   Array,
@@ -243,6 +244,7 @@ const consumeCommandsInBackground = (
               UpdateState({
                 updateFn: (state) =>
                   Match.value(state.status).pipe(
+                    Match.tag("Loading", () => state),
                     Match.tag("Playing", ({ album, trackIndex }) =>
                       isPlaying
                         ? state
@@ -313,6 +315,11 @@ const playTracks = ({
     );
 
     yield* commandQueue.offer(SyncPlayerState({ withMediaPlayer: player }));
+    yield* commandQueue.offer(
+      UpdateState({
+        updateFn: toLoadingState(album, trackIndex),
+      }),
+    );
     yield* playTrack(provider, player, requestedTrack.value);
     yield* commandQueue.offer(
       UpdateState({
@@ -467,6 +474,7 @@ const toPlayingState =
         ? [
             ...currentState.previouslyPlayedAlbums,
             ...Match.value(currentState.status).pipe(
+              Match.tag("Loading", () => [album]),
               Match.tag("Playing", ({ album }) => [album]),
               Match.tag("Paused", ({ album }) => [album]),
               Match.tag("Stopped", () => []),
@@ -477,6 +485,15 @@ const toPlayingState =
       comingUpAlbums: [],
     } satisfies PlayerState;
   };
+
+/**
+ * Sets the player state to loading the given track from the given album.
+ */
+const toLoadingState =
+  (album: Album, trackIndex: number) => (currentState: PlayerState) => ({
+    ...currentState,
+    status: Loading({ album, trackIndex }),
+  });
 
 const PlayerLiveWithState = Layer.scoped(Player, makePlayer);
 

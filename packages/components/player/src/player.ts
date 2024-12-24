@@ -11,6 +11,7 @@ import { Match, Option } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { ButtonType } from "@echo/components-ui-atoms";
 import "@echo/components-icons";
+import { classMap } from "lit/directives/class-map.js";
 
 /**
  * Component that displays the current status of the player.
@@ -28,6 +29,7 @@ export class EchoPlayer extends LitElement {
       it, like WebScrobbler to scrobble tracks.
       */
       Match.value(playerState.status).pipe(
+        Match.tag("Loading", () => {}),
         Match.tag("Playing", ({ album, trackIndex }) => {
           const track = album.tracks[trackIndex];
           this.dispatchEvent(
@@ -74,6 +76,22 @@ export class EchoPlayer extends LitElement {
       border-radius: 5%;
     }
 
+    .pulsating {
+      animation: pulsate 1s ease-out infinite;
+    }
+
+    @keyframes pulsate {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
     .track-info {
       display: flex;
       flex-direction: column;
@@ -105,7 +123,12 @@ export class EchoPlayer extends LitElement {
             Match.tag("Paused", (st) => this._renderActivePlayer(player, st)),
             Match.orElse(
               () => html`
-                <div class="current-track">
+                <div
+                  class=${classMap({
+                    "current-track": true,
+                    pulsating: player.status._tag === "Loading",
+                  })}
+                >
                   <h5 class="logo">echo</h5>
                 </div>
               `,

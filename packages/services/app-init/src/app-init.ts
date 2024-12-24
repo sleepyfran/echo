@@ -146,7 +146,7 @@ const syncPageTitleWithPlayer = (player: IPlayer) =>
     yield* playerState.changes.pipe(
       Stream.runForEach((state) =>
         Match.value(state.status).pipe(
-          Match.tag("Stopped", () =>
+          Match.tag("Stopped", "Loading", () =>
             Effect.sync(() => (document.title = "Echo")),
           ),
           Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
