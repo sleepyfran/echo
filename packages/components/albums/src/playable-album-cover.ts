@@ -2,9 +2,16 @@ import { Option } from "effect";
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
 import { Player, type Album } from "@echo/core-types";
 import { LitElement, html, css } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import "@echo/components-icons";
 import "@echo/components-ui-atoms";
+import { StreamConsumer } from "@echo/components-shared-controllers";
+
+enum PlayStatus {
+  Playing,
+  Paused,
+  NotPlaying,
+}
 
 /**
  * An element that displays the cover of an album from the user's library
@@ -18,7 +25,11 @@ export class PlayableAlbumCover extends LitElement {
   @property({ type: Boolean })
   detailsAlwaysVisible = false;
 
+  @state()
+  private _playStatus = PlayStatus.NotPlaying;
+
   private _playAlbum = new EffectFn(this, Player.playAlbum);
+  private _togglePlayback = new EffectFn(this, () => Player.togglePlayback);
 
   static styles = css`
     div.album-container {
@@ -122,8 +133,25 @@ export class PlayableAlbumCover extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    new StreamConsumer(this, Player.observe, {
+      item: (playerStatus) => {
+        if (
+          playerStatus.status._tag === "Stopped" ||
+          playerStatus.status.album.id !== this.album.id
+        ) {
+          this._playStatus = PlayStatus.NotPlaying;
+          return;
+        }
+
+        this._playStatus =
+          playerStatus.status._tag === "Playing"
+            ? PlayStatus.Playing
+            : PlayStatus.Paused;
+      },
+    });
   }
 
   render() {
@@ -142,14 +170,20 @@ export class PlayableAlbumCover extends LitElement {
           />
         `}
         <button class="play" @click=${this._onPlayClick} title="Play">
-          <play-icon size="24"></play-icon>
+          ${this._playStatus === PlayStatus.Playing
+            ? html`<pause-icon size="24"></pause-icon>`
+            : html`<play-icon size="24"></play-icon>`}
         </button>
       </div>
     `;
   }
 
   private _onPlayClick() {
-    this._playAlbum.run(this.album);
+    if (this._playStatus === PlayStatus.NotPlaying) {
+      return this._playAlbum.run(this.album);
+    }
+
+    this._togglePlayback.run({});
   }
 }
 

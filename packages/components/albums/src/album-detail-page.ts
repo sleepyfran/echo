@@ -1,8 +1,14 @@
 import { EffectFn } from "@echo/components-shared-controllers/src/effect-fn.controller";
-import { Genre, Library, type Album, type AlbumId } from "@echo/core-types";
+import {
+  Genre,
+  Library,
+  Player,
+  type Album,
+  type AlbumId,
+} from "@echo/core-types";
 import { Option } from "effect";
 import { LitElement, html, css, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import {
   Path,
   type RouterLocation,
@@ -11,6 +17,8 @@ import {
 import { map } from "lit/directives/map.js";
 import "@echo/components-ui-atoms";
 import "./playable-album-cover";
+import { StreamConsumer } from "@echo/components-shared-controllers";
+import { classMap } from "lit/directives/class-map.js";
 
 /**
  * Component that displays the details of an album.
@@ -19,6 +27,9 @@ import "./playable-album-cover";
 export class AlbumDetail extends LitElement {
   @property({ type: Object })
   album!: Album;
+
+  @state()
+  playingTrackIndex: number | null = null;
 
   static styles = css`
     ol.track-list {
@@ -98,13 +109,35 @@ export class AlbumDetail extends LitElement {
       justify-content: space-between;
     }
 
+    div.track > div {
+      display: inline-flex;
+      gap: 0.5rem;
+    }
+
+    div.track-playing {
+      background-color: var(--background-color-muted);
+    }
+
     div.track > .duration {
       color: var(--secondary-text-color);
     }
   `;
 
-  constructor() {
-    super();
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    new StreamConsumer(this, Player.observe, {
+      item: (playerStatus) => {
+        if (
+          playerStatus.status._tag === "Playing" &&
+          playerStatus.status.album.id === this.album.id
+        ) {
+          this.playingTrackIndex = playerStatus.status.trackIndex;
+        } else {
+          this.playingTrackIndex = null;
+        }
+      },
+    });
   }
 
   render() {
@@ -115,6 +148,7 @@ export class AlbumDetail extends LitElement {
           <playable-album-cover
             .album=${this.album}
             detailsAlwaysVisible
+            ?playing=${this.playingTrackIndex !== null}
           ></playable-album-cover>
           <h1>${this.album.name}</h1>
           <h5>
@@ -134,13 +168,27 @@ export class AlbumDetail extends LitElement {
           <ol class="track-list">
             ${map(
               this.album.tracks,
-              (track) =>
-                html`<div class="track">
-                  <li>${track.name}</li>
-                  <span class="duration"
-                    >${this._formatDuration(track.durationInSeconds)}</span
+              (track, index) =>
+                html`<li>
+                  <div
+                    class=${classMap({
+                      track: true,
+                      "track-playing": this.playingTrackIndex === index,
+                    })}
                   >
-                </div>`,
+                    <div>
+                      ${this.playingTrackIndex === index
+                        ? html`<animated-volume-icon
+                            size="16"
+                          ></animated-volume-icon>`
+                        : nothing}
+                      <span>${track.name}</span>
+                    </div>
+                    <span class="duration"
+                      >${this._formatDuration(track.durationInSeconds)}</span
+                    >
+                  </div>
+                </li>`,
             )}
           </ol>
         </div>

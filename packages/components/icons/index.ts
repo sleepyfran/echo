@@ -8,3 +8,4 @@ export * from "./src/prev-icon";
 export * from "./src/pause-icon";
 export * from "./src/provider-icon";
 export * from "./src/sync-icon";
+export * from "./src/volume-icon";
