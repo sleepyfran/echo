@@ -9,6 +9,7 @@ import {
   type Album,
   type Artist,
   type AuthenticationInfo,
+  type IAuthenticationCache,
   type Track,
 } from "@echo/core-types";
 import type { SpotifyAlbumResponse } from "./types";
@@ -22,7 +23,8 @@ const initialState = {
  * Creates an effect that retrieves all the albums in the user's library.
  */
 export const createListAlbums = (
-  authInfo: AuthenticationInfo,
+  fallbackAuthInfo: AuthenticationInfo,
+  authCache: IAuthenticationCache,
   userLibraryApi: ISpotifyLibraryApi,
 ) =>
   Effect.iterate(initialState, {
@@ -35,9 +37,13 @@ export const createListAlbums = (
           return state;
         }
 
+        const authInfoOrFallback = yield* authCache
+          .get(ApiBasedProviderId.Spotify)
+          .pipe(Effect.map(Option.getOrElse(() => fallbackAuthInfo)));
+
         const response = yield* userLibraryApi
           .savedAlbums({
-            authInfo,
+            authInfo: authInfoOrFallback,
             offset: maybeOffset.value,
             limit: 50,
           })

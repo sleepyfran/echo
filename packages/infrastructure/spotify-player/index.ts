@@ -1,4 +1,6 @@
 import {
+  ApiBasedProviderId,
+  AuthenticationCache,
   MediaPlayerFactory,
   MediaPlayerId,
   ProviderType,
@@ -12,6 +14,7 @@ import {
   Effect,
   Layer,
   Match,
+  Option,
   pipe,
   Queue,
   Scope,
@@ -42,6 +45,7 @@ const { PlayTrack, TogglePlayback, Stop, Dispose } =
   Data.taggedEnum<SpotifyPlayerCommand>();
 
 const make = Effect.gen(function* () {
+  const authCache = yield* AuthenticationCache;
   const playerApi = yield* SpotifyPlayerApi;
   const layerScope = yield* Scope.make();
 
@@ -73,7 +77,12 @@ const make = Effect.gen(function* () {
           window.onSpotifyWebPlaybackSDKReady = () => {
             const player = new window.Spotify.Player({
               name: "Echo",
-              getOAuthToken: (cb) => cb(authInfo.accessToken),
+              getOAuthToken: (cb) =>
+                Effect.runPromise(
+                  authCache
+                    .get(ApiBasedProviderId.Spotify)
+                    .pipe(Effect.map(Option.getOrElse(() => authInfo))),
+                ).then((authInfo) => cb(authInfo.accessToken)),
               volume: 1.0,
             });
 

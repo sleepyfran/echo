@@ -26,13 +26,13 @@ export const OneDriveProviderLive = Layer.effect(
 
     return MediaProviderFactory.of({
       authenticationProvider: Effect.succeed(msalAuth),
-      createMediaProvider: (authInfo) => {
+      createMediaProvider: (fallbackAuthInfo) => {
         const options: ClientOptions = {
           authProvider: {
             getAccessToken: () =>
               Effect.runPromise(
                 authCache.get(FileBasedProviderId.OneDrive).pipe(
-                  Effect.map(Option.getOrElse(() => authInfo)),
+                  Effect.map(Option.getOrElse(() => fallbackAuthInfo)),
                   Effect.map((authInfo) => authInfo.accessToken),
                 ),
               ),

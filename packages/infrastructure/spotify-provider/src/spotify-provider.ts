@@ -1,4 +1,8 @@
-import { MediaProviderFactory, ProviderType } from "@echo/core-types";
+import {
+  AuthenticationCache,
+  MediaProviderFactory,
+  ProviderType,
+} from "@echo/core-types";
 import { Effect, Layer } from "effect";
 import { SpotifyAuthentication } from "./spotify-authentication";
 import { SpotifyLibraryApi } from "./apis/user-library-api";
@@ -13,14 +17,19 @@ import { createListAlbums } from "./apis/list-albums-api";
 export const SpotifyProviderLive = Layer.effect(
   MediaProviderFactory,
   Effect.gen(function* () {
+    const authCache = yield* AuthenticationCache;
     const spotifyAuth = yield* SpotifyAuthentication;
     const userLibraryApi = yield* SpotifyLibraryApi;
 
     return MediaProviderFactory.of({
       authenticationProvider: Effect.succeed(spotifyAuth),
-      createMediaProvider: (authInfo) => ({
+      createMediaProvider: (fallbackAuthInfo) => ({
         _tag: ProviderType.ApiBased,
-        listAlbums: createListAlbums(authInfo, userLibraryApi),
+        listAlbums: createListAlbums(
+          fallbackAuthInfo,
+          authCache,
+          userLibraryApi,
+        ),
       }),
     });
   }),
