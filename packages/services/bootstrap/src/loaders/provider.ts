@@ -5,6 +5,7 @@ import {
   MediaProviderFactory,
   type Authentication,
   ApiBasedProviderId,
+  AuthenticationCache,
 } from "@echo/core-types";
 import { AppConfigLive } from "../app-config";
 import { FetchHttpClient } from "@effect/platform";
@@ -37,7 +38,9 @@ export class LazyLoadedProvider extends Effect.Tag(
  */
 const lazyLoadFromMetadata = (
   metadata: ProviderMetadata,
-): Effect.Effect<Layer.Layer<MediaProviderFactory, never, never>> => {
+): Effect.Effect<
+  Layer.Layer<MediaProviderFactory, never, AuthenticationCache>
+> => {
   switch (metadata.id) {
     case FileBasedProviderId.OneDrive:
       return Effect.promise(async () => {
@@ -74,17 +77,26 @@ const createLazyLoadedProvider = (metadata: ProviderMetadata) =>
 /**
  * A layer that can lazily load a media provider based on the metadata provided.
  */
-export const LazyLoadedProviderLive = Layer.succeed(
+export const LazyLoadedProviderLive = Layer.effect(
   LazyLoadedProvider,
-  LazyLoadedProvider.of({
-    load: (metadata) =>
-      Effect.gen(function* () {
-        const providerFactory = yield* lazyLoadFromMetadata(metadata);
+  Effect.gen(function* () {
+    const authCache = yield* AuthenticationCache;
+    const authCacheLayer = Layer.succeed(AuthenticationCache, authCache);
 
-        return yield* Effect.provide(
-          createLazyLoadedProvider(metadata),
-          providerFactory,
-        );
-      }),
+    return LazyLoadedProvider.of({
+      load: (metadata) =>
+        Effect.gen(function* () {
+          const providerFactory = yield* lazyLoadFromMetadata(metadata);
+
+          return yield* Effect.provide(
+            createLazyLoadedProvider(metadata),
+            // The auth cache requires a single instance for the whole application
+            // since the tokens are only stored in-memory, but since providers
+            // are lazy loaded and require the dependencies in place, we need
+            // to manually provide it from the environment.
+            providerFactory.pipe(Layer.provide(authCacheLayer)),
+          );
+        }),
+    });
   }),
 );

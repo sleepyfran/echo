@@ -41,17 +41,15 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
   );
 
   return ActiveMediaProviderCache.of({
-    add: (metadata, provider, player) =>
+    add: (args) =>
       Ref.update(providerByIdRef, (current) => {
         const updatedMap = new Map(current);
-        updatedMap.set(metadata.id, {
-          metadata,
-          provider,
-          player,
-        });
+        updatedMap.set(args.metadata.id, args);
         return updatedMap;
       }).pipe(
-        Effect.andThen(Effect.log(`Added provider ${metadata.id} to cache`)),
+        Effect.andThen(
+          Effect.log(`Added provider ${args.metadata.id} to cache`),
+        ),
       ),
     get: (providerId) =>
       Ref.get(providerByIdRef).pipe(
@@ -61,10 +59,7 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
             return Option.none();
           }
 
-          return Option.some({
-            provider: cachedProvider.provider,
-            player: cachedProvider.player,
-          });
+          return Option.some(cachedProvider);
         }),
       ),
     getAll: Effect.gen(function* () {

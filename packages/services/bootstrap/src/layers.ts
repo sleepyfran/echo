@@ -16,18 +16,24 @@ import {
 } from "@echo/services-media-provider-status";
 import { BrowserLocalStorageLive } from "@echo/infrastructure-browser-local-storage";
 import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-image-provider";
+import {
+  AuthenticationCacheLive,
+  AuthenticationRefresherLive,
+} from "@echo/services-reauthentication";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
  * main thread (web-app).
  */
-export const MainLive = ActiveMediaProviderCacheLive.pipe(
-  Layer.provideMerge(MediaProviderArgStorageLive),
+export const MainLive = MediaProviderArgStorageLive.pipe(
   Layer.provideMerge(MediaProviderStatusLive),
-  Layer.provideMerge(BroadcasterLive),
-  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
+  Layer.provideMerge(AuthenticationRefresherLive),
+  Layer.provideMerge(AuthenticationCacheLive),
+  Layer.provideMerge(ActiveMediaProviderCacheLive),
+  Layer.provideMerge(BroadcasterLive),
+  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(BrowserLocalStorageLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(DexieDatabaseLive),
@@ -41,9 +47,10 @@ export const MainLive = ActiveMediaProviderCacheLive.pipe(
  */
 export const WorkerLive = MediaProviderStatusLive.pipe(
   Layer.provideMerge(BroadcasterLive),
-  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(LazyLoadedProviderLive),
+  Layer.provideMerge(AuthenticationCacheLive),
+  Layer.provideMerge(BroadcastListenerLive),
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(MmbMetadataProviderLive),
   Layer.provideMerge(SpotifyArtistImageProvider),

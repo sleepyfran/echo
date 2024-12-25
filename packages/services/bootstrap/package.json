@@ -22,6 +22,7 @@
     "@echo/infrastructure-spotify-provider": "^1.0.0",
     "@echo/services-active-media-provider-cache": "^1.0.0",
     "@echo/services-media-provider-status": "^1.0.0",
+    "@echo/services-reauthentication": "^1.0.0",
     "@echo/workers-media-provider": "^1.0.0",
     "@effect/platform": "^0.66.2",
     "effect": "^3.8.3"

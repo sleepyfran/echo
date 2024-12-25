@@ -116,11 +116,7 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                 ProviderStartArgs,
                 request.startArgs,
               );
-              yield* activeMediaProviderCache.add(
-                request.providerWithMetadata.metadata,
-                request.providerWithMetadata.provider,
-                request.providerWithMetadata.player,
-              );
+              yield* activeMediaProviderCache.add(request.providerWithMetadata);
 
               return [{}, { _tag: "Done" as const }];
             }),
@@ -179,7 +175,9 @@ export const addProviderWorkflow = Machine.makeWith<MachineState>()(
                 yield* state.loadedProvider.createMediaPlayer(authInfo);
 
               const providerWithMetadata: ProviderWithMetadata = {
+                lastAuthInfo: authInfo,
                 metadata: state.loadedProvider.metadata,
+                authentication: state.loadedProvider.authentication,
                 provider: mediaProvider,
                 player: mediaPlayer,
               };

@@ -1,9 +1,16 @@
 import { Effect, Option, Stream } from "effect";
-import type { ProviderId, ProviderMetadata } from "../model";
+import type {
+  AuthenticationInfo,
+  ProviderId,
+  ProviderMetadata,
+} from "../model";
 import type { MediaPlayer, MediaProvider } from "./media-provider";
+import type { Authentication } from "./authentication";
 
 export type ProviderWithMetadata = {
+  readonly lastAuthInfo: AuthenticationInfo;
   readonly metadata: ProviderMetadata;
+  readonly authentication: Authentication;
   readonly provider: MediaProvider;
   readonly player: MediaPlayer;
 };
@@ -24,21 +31,14 @@ export type IActiveMediaProviderCache = {
    * listen to the provider's state changes and remove it from the cache once
    * it becomes inactive.
    */
-  readonly add: (
-    metadata: ProviderMetadata,
-    provider: MediaProvider,
-    player: MediaPlayer,
-  ) => Effect.Effect<void>;
+  readonly add: (args: ProviderWithMetadata) => Effect.Effect<void>;
 
   /**
    * Returns a media provider, if it is currently active, or none otherwise.
    */
-  readonly get: (providerId: ProviderId) => Effect.Effect<
-    Option.Option<{
-      provider: MediaProvider;
-      player: MediaPlayer;
-    }>
-  >;
+  readonly get: (
+    providerId: ProviderId,
+  ) => Effect.Effect<Option.Option<ProviderWithMetadata>>;
 
   /**
    * Returns all currently active media providers.

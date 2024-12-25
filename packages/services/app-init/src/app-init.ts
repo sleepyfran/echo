@@ -14,6 +14,7 @@ import {
   StartProvider,
   Player,
   type IPlayer,
+  AuthenticationRefresher,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
@@ -25,6 +26,7 @@ import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
   const activeMediaProviderCache = yield* ActiveMediaProviderCache;
+  const authRefresher = yield* AuthenticationRefresher;
   const broadcaster = yield* Broadcaster;
   const lazyLoadedProvider = yield* LazyLoadedProvider;
   const lazyLoaderMediaPlayer = yield* LazyLoadedMediaPlayer;
@@ -45,9 +47,14 @@ const make = Effect.gen(function* () {
 
       yield* mediaProviderArgsStorage.keepInSync.pipe(
         Scope.extend(globalScope),
+        Effect.forkIn(globalScope),
       );
+      yield* authRefresher.start.pipe(Effect.forkIn(globalScope));
 
-      yield* syncPageTitleWithPlayer(player).pipe(Scope.extend(globalScope));
+      yield* syncPageTitleWithPlayer(player).pipe(
+        Scope.extend(globalScope),
+        Effect.forkIn(globalScope),
+      );
 
       const allProviderStates = yield* retrieveAllProviderArgs(localStorage);
 
@@ -128,11 +135,13 @@ const reinitializeProvider = (
         },
       }),
     );
-    yield* activeMediaProviderCache.add(
-      startArgs.metadata,
-      mediaProvider,
-      mediaPlayer,
-    );
+    yield* activeMediaProviderCache.add({
+      lastAuthInfo: startArgs.authInfo,
+      metadata: startArgs.metadata,
+      authentication: providerFactory.authentication,
+      provider: mediaProvider,
+      player: mediaPlayer,
+    });
 
     yield* Effect.log(
       `Successfully reinitialized ${startArgs.metadata.id} provider`,
@@ -158,7 +167,6 @@ const syncPageTitleWithPlayer = (player: IPlayer) =>
           Match.exhaustive,
         ),
       ),
-      Effect.forkScoped,
     );
   });
 

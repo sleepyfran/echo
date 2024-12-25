@@ -1,10 +1,12 @@
 import * as S from "@effect/schema/Schema";
 import {
+  ProviderId,
   ProviderMetadata,
   ProviderStartArgs,
   ProviderStatus,
 } from "./provider-metadata";
 import { Serializable } from "@effect/schema";
+import { AuthenticationInfo } from "./authentication";
 
 /***
  * Request to start a provider, normally handled by the media provider worker.
@@ -36,6 +38,20 @@ export class ProviderStatusChanged extends S.Class<ProviderStatusChanged>(
 )({
   startArgs: ProviderStartArgs,
   status: ProviderStatus,
+}) {
+  get [Serializable.symbol]() {
+    return ProviderStatusChanged;
+  }
+}
+
+/**
+ * Event emitted when the authentication info of a provider has been refreshed.
+ */
+export class ProviderAuthInfoChanged extends S.Class<ProviderAuthInfoChanged>(
+  "providerAuthInfoChanged",
+)({
+  providerId: ProviderId,
+  authInfo: AuthenticationInfo,
 }) {
   get [Serializable.symbol]() {
     return ProviderStatusChanged;

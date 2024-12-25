@@ -42,7 +42,6 @@ export const MediaProviderArgStorageLive = Layer.effect(
               Match.orElse(() => Effect.void),
             ),
           ),
-          Effect.forkScoped,
         );
       }),
     });

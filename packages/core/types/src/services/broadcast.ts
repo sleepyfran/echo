@@ -6,7 +6,7 @@ import { Context, Scope, type Effect, type Stream } from "effect";
 /**
  * Defines all available channels.
  */
-export type ChannelName = "mediaProvider";
+export type ChannelName = "mediaProvider" | "authentication";
 
 /**
  * Defines a service that can act as the main message hub of the application,

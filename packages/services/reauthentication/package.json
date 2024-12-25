@@ -1,0 +1,16 @@
+{
+  "name": "@echo/services-reauthentication",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains implementations for services dealing with re-authenticating the client",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-auth": "^1.0.0",
+    "@echo/core-types": "^1.0.0",
+    "effect": "^3.8.3"
+  }
+}
