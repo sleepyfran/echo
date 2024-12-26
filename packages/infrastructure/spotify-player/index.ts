@@ -197,11 +197,22 @@ const consumeCommandsInBackground = (
 const setupListeners = (
   player: Spotify.Player,
   mediaPlayerEventQueue: Queue.Enqueue<MediaPlayerEvent>,
-) =>
-  Effect.sync(() => {
+) => {
+  /*
+  Usually I'd be very against having a mutable state here, but since
+  this listener triggers in the most unreliable way possible and it's
+  impossible to understand when a track has ended without the previous
+  state, we need to have this here.
+  */
+  let previousState: Spotify.PlaybackState | undefined;
+  return Effect.sync(() => {
     player.addListener("player_state_changed", (state) => {
+      if (statesMatch(previousState, state)) {
+        return;
+      }
+
       const currentTrackId = state.track_window.current_track.id;
-      const previousTrackID = state.track_window.previous_tracks[0]?.id;
+      const previousTrackId = state.track_window.previous_tracks[0]?.id;
 
       /*
       There's no reliable way of detecting when a track has ended via this listener
@@ -209,23 +220,49 @@ const setupListeners = (
       there's an event that adds the track that was just played to the previous_tracks
       array, so if we detect that the current track is the same as the previous track
       and the position is 0 while simultaneously being paused, we can assume that the
-      previous track has ended.
+      previous track has ended. HOWEVER! Somehow this stopped being reliable a few
+      months later, so I'm here updating this again :^) For some reason this same
+      condition was firing up to four times in a row, with the only difference being
+      that the last one has the loading flag set to false and the duration exposed
+      in the previous state differed from the current one by a millisecond. So we
+      need to keep those into account as well. Let's see when this breaks again,
+      can't wait, yay!
       */
       if (
         state.position === 0 &&
         state.paused &&
-        currentTrackId === previousTrackID
+        currentTrackId === previousTrackId &&
+        previousState?.duration !== state.duration &&
+        !state.loading
       ) {
         return mediaPlayerEventQueue.unsafeOffer("trackEnded");
       }
 
-      if (state.paused) {
+      /*
+      We also need this funky checks to detect that the previous state differs
+      from the current one to avoid triggering double pauses and plays, since
+      that messes up the switching of tracks when a track ends.
+      */
+      if (state.paused && !previousState?.paused) {
         mediaPlayerEventQueue.unsafeOffer("trackPaused");
-      } else {
+      } else if (!state.paused && previousState?.paused) {
         mediaPlayerEventQueue.unsafeOffer("trackPlaying");
       }
+
+      previousState = state;
     });
   });
+};
+
+const statesMatch = (
+  previousState: Spotify.PlaybackState | undefined,
+  currentState: Spotify.PlaybackState,
+) =>
+  previousState?.loading === currentState.loading &&
+  previousState?.paused === currentState.paused &&
+  previousState?.position === currentState.position &&
+  previousState?.track_window.current_track.id ===
+    currentState.track_window.current_track.id;
 
 /**
  * Implementation of the media player service using the Spotify Web Playback SDK.
