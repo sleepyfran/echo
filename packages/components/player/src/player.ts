@@ -67,9 +67,14 @@ export class EchoPlayer extends LitElement {
     .current-track {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 1rem;
+      justify-content: space-between;
+      gap: 0.5rem;
       overflow: hidden;
+      width: 100%;
+    }
+
+    .current-track-logo {
+      justify-content: center;
     }
 
     .current-track img {
@@ -111,6 +116,12 @@ export class EchoPlayer extends LitElement {
     h5.logo {
       font-size: 2rem;
     }
+
+    .playback-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+    }
   `;
 
   render() {
@@ -126,6 +137,7 @@ export class EchoPlayer extends LitElement {
                 <div
                   class=${classMap({
                     "current-track": true,
+                    "current-track-logo": true,
                     pulsating: player.status._tag === "Loading",
                   })}
                 >
@@ -165,28 +177,30 @@ export class EchoPlayer extends LitElement {
         </div>
         ${player.status._tag !== "Stopped"
           ? html`
-              <echo-button
-                .type=${ButtonType.Icon}
-                @click=${this._onPreviousTrack}
-                ?disabled=${!player.allowsPrevious}
-              >
-                <prev-icon></prev-icon>
-              </echo-button>
-              <echo-button
-                .type=${ButtonType.Icon}
-                @click=${this._onTogglePlayback}
-              >
-                ${player.status._tag === "Paused"
-                  ? html` <play-icon id="play"></play-icon> `
-                  : html` <pause-icon id="pause"></pause-icon> `}
-              </echo-button>
-              <echo-button
-                .type=${ButtonType.Icon}
-                @click=${this._onSkipTrack}
-                ?disabled=${!player.allowsNext}
-              >
-                <next-icon></next-icon>
-              </echo-button>
+              <div class="playback-buttons">
+                <echo-button
+                  .type=${ButtonType.Icon}
+                  @click=${this._onPreviousTrack}
+                  ?disabled=${!player.allowsPrevious}
+                >
+                  <prev-icon></prev-icon>
+                </echo-button>
+                <echo-button
+                  .type=${ButtonType.Icon}
+                  @click=${this._onTogglePlayback}
+                >
+                  ${player.status._tag === "Paused"
+                    ? html` <play-icon id="play"></play-icon> `
+                    : html` <pause-icon id="pause"></pause-icon> `}
+                </echo-button>
+                <echo-button
+                  .type=${ButtonType.Icon}
+                  @click=${this._onSkipTrack}
+                  ?disabled=${!player.allowsNext}
+                >
+                  <next-icon></next-icon>
+                </echo-button>
+              </div>
             `
           : nothing}
       </div>
