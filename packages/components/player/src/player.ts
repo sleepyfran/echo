@@ -70,7 +70,7 @@ export class EchoPlayer extends LitElement {
       justify-content: space-between;
       gap: 0.5rem;
       overflow: hidden;
-      width: 100%;
+      width: 80%;
     }
 
     .current-track-logo {
