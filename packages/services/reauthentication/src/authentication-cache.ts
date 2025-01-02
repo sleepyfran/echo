@@ -33,6 +33,11 @@ export const AuthenticationCacheLive = Layer.scoped(
       Stream.tap(({ providerId }) =>
         Effect.logInfo(`Received update for ${providerId}, updating cache`),
       ),
+      Stream.ensuring(
+        Effect.logWarning(
+          "Stopped listening for auth updates, was this intended?",
+        ),
+      ),
       Stream.runForEach(({ providerId, authInfo }) =>
         Ref.update(cache, (cache) => new Map(cache).set(providerId, authInfo)),
       ),
@@ -43,6 +48,13 @@ export const AuthenticationCacheLive = Layer.scoped(
       get: (providerId) =>
         cache.get.pipe(
           Effect.map((c) => Option.fromNullable(c.get(providerId))),
+          Effect.tap((result) =>
+            Option.isNone(result)
+              ? Effect.logWarning(
+                  `No token found in authentication cache for provider ${providerId}`,
+                )
+              : Effect.void,
+          ),
         ),
     });
   }),

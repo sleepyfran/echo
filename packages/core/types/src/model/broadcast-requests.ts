@@ -54,6 +54,6 @@ export class ProviderAuthInfoChanged extends S.Class<ProviderAuthInfoChanged>(
   authInfo: AuthenticationInfo,
 }) {
   get [Serializable.symbol]() {
-    return ProviderStatusChanged;
+    return ProviderAuthInfoChanged;
   }
 }

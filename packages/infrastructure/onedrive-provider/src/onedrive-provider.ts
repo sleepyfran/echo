@@ -4,7 +4,7 @@ import {
   MediaProviderFactory,
   ProviderType,
 } from "@echo/core-types";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Runtime } from "effect";
 import { MsalAuthentication } from "./msal-authentication";
 import { Client, type ClientOptions } from "@microsoft/microsoft-graph-client";
 import { createListRoot } from "./apis/list-root.graph-api";
@@ -23,6 +23,7 @@ export const OneDriveProviderLive = Layer.effect(
   Effect.gen(function* () {
     const authCache = yield* AuthenticationCache;
     const msalAuth = yield* MsalAuthentication;
+    const runtime = yield* Effect.runtime();
 
     return MediaProviderFactory.of({
       authenticationProvider: Effect.succeed(msalAuth),
@@ -30,7 +31,7 @@ export const OneDriveProviderLive = Layer.effect(
         const options: ClientOptions = {
           authProvider: {
             getAccessToken: () =>
-              Effect.runPromise(
+              Runtime.runPromise(runtime)(
                 authCache.get(FileBasedProviderId.OneDrive).pipe(
                   Effect.map(Option.getOrElse(() => fallbackAuthInfo)),
                   Effect.map((authInfo) => authInfo.accessToken),

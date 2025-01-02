@@ -113,8 +113,8 @@ const refreshProvider = (
     );
 
     const authentication = provider.value.authentication;
-    yield* authentication.connectSilent(currentAuthInfo).pipe(
-      Effect.map((authInfo) => onTokenUpdated(metadata.id, authInfo)),
+    yield* authentication.connectSilent(currentAuthInfo, true).pipe(
+      Effect.tap((authInfo) => onTokenUpdated(metadata.id, authInfo)),
       Effect.tap(() =>
         Effect.logInfo(
           `Token refreshed and stored in cache for provider ${metadata.id}`,

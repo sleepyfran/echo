@@ -21,6 +21,7 @@ export type Authentication = {
    */
   connectSilent: (
     cachedCredentials: AuthenticationInfo,
+    forceRefresh?: boolean,
   ) => Effect.Effect<AuthenticationInfo, AuthenticationError>;
 };
 

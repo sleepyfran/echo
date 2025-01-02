@@ -79,7 +79,10 @@ export const MsalAuthenticationLive = Layer.effect(
       return yield* handleResponse(authResult);
     });
 
-    const connectSilent = (cachedCredentials: AuthenticationInfo) =>
+    const connectSilent = (
+      cachedCredentials: AuthenticationInfo,
+      forceRefresh = false,
+    ) =>
       Effect.gen(function* () {
         const app = yield* msalAppRef.get;
 
@@ -102,6 +105,7 @@ export const MsalAuthenticationLive = Layer.effect(
             app.acquireTokenSilent({
               ...authRequest,
               account,
+              forceRefresh,
             }),
           catch: (e) => {
             console.error(e);
