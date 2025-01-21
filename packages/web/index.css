@@ -92,11 +92,12 @@ https://jakelazaroff.com/words/my-modern-css-reset
     /* Colors. */
     --font-family: "DepartureMono", monospace;
     --background-color: #f4f4f9;
+    --background-selected-color: #d1d1dc;
     --background-color-muted: #e9e9f3;
     --border-color: #e9e9f3;
     --border-prominent-color: #007bff;
     --disabled-background-color: #cccccc;
-    --primary-text-color: #333333;
+    --primary-text-color: #280505;
     --secondary-text-color: #555555;
     --accent-color: #ff6f61;
     --error-color: #dc3545;
@@ -122,6 +123,7 @@ https://jakelazaroff.com/words/my-modern-css-reset
   @media (prefers-color-scheme: dark) {
     :root {
       --background-color: #2e2e2e;
+      --background-selected-color: #434343;
       --background-color-muted: #3c3c3c;
       --border-color: #3c3c3c;
       --warning-color: #91731b;

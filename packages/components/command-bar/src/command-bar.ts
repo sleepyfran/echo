@@ -44,6 +44,7 @@ export class CommandBar extends LitElement {
 
     div.search-results {
       background-color: var(--background-color-muted);
+      box-shadow: var(--large-shadow);
     }
   `;
 
@@ -155,11 +156,10 @@ class CommandBarResult extends LitElement {
       text-decoration: none;
       color: inherit;
       padding: 0.5rem;
-      width: 100%;
     }
 
     a:hover {
-      background-color: var(--background-color);
+      background-color: var(--background-selected-color);
     }
 
     img {
