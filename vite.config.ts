@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import fs from "fs";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig(({ command }) => {
   const serverOptions =
@@ -15,6 +16,7 @@ export default defineConfig(({ command }) => {
       : {};
 
   return {
+    plugins: [react()],
     build: {
       outDir: "../../dist",
       rollupOptions: {
