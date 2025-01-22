@@ -17,6 +17,7 @@ import {
   Option,
   pipe,
   Queue,
+  Runtime,
   Scope,
   Stream,
 } from "effect";
@@ -73,12 +74,14 @@ const make = Effect.gen(function* () {
 
         const deferredUntilRegistered = yield* Deferred.make<undefined>();
 
+        const runtime = yield* Effect.runtime();
+
         yield* Stream.async<InitCommand>((emit) => {
           window.onSpotifyWebPlaybackSDKReady = () => {
             const player = new window.Spotify.Player({
               name: "Echo",
               getOAuthToken: (cb) =>
-                Effect.runPromise(
+                Runtime.runPromise(runtime)(
                   authCache
                     .get(ApiBasedProviderId.Spotify)
                     .pipe(Effect.map(Option.getOrElse(() => authInfo))),

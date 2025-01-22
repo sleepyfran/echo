@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "yarn workspace @echo/web tsc && vite build --emptyOutDir",
     "format": "prettier --check \"packages/**/*.{ts, tsx}\"",
+    "format:fix": "prettier --write \"packages/**/*.{ts, tsx}\"",
     "gen": "yarn plop",
     "lint": "yarn workspaces run lint",
     "preview": "yarn workspace @echo/web vite preview",
