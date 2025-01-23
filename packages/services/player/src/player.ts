@@ -23,8 +23,10 @@ import {
   Layer,
   Match,
   Option,
+  Order,
   pipe,
   Queue,
+  Random,
   Ref,
   Scope,
   Stream,
@@ -72,6 +74,7 @@ const makePlayer = Effect.gen(function* () {
         providerCache,
         commandQueue,
         preservePreviousTracks: false,
+        nextAlbums: [],
       }).pipe(
         Effect.catchTag("NoMoreTracksAvailable", () =>
           Effect.logError(
@@ -79,6 +82,31 @@ const makePlayer = Effect.gen(function* () {
           ),
         ),
       ),
+    playAlbums: ({ albums, order }) =>
+      Effect.gen(function* () {
+        if (albums.length === 0) {
+          yield* Effect.logWarning(
+            "Attempted to play albums, but the list was empty.",
+          );
+          return;
+        }
+
+        const sortedAlbums = yield* sortAlbums(albums, order);
+
+        yield* Effect.logInfo(
+          `Playing albums in ${order} order: ${sortedAlbums
+            .map((album) => album.name)
+            .join(",")}`,
+        );
+
+        yield* playTracks({
+          album: Array.head(sortedAlbums).pipe(Option.getOrThrow),
+          providerCache,
+          commandQueue,
+          preservePreviousTracks: false,
+          nextAlbums: Array.tail(sortedAlbums).pipe(Option.getOrElse(() => [])),
+        });
+      }),
     togglePlayback: Effect.gen(function* () {
       const mediaPlayer = yield* activeMediaPlayer.get;
       if (Option.isNone(mediaPlayer)) {
@@ -91,7 +119,8 @@ const makePlayer = Effect.gen(function* () {
       yield* mediaPlayer.value.player.togglePlayback;
     }),
     previous: Effect.gen(function* () {
-      const { previouslyPlayedAlbums, status } = yield* Ref.get(state);
+      const { previouslyPlayedAlbums, comingUpAlbums, status } =
+        yield* Ref.get(state);
 
       yield* Match.value(status).pipe(
         Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
@@ -114,6 +143,7 @@ const makePlayer = Effect.gen(function* () {
               providerCache,
               commandQueue,
               preservePreviousTracks: false,
+              nextAlbums: comingUpAlbums,
             });
           }),
         ),
@@ -159,6 +189,7 @@ const playLastFromPreviouslyPlayed = (
       providerCache,
       commandQueue,
       preservePreviousTracks: false,
+      nextAlbums: [],
     });
   });
 
@@ -178,6 +209,7 @@ const playNextFromComingUp = (
 
     yield* playTracks({
       album: nextAlbum.value,
+      nextAlbums: Array.tail(comingUpAlbums).pipe(Option.getOrElse(() => [])),
       providerCache,
       commandQueue,
     });
@@ -221,6 +253,7 @@ const consumeCommandsInBackground = (
                     providerCache,
                     commandQueue,
                     preservePreviousTracks: false,
+                    nextAlbums: comingUpAlbums,
                   });
                 }),
               ),
@@ -290,6 +323,7 @@ type PlayTracksInput = {
   providerCache: IActiveMediaProviderCache;
   commandQueue: Queue.Enqueue<PlayerCommand>;
   preservePreviousTracks?: boolean;
+  nextAlbums: Album[];
 };
 
 /**
@@ -302,6 +336,7 @@ const playTracks = ({
   providerCache,
   commandQueue,
   preservePreviousTracks = true,
+  nextAlbums,
 }: PlayTracksInput) =>
   Effect.gen(function* () {
     const requestedTrack = Array.get(album.tracks, trackIndex);
@@ -323,7 +358,12 @@ const playTracks = ({
     yield* playTrack(provider, player, requestedTrack.value);
     yield* commandQueue.offer(
       UpdateState({
-        updateFn: toPlayingState(album, trackIndex, preservePreviousTracks),
+        updateFn: toPlayingState(
+          album,
+          trackIndex,
+          preservePreviousTracks,
+          nextAlbums,
+        ),
       }),
     );
   });
@@ -457,7 +497,12 @@ const playTrack = (
  * also the previously played tracks with the current track, if any.
  */
 const toPlayingState =
-  (album: Album, trackIndex: number, preservePrevious = true) =>
+  (
+    album: Album,
+    trackIndex: number,
+    preservePrevious = true,
+    nextAlbums: Album[] = [],
+  ) =>
   (currentState: PlayerState) => {
     const hasNext =
       trackIndex + 1 < album.tracks.length ||
@@ -482,7 +527,7 @@ const toPlayingState =
             ),
           ]
         : [],
-      comingUpAlbums: [],
+      comingUpAlbums: nextAlbums,
     } satisfies PlayerState;
   };
 
@@ -493,6 +538,17 @@ const toLoadingState =
   (album: Album, trackIndex: number) => (currentState: PlayerState) => ({
     ...currentState,
     status: Loading({ album, trackIndex }),
+  });
+
+const sortAlbums = (albums: Album[], order: "newest" | "oldest" | "shuffled") =>
+  Effect.gen(function* () {
+    return order === "shuffled"
+      ? Array.fromIterable(yield* Random.shuffle(albums))
+      : Array.sortWith(
+          albums,
+          (album) => album.releaseYear.pipe(Option.getOrElse(() => 0)),
+          order === "newest" ? Order.reverse(Order.number) : Order.number,
+        );
   });
 
 const PlayerLiveWithState = Layer.scoped(Player, makePlayer);

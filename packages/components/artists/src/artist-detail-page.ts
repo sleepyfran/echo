@@ -11,6 +11,7 @@ import { type RouterLocation } from "@echo/components-router/index.routing";
 import { map } from "lit/directives/map.js";
 import "@echo/components-albums";
 import "@echo/components-ui-atoms";
+import "./play-all-button";
 
 /**
  * Component that displays the details of an artist.
@@ -50,6 +51,14 @@ export class ArtistDetail extends LitElement {
       background-color: var(--background-color-muted);
     }
 
+    play-all-button {
+      margin: 1rem 0;
+    }
+
+    h1 {
+      margin: 0.5rem 0 0 0;
+    }
+
     h5 {
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -81,6 +90,7 @@ export class ArtistDetail extends LitElement {
               `
             : nothing}
           <h1>${this.details.artist.name}</h1>
+          <play-all-button .albums=${this.details.albums}></play-all-button>
         </div>
 
         <div class="album-grid-container" slot="right-column">

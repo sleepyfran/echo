@@ -27,6 +27,15 @@ export type IPlayer = {
   ) => Effect.Effect<void, ProviderNotReady | PlayNotFoundError>;
 
   /**
+   * Plays the given albums, detecting the source from each track and delegating
+   * the playback to the appropriate media provider, respecting the given order.
+   */
+  readonly playAlbums: (args: {
+    albums: Album[];
+    order: "newest" | "oldest" | "shuffled";
+  }) => Effect.Effect<void, ProviderNotReady | PlayNotFoundError>;
+
+  /**
    * Pauses or resumes the current track.
    */
   readonly togglePlayback: Effect.Effect<void>;

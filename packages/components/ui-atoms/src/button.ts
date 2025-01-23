@@ -77,6 +77,9 @@ export class EchoButton extends LitElement {
 
     button:focus {
       outline: none;
+    }
+
+    button:focus-visible {
       border: 2px solid var(--border-prominent-color);
     }
   `;
