@@ -31,7 +31,15 @@ export class InitialSetup extends LitElement {
     }
 
     div.initial-setup {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      height: 80vh;
       max-width: 40%;
+    }
+
+    div.initial-setup echo-button {
+      align-self: center;
     }
 
     div.initial-setup::after {
@@ -57,8 +65,7 @@ export class InitialSetup extends LitElement {
 
     div.hero-grid img {
       align-self: center;
-      border-radius: 2rem;
-      transform: rotate(-2deg);
+      border-radius: 5px;
       width: 80%;
     }
 
@@ -70,6 +77,10 @@ export class InitialSetup extends LitElement {
     p.partial-support-warning {
       background-color: var(--warning-color);
       padding: 1em;
+    }
+
+    a {
+      color: var(--button-background-color);
     }
   `;
 
