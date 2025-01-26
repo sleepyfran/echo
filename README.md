@@ -21,7 +21,7 @@ you to shuffle albums, browse them based on genres, and more.
 - [x] Genre fetching and browsing
 - [x] Scrobbling support (upcoming via WebScrobbler, see [PR for tracking](https://github.com/web-scrobbler/web-scrobbler/pull/4996))
 - [x] Search support
-- [ ] Shuffling
+- [x] Shuffling
 - [ ] Queue management
 - [ ] More providers (YouTube Music, Google Drive, etc.)
 - [ ] Keyboard-driven navigation
