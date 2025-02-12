@@ -14,13 +14,6 @@ export class InitialSetup extends LitElement {
   @query("echo-dialog")
   private _dialog!: EchoDialog;
 
-  /**
-   * We need to check if the browser supports BYOB readers because it's an
-   * essential dependency for the file-based providers to work. If we don't,
-   * we can't use the file-based providers.
-   */
-  private supportsBYOBReader = !!globalThis.ReadableStreamBYOBReader;
-
   static styles = css`
     :host {
       display: flex;
@@ -34,7 +27,7 @@ export class InitialSetup extends LitElement {
       display: flex;
       flex-direction: column;
       justify-content: space-evenly;
-      height: 80vh;
+      height: 60vh;
       max-width: 40%;
     }
 
@@ -55,6 +48,7 @@ export class InitialSetup extends LitElement {
       display: grid;
       grid-template-columns: 1fr 1fr;
       max-width: 80%;
+      padding-bottom: 5rem;
     }
 
     @media (max-width: 1000px) {
@@ -96,15 +90,6 @@ export class InitialSetup extends LitElement {
         <echo-button @click=${this._onAddProviderClick}
           >Add provider</echo-button
         >
-
-        ${!this.supportsBYOBReader
-          ? html`<p class="partial-support-warning">
-              Your browser (most likely Safari) does not support an essential
-              feature for file-based providers to work. You can still use other
-              providers, but expect strange behavior when using providers like
-              OneDrive.
-            </p>`
-          : ""}
       </div>
       ${this._renderHero()} ${this._renderAddProviderModal()}
     `;
