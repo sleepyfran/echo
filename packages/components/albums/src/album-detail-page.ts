@@ -121,6 +121,33 @@ export class AlbumDetail extends LitElement {
     div.track > .duration {
       color: var(--secondary-text-color);
     }
+
+    table.track-list {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table.track-list th,
+    table.track-list td {
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    table.track-list tr.track-playing {
+      background-color: var(--background-color-muted);
+    }
+
+    table.track-list td.track-number {
+      color: var(--tertiary-text-color);
+      font-weight: bold;
+      text-align: right;
+      width: 2rem;
+    }
+
+    table.track-list td.duration {
+      color: var(--secondary-text-color);
+      text-align: right;
+    }
   `;
 
   connectedCallback(): void {
@@ -165,32 +192,31 @@ export class AlbumDetail extends LitElement {
 
         <div class="track-list-container" slot="right-column">
           <h2>Tracks</h2>
-          <ol class="track-list">
-            ${map(
-              this.album.tracks,
-              (track, index) =>
-                html`<li>
-                  <div
+          <table class="track-list">
+            <tbody>
+              ${map(
+                this.album.tracks,
+                (track, index) =>
+                  html`<tr
                     class=${classMap({
-                      track: true,
                       "track-playing": this.playingTrackIndex === index,
                     })}
                   >
-                    <div>
+                    <td class="track-number">
                       ${this.playingTrackIndex === index
                         ? html`<animated-volume-icon
                             size="16"
                           ></animated-volume-icon>`
-                        : nothing}
-                      <span>${track.name}</span>
-                    </div>
-                    <span class="duration"
-                      >${this._formatDuration(track.durationInSeconds)}</span
-                    >
-                  </div>
-                </li>`,
-            )}
-          </ol>
+                        : html`${index + 1}`}
+                    </td>
+                    <td>${track.name}</td>
+                    <td class="duration">
+                      ${this._formatDuration(track.durationInSeconds)}
+                    </td>
+                  </tr>`,
+              )}
+            </tbody>
+          </table>
         </div>
       </two-column-layout>
     `;

@@ -81,6 +81,7 @@ export class LibraryAlbum extends LitElement {
     }
 
     p {
+      color: var(--secondary-text-color);
       margin: 0;
       font-size: 0.8em;
     }
@@ -93,7 +94,7 @@ export class LibraryAlbum extends LitElement {
   render() {
     return html`
       <echo-hoverable>
-        <div key="${this.album.id}" class="album-container">
+        <div .key="${this.album.id}" class="album-container">
           <playable-album-cover .album="${this.album}"></playable-album-cover>
           <a href="/albums/${this.album.id}">
             <div class="album-info">
