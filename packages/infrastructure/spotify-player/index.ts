@@ -208,14 +208,13 @@ const setupListeners = (
   state, we need to have this here.
   */
   let previousState: Spotify.PlaybackState | undefined;
+  let lastTrackEndedTimestamp = 0;
+
   return Effect.sync(() => {
     player.addListener("player_state_changed", (state) => {
       if (statesMatch(previousState, state)) {
         return;
       }
-
-      const currentTrackId = state.track_window.current_track.id;
-      const previousTrackId = state.track_window.previous_tracks[0]?.id;
 
       /*
       There's no reliable way of detecting when a track has ended via this listener
@@ -230,14 +229,27 @@ const setupListeners = (
       in the previous state differed from the current one by a millisecond. So we
       need to keep those into account as well. Let's see when this breaks again,
       can't wait, yay!
+
+      Feb 2025 update - 2 months ago me probably thought he was done with this,
+      but guess what! I've figured that the best way for now to detect is by keeping
+      the base conditions intact (position is 0 and it's paused), but instead of
+      checking for whether the previous track is the same or not, since we're only
+      playing one song at a time and we don't rely on Spotify's queue at all, we
+      can simply check whether there's a previous track AND! have some debounce
+      time to avoid triggering this twice in a few seconds because for some reason
+      even after we've gotten the track ended event and we task Spotify with playing
+      another track it triggers ANOTHER event with the same payload and the same
+      previous_tracks array.  So only fire this event if we detect that the previous
+      timestamp was more than 5 seconds ago. Hello me from the future, hope you're
+      having a good day! :^)
       */
       if (
         state.position === 0 &&
         state.paused &&
-        currentTrackId === previousTrackId &&
-        previousState?.duration !== state.duration &&
-        !state.loading
+        !!state.track_window.previous_tracks.length &&
+        state.timestamp - lastTrackEndedTimestamp > 5000
       ) {
+        lastTrackEndedTimestamp = state.timestamp;
         return mediaPlayerEventQueue.unsafeOffer("trackEnded");
       }
 
