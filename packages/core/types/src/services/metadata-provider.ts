@@ -67,10 +67,14 @@ export type TrackMetadata = {
 };
 
 /**
- * Errors that can occur when parsing metadata.
+ * Error that can occur when trying to extract metadata from a stream.
  */
-export enum MetadataProviderError {
-  MalformedFile = "malformed-file",
+export class MalformedFileError {
+  readonly _tag = "malformed-file";
+
+  constructor(readonly innerException: unknown) {
+    this.innerException = innerException;
+  }
 }
 
 /**
@@ -83,7 +87,7 @@ export type MetadataProvider = {
   trackMetadataFromReadableStream: (
     stream: ReadableStream,
     file: FileMetadata,
-  ) => Effect.Effect<TrackMetadata, MetadataProviderError>;
+  ) => Effect.Effect<TrackMetadata, MalformedFileError>;
 };
 
 /**

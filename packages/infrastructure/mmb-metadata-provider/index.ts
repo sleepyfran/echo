@@ -1,4 +1,4 @@
-import { MetadataProviderError, MetadataProvider } from "@echo/core-types";
+import { MetadataProvider, MalformedFileError } from "@echo/core-types";
 import { Effect, Layer, Option } from "effect";
 import { Buffer } from "buffer";
 import process from "process";
@@ -24,7 +24,7 @@ const mmbMetadataProvider = MetadataProvider.of({
           mimeType: Option.getOrElse(file.mimeType, () => ""),
           size: file.byteSize,
         }),
-      catch: () => MetadataProviderError.MalformedFile,
+      catch: (e) => new MalformedFileError(e),
     }).pipe(
       Effect.flatMap((metadata) =>
         Effect.gen(function* () {

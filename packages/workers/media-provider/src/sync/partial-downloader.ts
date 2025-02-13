@@ -2,12 +2,25 @@ import type { FileMetadata } from "@echo/core-types";
 import { Effect } from "effect";
 
 /**
- * Enumerates the errors that can occur during the download process.
+ * Error that occurs when no body is returned during the download process.
  */
-export enum DownloadError {
-  NoBodyReturned = "no-body-returned",
-  Unknown = "unknown",
+export class NoBodyReturnedError {
+  readonly _tag = "no-body-returned";
 }
+
+/**
+ * General, unknown error that can occur during the download process. It's probably
+ * not that it's actually unknown, but that we don't want to deal with the specifics
+ * of the error.
+ */
+export class UnknownError {
+  readonly _tag = "unknown";
+}
+
+/**
+ * All possible errors that can occur during the download process.
+ */
+export type DownloadError = NoBodyReturnedError | UnknownError;
 
 /**
  * Partially downloads the given file from the given start to the given end
@@ -25,11 +38,11 @@ export const partiallyDownloadIntoStream = (
           Range: `bytes=${byteRangeStart}-${byteRangeEnd}`,
         },
       }).then((response) => response.body), // TODO: Check if this works on Firefox.
-    catch: () => DownloadError.Unknown,
+    catch: () => new UnknownError(),
   }).pipe(
     Effect.flatMap((response) => {
       if (!response) {
-        return Effect.fail(DownloadError.NoBodyReturned);
+        return Effect.fail(new NoBodyReturnedError());
       }
 
       return Effect.succeed(response);

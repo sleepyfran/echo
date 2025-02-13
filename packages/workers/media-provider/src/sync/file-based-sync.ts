@@ -8,7 +8,6 @@ import {
   type MetadataProvider,
   type TrackMetadata,
   type Crypto,
-  MetadataProviderError,
   type Database,
   type DatabaseArtist,
   type DatabaseTrack,
@@ -21,13 +20,14 @@ import {
   type FileBasedStartArgs,
   type IBroadcaster,
   ProviderStatusChanged,
+  MalformedFileError,
 } from "@echo/core-types";
 import { Effect, Match, Option, Schedule, Stream } from "effect";
 import { head } from "effect/Array";
 import { isSupportedAudioFile } from "@echo/core-files";
 import {
-  DownloadError,
   partiallyDownloadIntoStream,
+  type DownloadError,
 } from "./partial-downloader";
 import { Genres } from "@echo/core-genres";
 
@@ -182,8 +182,23 @@ const resolveMetadataFromStream = (
             Effect.logDebug(`Downloaded and processed ${file.name}`),
           ),
           Effect.tapError((error) =>
-            Effect.logError(
-              `Failed to process file ${file.name} with error: ${error}`,
+            Match.value(error).pipe(
+              Match.tag("malformed-file", (error) =>
+                Effect.logError(
+                  `Failed to process metadata from file ${file.name} with error: ${error.innerException}`,
+                ),
+              ),
+              Match.tag("no-body-returned", () =>
+                Effect.logError(
+                  `No body returned when downloading file ${file.name}`,
+                ),
+              ),
+              Match.tag("unknown", () =>
+                Effect.logError(
+                  `Unknown error occurred while downloading file ${file.name}`,
+                ),
+              ),
+              Match.exhaustive,
             ),
           ),
           Effect.either /* We don't want to fail the whole stream in case we
@@ -196,7 +211,7 @@ const resolveMetadataFromStream = (
     Stream.runFold(
       {
         processed: [] as { metadata: TrackMetadata; file: FileMetadata }[],
-        errors: [] as (DownloadError | MetadataProviderError | ProviderError)[],
+        errors: [] as (DownloadError | MalformedFileError | ProviderError)[],
       },
       (acc, currentItem) =>
         Match.value(currentItem).pipe(
