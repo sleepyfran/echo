@@ -1,15 +1,12 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { ActiveMediaProviderCache, AppInit } from "@echo/core-types";
-import {
-  EffectConsumer,
-  StreamConsumer,
-} from "@echo/components-shared-controllers";
+import { EffectConsumer, StreamConsumer } from "~web/shared-controllers";
 import { cache } from "lit/directives/cache.js";
-import "@echo/components-header";
-import "@echo/components-initial-setup";
-import "@echo/components-library";
-import "@echo/components-router";
+import "~web/header";
+import "~web/initial-setup";
+import "~web/library";
+import "~web/router";
 
 /**
  * Root element of the application.

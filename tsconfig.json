@@ -23,7 +23,14 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    /* Aliases */
+    "baseUrl": ".",
+    "paths": {
+      "~web/*": [
+        "packages/web/src/*"
+      ]
+    }
   },
   "references": [
     {

@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import fs from "fs";
+import path from "path";
 
 export default defineConfig(({ command }) => {
   const serverOptions =
@@ -15,6 +16,12 @@ export default defineConfig(({ command }) => {
       : {};
 
   return {
+    resolve: {
+      alias: {
+        "~web": path.resolve(__dirname, "./packages/web/src"),
+      },
+    },
+
     build: {
       outDir: "../../dist",
       rollupOptions: {
