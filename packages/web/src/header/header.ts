@@ -16,9 +16,11 @@ export class Header extends LitElement {
   static styles = css`
     header {
       background-color: var(--background-color);
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       justify-content: space-between;
       align-items: center;
+      gap: 2rem;
       padding: 0 1rem;
       position: sticky;
       top: 0;
@@ -31,7 +33,9 @@ export class Header extends LitElement {
     }
 
     header > * {
-      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   `;
 
@@ -50,8 +54,8 @@ export class Header extends LitElement {
   render() {
     return html`
       <header>
-        <command-bar></command-bar>
         <echo-player></echo-player>
+        <command-bar></command-bar>
         <all-providers-status-bar></all-providers-status-bar>
       </header>
     `;

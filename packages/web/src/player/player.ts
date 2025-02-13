@@ -69,11 +69,7 @@ export class EchoPlayer extends LitElement {
       justify-content: space-between;
       gap: 0.5rem;
       overflow: hidden;
-      width: 80%;
-    }
-
-    .current-track-logo {
-      justify-content: center;
+      width: 100%;
     }
 
     .current-track img {
@@ -98,9 +94,17 @@ export class EchoPlayer extends LitElement {
 
     .track-info {
       display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+      align-items: center;
+      max-width: calc(100% - 10rem);
+    }
+
+    .track-details {
+      display: flex;
       flex-direction: column;
       justify-content: center;
-      max-width: 50%;
+      max-width: calc(100% - 1rem);
     }
 
     h4,
@@ -161,18 +165,22 @@ export class EchoPlayer extends LitElement {
   private _renderPlayer(player: PlayerState, album: Album, track: Track) {
     return html`
       <div id="player" class="current-track">
-        ${Option.isSome(album.embeddedCover)
-          ? html` <img
-              id="current-track-cover"
-              src="${URL.createObjectURL(album.embeddedCover.value)}"
-              height="40"
-              width="40"
-              alt="Album cover"
-            />`
-          : nothing}
         <div class="track-info">
-          <h4 id="track-name">${track.name}</h4>
-          <h6 id="artist-name">${track.mainArtist.name}</h6>
+          ${Option.isSome(album.embeddedCover)
+            ? html` <img
+                id="current-track-cover"
+                src="${URL.createObjectURL(album.embeddedCover.value)}"
+                height="40"
+                width="40"
+                alt="Album cover"
+              />`
+            : nothing}
+          <div class="track-details">
+            <h4 id="track-name" title=${track.name}>${track.name}</h4>
+            <h6 id="artist-name" title=${track.mainArtist.name}>
+              ${track.mainArtist.name}
+            </h6>
+          </div>
         </div>
         ${player.status._tag !== "Stopped"
           ? html`
