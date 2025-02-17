@@ -77,18 +77,18 @@ export class EchoPlayer extends LitElement {
     }
 
     .pulsating {
-      animation: pulsate 1s ease-out infinite;
+      animation: color-pulse 1s ease-out infinite;
     }
 
-    @keyframes pulsate {
+    @keyframes color-pulse {
       0% {
-        transform: scale(1);
+        color: var(--primary-text-color);
       }
       50% {
-        transform: scale(1.05);
+        color: var(--accent-color);
       }
       100% {
-        transform: scale(1);
+        color: var(--primary-text-color);
       }
     }
 
