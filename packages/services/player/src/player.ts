@@ -506,7 +506,8 @@ const toPlayingState =
   (currentState: PlayerState) => {
     const hasNext =
       trackIndex + 1 < album.tracks.length ||
-      !!currentState.comingUpAlbums.length;
+      !!currentState.comingUpAlbums.length ||
+      !!nextAlbums.length;
     const hasPrevious =
       trackIndex > 0 || !!currentState.previouslyPlayedAlbums.length;
 
