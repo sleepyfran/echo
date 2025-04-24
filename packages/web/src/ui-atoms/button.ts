@@ -75,6 +75,12 @@ export class EchoButton extends LitElement {
       color: var(--button-text-color);
     }
 
+    button[echo-type="secondary"]:disabled {
+      background-color: transparent;
+      border: 2px solid var(--disabled-background-color);
+      color: var(--disabled-background-color);
+    }
+
     button:focus {
       outline: none;
     }
