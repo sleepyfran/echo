@@ -109,6 +109,9 @@ class GenreAlbumLibrary extends LitElement {
       justify-content: center;
       align-items: center;
       height: 100%;
+    }
+
+    div.loading-container.animated {
       animation: blinking 1s infinite;
     }
 
@@ -124,7 +127,7 @@ class GenreAlbumLibrary extends LitElement {
       }
     }
 
-    div {
+    .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
@@ -147,15 +150,24 @@ class GenreAlbumLibrary extends LitElement {
   render() {
     return this._albums.render({
       initial: () =>
-        html`<div class="loading-container"><h1>Loading library...</h1></div>`,
-      item: (albums) => html`
-        <div>
-          ${map(
-            albums,
-            (album) => html` <library-album .album=${album}></library-album> `,
-          )}
-        </div>
-      `,
+        html`<div class="loading-container animated">
+          <h1>Loading library...</h1>
+        </div>`,
+      item: (albums) =>
+        albums.length > 0
+          ? html`
+              <div class="grid">
+                ${map(
+                  albums,
+                  (album) => html`
+                    <library-album .album=${album}></library-album>
+                  `,
+                )}
+              </div>
+            `
+          : html`<div class="loading-container">
+              <h1>Your albums will appear here...</h1>
+            </div>`,
     });
   }
 }

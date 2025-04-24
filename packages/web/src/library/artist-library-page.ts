@@ -21,7 +21,7 @@ export class ArtistLibraryPage extends LitElement {
       height: 100%;
     }
 
-    div {
+    .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
@@ -34,19 +34,22 @@ export class ArtistLibraryPage extends LitElement {
       <library-selection></library-selection>
       ${this._library.render({
         initial: () =>
-          html`<div class="loading-container">
-            <h1>Loading library...</h1>
-          </div>`,
-        item: (artists) => html`
-          <div>
-            ${map(
-              artists,
-              (artist) => html`
-                <library-artist .artist=${artist}></library-artist>
-              `,
-            )}
-          </div>
-        `,
+          html`<div class="loading-container"><h1>Loading...</h1></div>`,
+        item: (artists) =>
+          artists.length > 0
+            ? html`
+                <div class="grid">
+                  ${map(
+                    artists,
+                    (artist) => html`
+                      <library-artist .artist=${artist}></library-artist>
+                    `,
+                  )}
+                </div>
+              `
+            : html`<div class="loading-container">
+                <h1>Your artists will appear here...</h1>
+              </div>`,
       })}
     `;
   }
