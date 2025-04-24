@@ -5,13 +5,12 @@ import {
 } from "@echo/core-types";
 import { StreamConsumer } from "~web/shared-controllers";
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, query } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 import { Match } from "effect";
-import { ButtonType, type EchoDialog } from "~web/ui-atoms";
+import { ButtonType } from "~web/ui-atoms";
 import "~web/icons";
 import "~web/add-provider";
-import "~web/ui-atoms";
 
 /**
  * Component that displays the status of all active providers.
@@ -23,8 +22,8 @@ export class AllProvidersStatusBar extends LitElement {
     MediaProviderStatus.observe,
   );
 
-  @query("echo-dialog")
-  private _dialog!: EchoDialog;
+  @state()
+  dialogOpen = false;
 
   static styles = css`
     .provider-container {
@@ -147,15 +146,19 @@ export class AllProvidersStatusBar extends LitElement {
 
   private _renderAddProviderModal() {
     return html`
-      <echo-dialog>
-        <add-provider></add-provider>
-      </echo-dialog>
+      <add-provider-dialog
+        .open=${this.dialogOpen}
+        @dismiss=${this._onAddProviderDismiss}
+      ></add-provider-dialog>
     `;
   }
 
-  // --- Event handlers ---
   private _onAddProviderClick() {
-    this._dialog.open();
+    this.dialogOpen = true;
+  }
+
+  private _onAddProviderDismiss() {
+    this.dialogOpen = false;
   }
 }
 

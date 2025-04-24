@@ -1,6 +1,5 @@
 import { LitElement, css, html } from "lit";
-import { customElement, query, state } from "lit/decorators.js";
-import type { EchoDialog } from "~web/ui-atoms";
+import { customElement, state } from "lit/decorators.js";
 import "~web/ui-atoms";
 
 /**
@@ -10,9 +9,6 @@ import "~web/ui-atoms";
 export class InitialSetup extends LitElement {
   @state()
   dialogOpen = false;
-
-  @query("echo-dialog")
-  private _dialog!: EchoDialog;
 
   static styles = css`
     :host {
@@ -139,14 +135,19 @@ export class InitialSetup extends LitElement {
 
   private _renderAddProviderModal() {
     return html`
-      <echo-dialog ?open=${this.dialogOpen}>
-        <add-provider></add-provider>
-      </echo-dialog>
+      <add-provider-dialog
+        .open=${this.dialogOpen}
+        @dismiss=${this._onAddProviderDismiss}
+      ></add-provider-dialog>
     `;
   }
 
   private _onAddProviderClick() {
-    this._dialog.open();
+    this.dialogOpen = true;
+  }
+
+  private _onAddProviderDismiss() {
+    this.dialogOpen = false;
   }
 }
 

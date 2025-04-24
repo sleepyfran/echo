@@ -1,4 +1,4 @@
-import type { FolderMetadata } from "@echo/core-types";
+import type { RequiresRootSelectionState } from "@echo/core-types";
 
 /**
  * Event that gets dispatched by the component when the root has been selected
@@ -15,7 +15,7 @@ export class ProviderStartedEvent extends Event {
  * and is awaiting root folder selection.
  */
 export class ProviderWaitingForRoot extends Event {
-  constructor(public availableFolders: FolderMetadata[]) {
+  constructor(public state: RequiresRootSelectionState) {
     super("waiting-for-root", { bubbles: true, composed: true });
   }
 }

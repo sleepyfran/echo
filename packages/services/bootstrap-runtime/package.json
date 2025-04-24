@@ -10,11 +10,11 @@
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
-    "@echo/services-add-provider-workflow": "^1.0.0",
     "@echo/services-app-init": "^1.0.0",
     "@echo/services-bootstrap": "^1.0.0",
     "@echo/services-library": "^1.0.0",
     "@echo/services-player": "^1.0.0",
+    "@echo/services-provider-manager": "^1.0.0",
     "effect": "^3.8.3"
   }
 }

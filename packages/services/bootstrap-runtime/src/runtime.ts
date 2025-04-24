@@ -1,8 +1,8 @@
-import { AddProviderWorkflowLive } from "@echo/services-add-provider-workflow";
 import { AppInitLive } from "@echo/services-app-init";
 import { MainLive } from "@echo/services-bootstrap";
 import { LibraryLive } from "@echo/services-library";
 import { PlayerLive } from "@echo/services-player";
+import { AddProviderWorkflowLive } from "@echo/services-provider-manager";
 import { Layer, ManagedRuntime } from "effect";
 import { globalValue } from "effect/GlobalValue";
 

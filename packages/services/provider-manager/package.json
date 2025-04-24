@@ -1,8 +1,8 @@
 {
-  "name": "@echo/services-add-provider-workflow",
+  "name": "@echo/services-provider-manager",
   "private": true,
   "version": "1.0.0",
-  "description": "Contains the implementation of the add provider workflow using a state machine",
+  "description": "Contains the implementation for the ProviderManager service",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -11,7 +11,6 @@
   "dependencies": {
     "@echo/core-types": "^1.0.0",
     "@echo/services-bootstrap": "^1.0.0",
-    "@effect/experimental": "^0.23.4",
     "effect": "^3.8.3"
   }
 }

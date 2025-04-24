@@ -1,5 +1,9 @@
 import { EffectFn } from "~web/shared-controllers";
-import { AddProviderWorkflow, type FolderMetadata } from "@echo/core-types";
+import {
+  AddProviderWorkflow,
+  type FolderMetadata,
+  type RequiresRootSelectionState,
+} from "@echo/core-types";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import "~web/ui-atoms";
@@ -12,15 +16,16 @@ import type { ItemSelected } from "~web/ui-atoms";
  */
 @customElement("select-root")
 export class SelectRoot extends LitElement {
-  @property({ type: Array })
-  availableFolders: FolderMetadata[] = [];
+  @property({ type: Object })
+  state!: RequiresRootSelectionState;
 
   @property({ type: Object })
   private _selectedFolder: FolderMetadata | undefined = undefined;
 
   private _selectRoot = new EffectFn(
     this,
-    (rootFolder: FolderMetadata) => AddProviderWorkflow.selectRoot(rootFolder),
+    (rootFolder: FolderMetadata) =>
+      AddProviderWorkflow.selectRoot(this.state, rootFolder),
     {
       complete: () => this.dispatchEvent(new ProviderStartedEvent()),
     },
@@ -53,7 +58,7 @@ export class SelectRoot extends LitElement {
           <echo-select
             @selected=${this._onSelectChange}
             placeholder="Select a folder"
-            .elements=${this.availableFolders}
+            .elements=${this.state.rootFolders}
             displayKey="name"
           >
           </echo-select>

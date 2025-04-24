@@ -35,7 +35,6 @@ export class Header extends LitElement {
     header > * {
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
     }
   `;
 

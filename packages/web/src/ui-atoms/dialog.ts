@@ -1,5 +1,5 @@
-import { LitElement, css, html } from "lit";
-import { customElement, query } from "lit/decorators.js";
+import { LitElement, css, html, type PropertyValues } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 import "./button";
 
 /**
@@ -9,6 +9,9 @@ import "./button";
 export class EchoDialog extends LitElement {
   @query("dialog")
   private dialog!: HTMLDialogElement;
+
+  @property({ type: Boolean, reflect: true })
+  open = false;
 
   static styles = css`
     dialog[open] {
@@ -33,7 +36,7 @@ export class EchoDialog extends LitElement {
   render() {
     return html`
       <dialog>
-        <echo-button class="dismiss" @click=${this.dismiss}
+        <echo-button class="dismiss" @click=${this._onDismissClick}
           >Dismiss</echo-button
         >
         <slot></slot>
@@ -41,12 +44,18 @@ export class EchoDialog extends LitElement {
     `;
   }
 
-  public open() {
-    this.dialog.showModal();
+  updated(changedProperties: PropertyValues) {
+    if (changedProperties.has("open")) {
+      if (this.open) {
+        this.dialog.showModal();
+      } else {
+        this.dialog.close();
+      }
+    }
   }
 
-  public dismiss() {
-    this.dialog.close();
+  _onDismissClick() {
+    this.dispatchEvent(new CustomEvent("dismiss"));
   }
 }
 

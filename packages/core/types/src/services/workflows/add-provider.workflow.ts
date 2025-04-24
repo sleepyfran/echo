@@ -3,13 +3,37 @@ import type {
   ProviderMetadata,
   FolderMetadata,
   AuthenticationError,
+  AuthenticationInfo,
 } from "../../model";
-import type { FileBasedProviderError } from "../media-provider";
+import type {
+  FileBasedProviderError,
+  MediaPlayerFactory,
+  MediaProviderFactory,
+} from "../media-provider";
+import type { Authentication } from "../authentication";
+import type { ProviderWithMetadata } from "../active-media-provider-cache";
 
-/**
- * Empty record used to represent the absence of data, either input or output.
- */
-export type Empty = Record<string, never>;
+export type WaitingForConnectionState = {
+  _tag: "WaitingForConnection";
+  loadedProvider: {
+    metadata: ProviderMetadata;
+    authentication: Authentication;
+    createMediaProvider: MediaProviderFactory["createMediaProvider"];
+    createMediaPlayer: MediaPlayerFactory["createMediaPlayer"];
+  };
+};
+
+export type RequiresRootSelectionState = {
+  _tag: "WaitingForRoot";
+  authInfo: AuthenticationInfo;
+  rootFolders: FolderMetadata[];
+  providerWithMetadata: ProviderWithMetadata;
+};
+
+export type DoneState = {
+  _tag: "Done";
+  providerWithMetadata: ProviderWithMetadata;
+};
 
 /**
  * Workflow that orchestrates the process of adding a new provider to the application.
@@ -18,18 +42,17 @@ export type IAddProviderWorkflow = {
   readonly availableProviders: Effect.Effect<ProviderMetadata[]>;
   readonly loadProvider: (
     metadata: ProviderMetadata,
-  ) => Effect.Effect<ProviderMetadata>;
-  readonly connectToProvider: Effect.Effect<
-    | {
-        requiresRootFolderSelection: true;
-        folders: FolderMetadata[];
-      }
-    | {
-        requiresRootFolderSelection: false;
-      },
+  ) => Effect.Effect<WaitingForConnectionState>;
+  readonly connectToProvider: (
+    state: WaitingForConnectionState,
+  ) => Effect.Effect<
+    RequiresRootSelectionState | DoneState,
     AuthenticationError | FileBasedProviderError
   >;
-  readonly selectRoot: (rootFolder: FolderMetadata) => Effect.Effect<Empty>;
+  readonly selectRoot: (
+    state: RequiresRootSelectionState,
+    rootFolder: FolderMetadata,
+  ) => Effect.Effect<DoneState>;
 };
 
 /**

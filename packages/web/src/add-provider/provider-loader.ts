@@ -1,5 +1,9 @@
 import { EffectFn } from "~web/shared-controllers";
-import { AddProviderWorkflow, type ProviderMetadata } from "@echo/core-types";
+import {
+  AddProviderWorkflow,
+  type ProviderMetadata,
+  type WaitingForConnectionState,
+} from "@echo/core-types";
 import { Match } from "effect";
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -11,7 +15,7 @@ type LoaderStatus =
   | { _tag: "Initial" }
   | { _tag: "Errored" }
   | { _tag: "LoadingProvider" }
-  | { _tag: "WaitingToConnect"; metadata: ProviderMetadata }
+  | WaitingForConnectionState
   | { _tag: "ConnectingToProvider" }
   | { _tag: "Connected" };
 
@@ -30,24 +34,25 @@ export class ProviderLoader extends LitElement {
     this,
     (metadata: ProviderMetadata) => AddProviderWorkflow.loadProvider(metadata),
     {
-      complete: (metadata) => {
-        this._loaderStatus = { _tag: "WaitingToConnect", metadata };
+      complete: (state) => {
+        this._loaderStatus = state;
       },
     },
   );
 
   private _connectToProvider = new EffectFn(
     this,
-    () => AddProviderWorkflow.connectToProvider,
+    (state: WaitingForConnectionState) =>
+      AddProviderWorkflow.connectToProvider(state),
     {
       pending: () => {
         this._loaderStatus = { _tag: "ConnectingToProvider" };
       },
-      complete: (result) => {
+      complete: (state) => {
         this._loaderStatus = { _tag: "Connected" };
         this.dispatchEvent(
-          result.requiresRootFolderSelection
-            ? new ProviderWaitingForRoot(result.folders)
+          state._tag === "WaitingForRoot"
+            ? new ProviderWaitingForRoot(state)
             : new ProviderStartedEvent(),
         );
       },
@@ -115,15 +120,15 @@ export class ProviderLoader extends LitElement {
             `,
           ),
           Match.tag(
-            "WaitingToConnect",
-            ({ metadata }) => html`
+            "WaitingForConnection",
+            (state) => html`
               <p>
-                Let's connect to ${metadata.id}. Clicking the button below will
-                open a new window to authenticate with the provider. Echo does
-                not store any of your credentials:
+                Let's connect to ${state.loadedProvider.metadata.id}. Clicking
+                the button below will open a new window to authenticate with the
+                provider. Echo does not store any of your credentials:
               </p>
-              <echo-button @click=${() => this._connectToProvider.run({})}>
-                Connect to ${metadata.id}
+              <echo-button @click=${() => this._connectToProvider.run(state)}>
+                Connect to ${state.loadedProvider.metadata.id}
               </echo-button>
             `,
           ),
