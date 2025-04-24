@@ -5,12 +5,13 @@ import {
 } from "@echo/core-types";
 import { StreamConsumer } from "~web/shared-controllers";
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 import { Match } from "effect";
 import { ButtonType } from "~web/ui-atoms";
 import "~web/icons";
 import "~web/add-provider";
+import { navigate, Path } from "~web/router/routing";
 
 /**
  * Component that displays the status of all active providers.
@@ -22,15 +23,13 @@ export class AllProvidersStatusBar extends LitElement {
     MediaProviderStatus.observe,
   );
 
-  @state()
-  dialogOpen = false;
-
   static styles = css`
     .provider-container {
       display: flex;
       align-items: center;
       justify-content: flex-end;
       margin: 0.5rem 0;
+      gap: 1rem;
     }
 
     .provider-status {
@@ -43,24 +42,8 @@ export class AllProvidersStatusBar extends LitElement {
       right: -5px;
     }
 
-    .syncing-icon {
-      animation: blinking 1s infinite;
-    }
-
     .error-icon {
       color: var(--error-color);
-    }
-
-    @keyframes blinking {
-      0% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
-      100% {
-        opacity: 1;
-      }
     }
   `;
 
@@ -77,48 +60,25 @@ export class AllProvidersStatusBar extends LitElement {
               >
                 <div class="provider-status">
                   <provider-icon .providerId=${providerId}></provider-icon>
-                  ${this._renderProviderStatus(providerStatus)}
+                  <provider-status-icon
+                    class="provider-status-icon"
+                    .status=${providerStatus}
+                  ></provider-status-icon>
                 </div>
               </echo-tooltip>
             `,
           )}
           <echo-button
             .type=${ButtonType.Icon}
-            @click=${this._onAddProviderClick}
+            @click=${this._onManageProvidersClick}
           >
-            <plus-icon title="Add provider"></plus-icon>
+            <settings-icon title="Manage providers"></settings-icon>
           </echo-button>
         </div>
-        ${this._renderAddProviderModal()}
       `,
       complete: () => nothing,
       error: () => nothing,
     });
-  }
-
-  private _renderProviderStatus(providerStatus: ProviderStatus) {
-    return Match.value(providerStatus).pipe(
-      Match.tag(
-        "syncing",
-        () =>
-          html`<sync-icon
-            class="provider-status-icon syncing-icon"
-          ></sync-icon>`,
-      ),
-      Match.tag(
-        "synced",
-        "sync-skipped",
-        () => html`<done-icon class="provider-status-icon"></done-icon>`,
-      ),
-      Match.tag(
-        "errored",
-        () =>
-          html`<cross-icon
-            class="provider-status-icon error-icon"
-          ></cross-icon>`,
-      ),
-      Match.orElse(() => nothing),
-    );
   }
 
   private _providerStatusTitle(
@@ -144,21 +104,8 @@ export class AllProvidersStatusBar extends LitElement {
     );
   }
 
-  private _renderAddProviderModal() {
-    return html`
-      <add-provider-dialog
-        .open=${this.dialogOpen}
-        @dismiss=${this._onAddProviderDismiss}
-      ></add-provider-dialog>
-    `;
-  }
-
-  private _onAddProviderClick() {
-    this.dialogOpen = true;
-  }
-
-  private _onAddProviderDismiss() {
-    this.dialogOpen = false;
+  private _onManageProvidersClick() {
+    navigate(Path.Settings);
   }
 }
 

@@ -8,5 +8,6 @@ export * from "./plus-icon";
 export * from "./prev-icon";
 export * from "./pause-icon";
 export * from "./provider-icon";
+export * from "./settings-icon";
 export * from "./sync-icon";
 export * from "./volume-icon";

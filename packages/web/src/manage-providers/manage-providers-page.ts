@@ -5,7 +5,7 @@ import {
   ProviderStatus,
 } from "@echo/core-types";
 import { LitElement, css, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 import { Match } from "effect";
 import { formatDistanceToNow } from "date-fns";
@@ -17,6 +17,9 @@ import "~web/icons";
  */
 @customElement("manage-providers-page")
 export class ManageProvidersPage extends LitElement {
+  @state()
+  dialogOpen = false;
+
   private _providerStatus = new StreamConsumer(
     this,
     MediaProviderStatus.observe,
@@ -36,7 +39,6 @@ export class ManageProvidersPage extends LitElement {
 
     .provider-list {
       display: flex;
-      flex-direction: column;
       gap: 1rem;
     }
 
@@ -60,6 +62,12 @@ export class ManageProvidersPage extends LitElement {
       text-transform: capitalize;
     }
 
+    .provider-status {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
     .provider-status-tag {
       text-decoration: underline;
     }
@@ -81,7 +89,12 @@ export class ManageProvidersPage extends LitElement {
                     <provider-icon .providerId=${providerId}></provider-icon>
                     <div class="provider-info">
                       <p>${providerId}</p>
-                      ${this._renderProviderStatusTag(providerStatus)}
+                      <div class="provider-status">
+                        <provider-status-icon
+                          .status=${providerStatus}
+                        ></provider-status-icon>
+                        ${this._renderProviderStatusTag(providerStatus)}
+                      </div>
                     </div>
                     <echo-button disabled type="secondary"
                       >Sync now</echo-button
@@ -97,8 +110,11 @@ export class ManageProvidersPage extends LitElement {
               )}
             </div>
 
-            <echo-button @click=${this._onAddProvider}>Add more</echo-button>
+            <echo-button @click=${this._onAddProviderClick}
+              >Add more</echo-button
+            >
           </div>
+          ${this._renderAddProviderModal()}
         `,
       })}
     `;
@@ -121,12 +137,25 @@ export class ManageProvidersPage extends LitElement {
     `;
   }
 
-  private _onRemoveProvider(_providerId: ProviderId) {
-    // Handle provider removal
+  private _renderAddProviderModal() {
+    return html`
+      <add-provider-dialog
+        .open=${this.dialogOpen}
+        @dismiss=${this._onAddProviderDismiss}
+      ></add-provider-dialog>
+    `;
   }
 
-  private _onAddProvider() {
-    // Handle provider addition
+  private _onAddProviderClick() {
+    this.dialogOpen = true;
+  }
+
+  private _onAddProviderDismiss() {
+    this.dialogOpen = false;
+  }
+
+  private _onRemoveProvider(_providerId: ProviderId) {
+    // Handle provider removal
   }
 }
 

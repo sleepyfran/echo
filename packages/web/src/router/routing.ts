@@ -7,6 +7,7 @@ import type { ReactiveController, ReactiveControllerHost } from "lit";
 export enum Path {
   Albums = "/",
   Artists = "/artists",
+  Settings = "/settings",
 }
 
 /**
