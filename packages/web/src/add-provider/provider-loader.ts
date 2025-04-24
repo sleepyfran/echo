@@ -93,31 +93,10 @@ export class ProviderLoader extends LitElement {
       <h1>Add provider</h1>
       <div class="centered">
         ${Match.value(this._loaderStatus).pipe(
-          Match.tag(
-            "Initial",
-            () => html`
-              <p>
-                These are all the currently supported providers that are
-                available to add. Select which one you want to add:
-              </p>
-              <div class="available-provider-list">
-                ${this.availableProviders.map(
-                  (provider) => html`
-                    <echo-button
-                      type=${ButtonType.Secondary}
-                      @click=${() => this._loadProvider.run(provider)}
-                    >
-                      <div class="button-content">
-                        <provider-icon
-                          .providerId=${provider.id}
-                        ></provider-icon>
-                        ${provider.id}
-                      </div>
-                    </echo-button>
-                  `,
-                )}
-              </div>
-            `,
+          Match.tag("Initial", () =>
+            this.availableProviders.length > 0
+              ? this._providerPicker(this.availableProviders)
+              : this._noProvidersAvailable(),
           ),
           Match.tag(
             "WaitingForConnection",
@@ -146,6 +125,34 @@ export class ProviderLoader extends LitElement {
               </h5>`,
           ),
           Match.exhaustive,
+        )}
+      </div>
+    `;
+  }
+
+  private _noProvidersAvailable() {
+    return html` <h2>You have all providers active already!</h2> `;
+  }
+
+  private _providerPicker(providers: typeof this.availableProviders) {
+    return html`
+      <p>
+        These are all the currently supported providers that are available to
+        add. Select which one you want to add:
+      </p>
+      <div class="available-provider-list">
+        ${providers.map(
+          (provider) => html`
+            <echo-button
+              type=${ButtonType.Secondary}
+              @click=${() => this._loadProvider.run(provider)}
+            >
+              <div class="button-content">
+                <provider-icon .providerId=${provider.id}></provider-icon>
+                ${provider.id}
+              </div>
+            </echo-button>
+          `,
         )}
       </div>
     `;
