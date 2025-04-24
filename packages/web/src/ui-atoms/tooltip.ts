@@ -1,6 +1,7 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import "@lion/ui/define/lion-tooltip";
+import "@shoelace-style/shoelace/dist/components/popup/popup";
+import "@shoelace-style/shoelace/dist/components/tooltip/tooltip";
 
 /**
  * Component that wraps a slot in a tooltip.
@@ -11,7 +12,7 @@ export class Tooltip extends LitElement {
   content: string = "";
 
   static styles = css`
-    .tooltip-content {
+    sl-tooltip::part(body) {
       padding: 0.5rem;
       background-color: var(--button-background-color);
       border: 1px solid var(--background-color-muted);
@@ -26,12 +27,9 @@ export class Tooltip extends LitElement {
 
   render() {
     return html`
-      <lion-tooltip>
-        <div slot="invoker">
-          <slot></slot>
-        </div>
-        <div slot="content" class="tooltip-content">${this.content}</div>
-      </lion-tooltip>
+      <sl-tooltip content=${this.content} arrow>
+        <slot></slot>
+      </sl-tooltip>
     `;
   }
 }
