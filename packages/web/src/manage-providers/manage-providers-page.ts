@@ -39,6 +39,7 @@ export class ManageProvidersPage extends LitElement {
 
     .provider-list {
       display: flex;
+      flex-wrap: wrap;
       gap: 1rem;
     }
 
@@ -96,10 +97,14 @@ export class ManageProvidersPage extends LitElement {
                         ${this._renderProviderStatusTag(providerStatus)}
                       </div>
                     </div>
-                    <echo-button disabled type="secondary"
+                    <echo-button
+                      title="Coming soon..."
+                      disabled
+                      type="secondary"
                       >Sync now</echo-button
                     >
                     <echo-button
+                      title="Coming soon..."
                       disabled
                       @click=${() => this._onRemoveProvider(providerId)}
                     >
