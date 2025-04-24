@@ -34,7 +34,9 @@ export class ArtistLibraryPage extends LitElement {
       <library-selection></library-selection>
       ${this._library.render({
         initial: () =>
-          html`<div class="loading-container"><h1>Loading...</h1></div>`,
+          html`<div class="loading-container">
+            <h1>Loading library...</h1>
+          </div>`,
         item: (artists) => html`
           <div>
             ${map(

@@ -147,7 +147,7 @@ class GenreAlbumLibrary extends LitElement {
   render() {
     return this._albums.render({
       initial: () =>
-        html`<div class="loading-container"><h1>Loading...</h1></div>`,
+        html`<div class="loading-container"><h1>Loading library...</h1></div>`,
       item: (albums) => html`
         <div>
           ${map(
