@@ -127,9 +127,19 @@ export const MsalAuthenticationLive = Layer.effect(
         );
       });
 
+    const signOut = Effect.gen(function* () {
+      yield* Effect.log("Signing out from MSAL");
+      const app = yield* msalAppRef.get;
+      yield* Effect.tryPromise({
+        try: () => app.clearCache(),
+        catch: () => AuthenticationError.Unknown,
+      });
+    });
+
     return MsalAuthentication.of({
       connect,
       connectSilent,
+      signOut,
     });
   }),
 );

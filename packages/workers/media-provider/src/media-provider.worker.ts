@@ -10,7 +10,7 @@ type WorkerMessage = S.Schema.Type<typeof WorkerMessage>;
 const decodeWorkerMessage = S.decode(WorkerMessage);
 
 const initialState = Ref.make<WorkerState>({
-  fiberByProvider: new Map(),
+  stateByProvider: new Map(),
 });
 
 /**

@@ -24,7 +24,15 @@ export const MediaProviderStatusLive = Layer.scoped(
     yield* statusStream.pipe(
       Stream.runForEach(({ startArgs, status }) => {
         return Ref.update(stateByProviderRef, (current) => {
-          return new Map(current).set(startArgs.metadata.id, status);
+          const updatedMap = new Map(current);
+
+          if (status._tag === "stopped") {
+            updatedMap.delete(startArgs.metadata.id);
+          } else {
+            updatedMap.set(startArgs.metadata.id, status);
+          }
+
+          return updatedMap;
         });
       }),
       Effect.forkScoped,

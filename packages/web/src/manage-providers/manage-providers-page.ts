@@ -1,14 +1,11 @@
 import { StreamConsumer } from "~web/shared-controllers";
-import {
-  MediaProviderStatus,
-  ProviderId,
-  ProviderStatus,
-} from "@echo/core-types";
+import { MediaProviderStatus, ProviderStatus } from "@echo/core-types";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 import { Match } from "effect";
 import { formatDistanceToNow } from "date-fns";
+import "./signout-from-provider-button";
 import "~web/icons";
 
 /**
@@ -103,13 +100,9 @@ export class ManageProvidersPage extends LitElement {
                       type="secondary"
                       >Sync now</echo-button
                     >
-                    <echo-button
-                      title="Coming soon..."
-                      disabled
-                      @click=${() => this._onRemoveProvider(providerId)}
-                    >
-                      Sign out
-                    </echo-button>
+                    <signout-from-provider-button
+                      .providerId=${providerId}
+                    ></signout-from-provider-button>
                   </div>
                 `,
               )}
@@ -157,10 +150,6 @@ export class ManageProvidersPage extends LitElement {
 
   private _onAddProviderDismiss() {
     this.dialogOpen = false;
-  }
-
-  private _onRemoveProvider(_providerId: ProviderId) {
-    // Handle provider removal
   }
 }
 

@@ -70,6 +70,16 @@ const createTable = <
         table.bulkPut(records, { allKeys: true }),
       ).pipe(Effect.map((keys) => keys.length));
     }),
+  deleteMany: (key, equals) =>
+    Effect.gen(function* () {
+      const table = db[tableName] as DexieTable<TSchema>;
+      return yield* Effect.promise(() =>
+        table
+          .where(key as string)
+          .equals(normalizeForComparison(equals as string))
+          .delete(),
+      );
+    }),
   byId: (id) =>
     Effect.gen(function* () {
       const table = db[tableName];
@@ -161,7 +171,7 @@ class DexieDatabase extends Dexie {
     super("echo");
 
     this.version(1).stores({
-      albums: "id, name, artistId",
+      albums: "id, name, artistId, providerId",
       artists: "id, name",
     });
   }

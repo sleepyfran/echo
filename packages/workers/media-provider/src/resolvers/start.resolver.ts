@@ -11,11 +11,12 @@ import {
   ProviderStatusChanged,
 } from "@echo/core-types";
 import { LazyLoadedProvider } from "@echo/services-bootstrap";
-import { DateTime, Effect, Match, Option, Ref } from "effect";
+import { DateTime, Effect, Fiber, Match, Option, Ref } from "effect";
 import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
 import { syncApiBasedProvider } from "../sync/api-based-sync";
+import type { ParseError } from "@effect/schema/ParseResult";
 
 type StartMediaProviderResolverInput = {
   input: ProviderStartArgs;
@@ -32,7 +33,7 @@ export const startMediaProviderResolver = ({
     yield* Effect.log(`Starting media provider ${input.metadata.id}`);
 
     const currentWorkerState = yield* workerStateRef.get;
-    const alreadyStarted = currentWorkerState.fiberByProvider.has(
+    const alreadyStarted = currentWorkerState.stateByProvider.has(
       input.metadata.id,
     );
 
@@ -54,6 +55,7 @@ export const startMediaProviderResolver = ({
         yield* Effect.log(
           `Provider with ID ${input.metadata.id} was synced less than a day ago. Ignoring command.`,
         );
+        yield* updateStateInWorkerMap(workerStateRef, input);
         yield* notifyMainThreadOfSyncSkipped(
           input,
           input.lastSyncedAt.value,
@@ -67,6 +69,7 @@ export const startMediaProviderResolver = ({
       yield* Effect.logError(
         `Token for provider with ID ${input.metadata.id} is expired. Aborting initialization.`,
       );
+      yield* updateStateInWorkerMap(workerStateRef, input);
       yield* notifyMainThreadOfExpiredToken(input, broadcaster);
       return;
     }
@@ -117,11 +120,11 @@ export const startMediaProviderResolver = ({
       Match.exhaustive,
     )(input);
 
-    yield* Ref.update(workerStateRef, (state) => {
-      const updatedMap = new Map(state.fiberByProvider);
-      updatedMap.set(input.metadata.id, runtimeFiber);
-      return { ...state, fiberByProvider: updatedMap };
-    });
+    yield* updateStateInWorkerMap(
+      workerStateRef,
+      input,
+      Option.some(runtimeFiber),
+    );
   });
 
 export const notifyMainThreadOfExpiredToken = (
@@ -150,3 +153,17 @@ export const notifyMainThreadOfSyncSkipped = (
       status: { _tag: "sync-skipped", lastSyncedAt: lastSyncDate },
     }),
   );
+
+export const updateStateInWorkerMap = (
+  workerStateRef: Ref.Ref<WorkerState>,
+  startArgs: ProviderStartArgs,
+  fiber: Option.Option<Fiber.RuntimeFiber<void, ParseError>> = Option.none(),
+) =>
+  Ref.update(workerStateRef, (state) => {
+    const updatedMap = new Map(state.stateByProvider);
+    updatedMap.set(startArgs.metadata.id, {
+      startArgs,
+      fiber,
+    });
+    return { ...state, stateByProvider: updatedMap };
+  });

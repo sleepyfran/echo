@@ -80,6 +80,14 @@ export type Table<
   readonly putMany: (records: TSchema[]) => Effect.Effect<number>;
 
   /**
+   * Deletes all the records that match the given filter.
+   */
+  readonly deleteMany: (
+    key: StringKeyOf<TSchema>,
+    equals: TSchema[StringKeyOf<TSchema>],
+  ) => Effect.Effect<void>;
+
+  /**
    * Retrieves a specific record from the table by its ID.
    */
   readonly byId: (id: TSchema["id"]) => Effect.Effect<Option.Option<TSchema>>;

@@ -23,6 +23,11 @@ export type Authentication = {
     cachedCredentials: AuthenticationInfo,
     forceRefresh?: boolean,
   ) => Effect.Effect<AuthenticationInfo, AuthenticationError>;
+
+  /**
+   * Signs out from the provider, clearing the cached authentication info
+   */
+  signOut: Effect.Effect<void, AuthenticationError>;
 };
 
 /**

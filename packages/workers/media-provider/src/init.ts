@@ -2,11 +2,13 @@ import {
   Broadcaster,
   BroadcastListener,
   StartProvider,
+  StopProvider,
 } from "@echo/core-types";
 import { Effect, Stream } from "effect";
 import { startMediaProviderResolver } from "./resolvers/start.resolver";
 import * as S from "@effect/schema/Schema";
 import { WorkerStateRef } from "./state";
+import { stopMediaProviderResolver } from "./resolvers/stop.resolver";
 
 export const InitMessage = S.TaggedStruct("init", {});
 type InitMessage = S.Schema.Type<typeof InitMessage>;
@@ -35,6 +37,21 @@ export const init = () =>
         startMediaProviderResolver({
           broadcaster,
           input: request.args,
+          workerStateRef,
+        }),
+      ),
+      Effect.forkScoped,
+    );
+
+    const stopStream = yield* broadcastListener.listen(
+      "mediaProvider",
+      StopProvider,
+    );
+    yield* stopStream.pipe(
+      Stream.runForEach((request) =>
+        stopMediaProviderResolver({
+          providerId: request.provider.id,
+          broadcaster,
           workerStateRef,
         }),
       ),

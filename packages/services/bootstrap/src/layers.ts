@@ -11,8 +11,8 @@ import { AppConfigLive } from "./app-config";
 import { LazyLoadedMediaPlayerLive } from "./loaders/player";
 import { ActiveMediaProviderCacheLive } from "@echo/services-active-media-provider-cache";
 import {
-  MediaProviderStatusLive,
   MediaProviderArgStorageLive,
+  MediaProviderStatusLive,
 } from "@echo/services-media-provider-status";
 import { BrowserLocalStorageLive } from "@echo/infrastructure-browser-local-storage";
 import { SpotifyArtistImageProvider } from "@echo/infrastructure-spotify-artist-image-provider";
@@ -20,6 +20,7 @@ import {
   AuthenticationCacheLive,
   AuthenticationRefresherLive,
 } from "@echo/services-reauthentication";
+import { MediaProviderManagerLive } from "@echo/services-media-provider-manager";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
@@ -27,6 +28,7 @@ import {
  */
 export const MainLive = MediaProviderArgStorageLive.pipe(
   Layer.provideMerge(MediaProviderStatusLive),
+  Layer.provideMerge(MediaProviderManagerLive),
   Layer.provideMerge(LazyLoadedProviderLive),
   Layer.provideMerge(LazyLoadedMediaPlayerLive),
   Layer.provideMerge(AuthenticationRefresherLive),

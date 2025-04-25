@@ -10,5 +10,6 @@ export * from "./local-storage";
 export * from "./metadata-provider";
 export * from "./media-provider";
 export * from "./player";
+export * from "./provider-manager";
 export * from "./provider-status";
 export * from "./workflows";

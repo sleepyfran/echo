@@ -78,6 +78,9 @@ const make = Effect.gen(function* () {
   return SpotifyAuthentication.of({
     connect,
     connectSilent,
+    // We don't actually need to do anything here other than cleaning up the
+    // start args, which is done through the MediaProviderManager.
+    signOut: Effect.void,
   });
 });
 
