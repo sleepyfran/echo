@@ -2,7 +2,6 @@ import { LitElement, css, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { ActiveMediaProviderCache, AppInit } from "@echo/core-types";
 import { EffectConsumer, StreamConsumer } from "~web/shared-controllers";
-import { cache } from "lit/directives/cache.js";
 import "~web/header";
 import "~web/initial-setup";
 import "~web/library";
@@ -32,14 +31,12 @@ export class AppRoot extends LitElement {
     return this._init.render({
       pending: () => this._renderInitializingMessage(),
       complete: () =>
-        cache(
-          this._activeProviders.render({
-            item: (activeProviders) =>
-              activeProviders.length > 0
-                ? this._renderMainPage()
-                : html`<initial-setup></initial-setup>`,
-          }),
-        ),
+        this._activeProviders.render({
+          item: (activeProviders) =>
+            activeProviders.length > 0
+              ? this._renderMainPage()
+              : html`<initial-setup></initial-setup>`,
+        }),
       error: () =>
         html`<h3 style="color: red;">
           Ooops, something went wrong. Please report it!

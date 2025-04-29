@@ -136,7 +136,7 @@ export class InitialSetup extends LitElement {
   private _renderAddProviderModal() {
     return html`
       <add-provider-dialog
-        .open=${this.dialogOpen}
+        ?open=${this.dialogOpen}
         @dismiss=${this._onAddProviderDismiss}
       ></add-provider-dialog>
     `;
