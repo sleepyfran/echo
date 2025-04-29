@@ -20,6 +20,18 @@ export class StartProvider extends S.Class<StartProvider>("start")({
 }
 
 /**
+ * Request to forcefully sync a provider, normally handled by the media
+ * provider worker.
+ */
+export class ForceSyncProvider extends S.Class<ForceSyncProvider>("forceSync")({
+  args: ProviderStartArgs,
+}) {
+  get [Serializable.symbol]() {
+    return ForceSyncProvider;
+  }
+}
+
+/**
  * Request to stop a running provider, normally handled by the media provider worker.
  */
 export class StopProvider extends S.Class<StopProvider>("stop")({

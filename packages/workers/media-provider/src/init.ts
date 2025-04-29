@@ -1,6 +1,7 @@
 import {
   Broadcaster,
   BroadcastListener,
+  ForceSyncProvider,
   StartProvider,
   StopProvider,
 } from "@echo/core-types";
@@ -9,6 +10,7 @@ import { startMediaProviderResolver } from "./resolvers/start.resolver";
 import * as S from "@effect/schema/Schema";
 import { WorkerStateRef } from "./state";
 import { stopMediaProviderResolver } from "./resolvers/stop.resolver";
+import { forkSync } from "./sync/sync";
 
 export const InitMessage = S.TaggedStruct("init", {});
 type InitMessage = S.Schema.Type<typeof InitMessage>;
@@ -38,6 +40,22 @@ export const init = () =>
           broadcaster,
           input: request.args,
           workerStateRef,
+        }),
+      ),
+      Effect.forkScoped,
+    );
+
+    const forceSyncStream = yield* broadcastListener.listen(
+      "mediaProvider",
+      ForceSyncProvider,
+    );
+    yield* forceSyncStream.pipe(
+      Stream.runForEach((request) =>
+        forkSync({
+          broadcaster,
+          input: request.args,
+          workerStateRef,
+          force: true,
         }),
       ),
       Effect.forkScoped,

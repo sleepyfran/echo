@@ -6,6 +6,7 @@ import { map } from "lit/directives/map.js";
 import { Match } from "effect";
 import { formatDistanceToNow } from "date-fns";
 import "./signout-from-provider-button";
+import "./force-sync-button";
 import "~web/icons";
 
 /**
@@ -94,12 +95,10 @@ export class ManageProvidersPage extends LitElement {
                         ${this._renderProviderStatusTag(providerStatus)}
                       </div>
                     </div>
-                    <echo-button
-                      title="Coming soon..."
-                      disabled
-                      type="secondary"
-                      >Sync now</echo-button
-                    >
+                    <force-sync-button
+                      .providerId=${providerId}
+                      .providerStatus=${providerStatus}
+                    ></force-sync-button>
                     <signout-from-provider-button
                       .providerId=${providerId}
                     ></signout-from-provider-button>

@@ -10,7 +10,7 @@ type ProviderState = {
   startArgs: ProviderStartArgs;
 
   /**
-   * The fiber that is currently running the provider.
+   * The fiber that is currently running the provider, if any.
    */
   fiber: Option.Option<RuntimeFiber<void, ParseError>>;
 };

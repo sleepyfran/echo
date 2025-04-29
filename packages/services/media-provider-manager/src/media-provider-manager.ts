@@ -3,8 +3,10 @@ import {
   ActiveMediaProviderCache,
   Broadcaster,
   Database,
+  ForceSyncProvider,
   LocalStorage,
   MediaProviderManager,
+  ProviderStartArgs,
   StopProvider,
 } from "@echo/core-types";
 
@@ -17,6 +19,32 @@ export const MediaProviderManagerLive = Layer.scoped(
     const localStorage = yield* LocalStorage;
 
     return MediaProviderManager.of({
+      forceSync: (providerId) =>
+        Effect.gen(function* () {
+          const providerStartArgs = yield* localStorage.get(
+            "media-provider-start-args",
+            providerId,
+            ProviderStartArgs,
+          );
+
+          if (Option.isNone(providerStartArgs)) {
+            yield* Effect.logWarning(
+              `Requested to force sync provider ${providerId}, but there's no information saved about it. Ignoring request...`,
+            );
+            return;
+          }
+
+          yield* Effect.log(
+            `Creating request to force ${providerId} to sync...`,
+          );
+
+          yield* broadcaster.broadcast(
+            "mediaProvider",
+            new ForceSyncProvider({
+              args: providerStartArgs.value,
+            }),
+          );
+        }),
       signOut: (providerId) =>
         Effect.gen(function* () {
           const providerWithMetadata =
