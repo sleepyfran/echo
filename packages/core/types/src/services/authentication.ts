@@ -36,6 +36,17 @@ export type Authentication = {
  */
 export type IAuthenticationCache = {
   /**
+   * Sets the authentication info for a given provider. This should be used
+   * during the app initialization to cache any re-fetched authentication info.
+   * Any further calls to this method will be ignored if the value is already
+   * set.
+   */
+  initialSet: (
+    providerId: ProviderId,
+    authInfo: AuthenticationInfo,
+  ) => Effect.Effect<void>;
+
+  /**
    * Retrieves the cached authentication info for a given provider.
    */
   get: (

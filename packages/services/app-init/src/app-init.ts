@@ -15,6 +15,8 @@ import {
   Player,
   type IPlayer,
   AuthenticationRefresher,
+  type IAuthenticationCache,
+  AuthenticationCache,
 } from "@echo/core-types";
 import {
   LazyLoadedMediaPlayer,
@@ -26,6 +28,7 @@ import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
   const activeMediaProviderCache = yield* ActiveMediaProviderCache;
+  const authenticationCache = yield* AuthenticationCache;
   const authRefresher = yield* AuthenticationRefresher;
   const broadcaster = yield* Broadcaster;
   const lazyLoadedProvider = yield* LazyLoadedProvider;
@@ -81,6 +84,7 @@ const make = Effect.gen(function* () {
               mediaPlayerFactory.createMediaPlayer,
               broadcaster,
               activeMediaProviderCache,
+              authenticationCache,
             ).pipe(Effect.orElseSucceed(() => {}));
           }),
         ),
@@ -111,6 +115,7 @@ const reinitializeProvider = (
   createMediaPlayer: MediaPlayerFactory["createMediaPlayer"],
   broadcaster: IBroadcaster,
   activeMediaProviderCache: IActiveMediaProviderCache,
+  authenticationCache: IAuthenticationCache,
 ) =>
   Effect.gen(function* () {
     const authResult = yield* providerFactory.authentication
@@ -142,6 +147,7 @@ const reinitializeProvider = (
       provider: mediaProvider,
       player: mediaPlayer,
     });
+    yield* authenticationCache.initialSet(startArgs.metadata.id, authResult);
 
     yield* Effect.log(
       `Successfully reinitialized ${startArgs.metadata.id} provider`,

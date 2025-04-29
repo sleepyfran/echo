@@ -1,6 +1,7 @@
 import { Effect, Layer, Option } from "effect";
 import {
   ActiveMediaProviderCache,
+  AuthenticationCache,
   Broadcaster,
   Database,
   ForceSyncProvider,
@@ -14,6 +15,7 @@ export const MediaProviderManagerLive = Layer.scoped(
   MediaProviderManager,
   Effect.gen(function* () {
     const activeMediaProviderCache = yield* ActiveMediaProviderCache;
+    const authenticationCache = yield* AuthenticationCache;
     const broadcaster = yield* Broadcaster;
     const database = yield* Database;
     const localStorage = yield* LocalStorage;
@@ -34,6 +36,15 @@ export const MediaProviderManagerLive = Layer.scoped(
             return;
           }
 
+          // TODO: This indirection of depending on the cache and the start args from the local storage is weird to say the least. Maybe fix me? Caching start args in the active media provider cache without auth info might be a better idea.
+          const cachedInfoOrDefault = yield* authenticationCache
+            .get(providerId)
+            .pipe(
+              Effect.map(
+                Option.getOrElse(() => providerStartArgs.value.authInfo),
+              ),
+            );
+
           yield* Effect.log(
             `Creating request to force ${providerId} to sync...`,
           );
@@ -41,7 +52,10 @@ export const MediaProviderManagerLive = Layer.scoped(
           yield* broadcaster.broadcast(
             "mediaProvider",
             new ForceSyncProvider({
-              args: providerStartArgs.value,
+              args: {
+                ...providerStartArgs.value,
+                authInfo: cachedInfoOrDefault,
+              },
             }),
           );
         }),

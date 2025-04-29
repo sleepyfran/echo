@@ -45,6 +45,23 @@ export const AuthenticationCacheLive = Layer.scoped(
     );
 
     return AuthenticationCache.of({
+      initialSet: (providerId, authInfo) =>
+        Effect.gen(function* () {
+          const current = yield* cache.get;
+          if (current.has(providerId)) {
+            yield* Effect.logWarning(
+              `Authentication info for ${providerId} already set, ignoring`,
+            );
+            return;
+          }
+
+          yield* Effect.logInfo(
+            `Setting initial authentication info for ${providerId}`,
+          );
+          yield* Ref.update(cache, (cache) =>
+            new Map(cache).set(providerId, authInfo),
+          );
+        }),
       get: (providerId) =>
         cache.get.pipe(
           Effect.map((c) => Option.fromNullable(c.get(providerId))),
