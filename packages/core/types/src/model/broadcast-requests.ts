@@ -11,7 +11,9 @@ import { AuthenticationInfo } from "./authentication";
 /***
  * Request to start a provider, normally handled by the media provider worker.
  */
-export class StartProvider extends S.Class<StartProvider>("start")({
+export class StartProvider extends S.TaggedClass<StartProvider>(
+  "@echo/broadcast-request/StartProvider",
+)("StartProvider", {
   args: ProviderStartArgs,
 }) {
   get [Serializable.symbol]() {
@@ -23,7 +25,9 @@ export class StartProvider extends S.Class<StartProvider>("start")({
  * Request to forcefully sync a provider, normally handled by the media
  * provider worker.
  */
-export class ForceSyncProvider extends S.Class<ForceSyncProvider>("forceSync")({
+export class ForceSyncProvider extends S.TaggedClass<ForceSyncProvider>(
+  "@echo/broadcast-request/ForceSyncProvider",
+)("ForceSyncProvider", {
   args: ProviderStartArgs,
 }) {
   get [Serializable.symbol]() {
@@ -34,7 +38,9 @@ export class ForceSyncProvider extends S.Class<ForceSyncProvider>("forceSync")({
 /**
  * Request to stop a running provider, normally handled by the media provider worker.
  */
-export class StopProvider extends S.Class<StopProvider>("stop")({
+export class StopProvider extends S.TaggedClass<StopProvider>(
+  "@echo/broadcast-request/StopProvider",
+)("StopProvider", {
   provider: ProviderMetadata,
 }) {
   get [Serializable.symbol]() {
