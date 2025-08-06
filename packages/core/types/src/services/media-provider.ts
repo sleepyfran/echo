@@ -104,7 +104,11 @@ export const MediaPlayerId = Brand.nominal<MediaPlayerId>();
 /**
  * Events that can be emitted by a media player.
  */
-export type MediaPlayerEvent = "trackPlaying" | "trackPaused" | "trackEnded";
+export type MediaPlayerEvent =
+  | { _tag: "trackPlaying" }
+  | { _tag: "trackPaused" }
+  | { _tag: "trackEnded" }
+  | { _tag: "trackTimeChanged"; time: number };
 
 /**
  * Defines all types of media players that are available in the app.

@@ -278,14 +278,26 @@ const consumeCommandsInBackground = (
                 updateFn: (state) =>
                   Match.value(state.status).pipe(
                     Match.tag("Loading", () => state),
-                    Match.tag("Playing", ({ album, trackIndex }) =>
-                      isPlaying
-                        ? state
-                        : { ...state, status: Paused({ album, trackIndex }) },
+                    Match.tag(
+                      "Playing",
+                      ({ album, trackIndex, currentTime }) =>
+                        isPlaying
+                          ? state
+                          : {
+                              ...state,
+                              status: Paused({
+                                album,
+                                trackIndex,
+                                currentTime,
+                              }),
+                            },
                     ),
-                    Match.tag("Paused", ({ album, trackIndex }) =>
+                    Match.tag("Paused", ({ album, trackIndex, currentTime }) =>
                       isPlaying
-                        ? { ...state, status: Playing({ album, trackIndex }) }
+                        ? {
+                            ...state,
+                            status: Playing({ album, trackIndex, currentTime }),
+                          }
                         : state,
                     ),
                     Match.tag("Stopped", () => state),
@@ -436,12 +448,27 @@ const syncPlayerState = (
       Stream.ensuring(mediaPlayer.stop),
       Stream.runForEach((event) =>
         Match.value(event).pipe(
-          Match.when("trackPlaying", () =>
+          Match.tag("trackPlaying", () =>
             commandQueue.offer(PlaybackChanged({ isPlaying: true })),
           ),
-          Match.when("trackEnded", () => commandQueue.offer(NextTrack())),
-          Match.when("trackPaused", () =>
+          Match.tag("trackEnded", () => commandQueue.offer(NextTrack())),
+          Match.tag("trackPaused", () =>
             commandQueue.offer(PlaybackChanged({ isPlaying: false })),
+          ),
+          Match.tag("trackTimeChanged", ({ time }) =>
+            commandQueue.offer(
+              UpdateState({
+                updateFn: (state) => ({
+                  ...state,
+                  status:
+                    state.status._tag === "Playing"
+                      ? Playing({ ...state.status, currentTime: time })
+                      : state.status._tag === "Paused"
+                        ? Paused({ ...state.status, currentTime: time })
+                        : state.status,
+                }),
+              }),
+            ),
           ),
           Match.exhaustive,
         ),
@@ -513,7 +540,7 @@ const toPlayingState =
 
     return {
       ...currentState,
-      status: Playing({ album, trackIndex }),
+      status: Playing({ album, trackIndex, currentTime: 0 }),
       allowsNext: hasNext,
       allowsPrevious: hasPrevious,
       previouslyPlayedAlbums: preservePrevious

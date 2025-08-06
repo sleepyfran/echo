@@ -6,8 +6,8 @@ import type { Album } from "./album";
  */
 export type PlayingStatus =
   | { _tag: "Loading"; album: Album; trackIndex: number }
-  | { _tag: "Playing"; album: Album; trackIndex: number }
-  | { _tag: "Paused"; album: Album; trackIndex: number }
+  | { _tag: "Playing"; album: Album; trackIndex: number; currentTime: number }
+  | { _tag: "Paused"; album: Album; trackIndex: number; currentTime: number }
   | { _tag: "Stopped" };
 
 export const { Loading, Playing, Paused, Stopped } =

@@ -11,6 +11,7 @@ import { Match, Option } from "effect";
 import { ButtonType } from "~web/ui-atoms";
 import "~web/icons";
 import { classMap } from "lit/directives/class-map.js";
+import { CachedValue } from "~web/utils";
 
 /**
  * Component that displays the current status of the player.
@@ -55,6 +56,7 @@ export class EchoPlayer extends LitElement {
   );
   private _previousTrack = new EffectFn(this, () => PlayerService.previous);
   private _skipTrack = new EffectFn(this, () => PlayerService.skip);
+  private _cachedObjectUrl = new CachedValue<string>();
 
   static styles = css`
     .player {
@@ -100,11 +102,22 @@ export class EchoPlayer extends LitElement {
       max-width: calc(100% - 10rem);
     }
 
-    .track-details {
+    .left-container {
       display: flex;
       flex-direction: column;
       justify-content: center;
       max-width: calc(100% - 1rem);
+    }
+
+    .track-details {
+      display: flex;
+      align-items: end;
+      gap: 0.5rem;
+    }
+
+    #artist-name {
+      padding-bottom: 1px;
+      color: var(--tertiary-text-color);
     }
 
     h4,
@@ -156,29 +169,52 @@ export class EchoPlayer extends LitElement {
 
   private _renderActivePlayer(
     player: PlayerState,
-    { album, trackIndex }: { album: Album; trackIndex: number },
+    {
+      album,
+      trackIndex,
+      currentTime,
+    }: { album: Album; trackIndex: number; currentTime: number },
   ) {
     const track = album.tracks[trackIndex];
-    return this._renderPlayer(player, album, track);
+    return this._renderPlayer(player, album, track, currentTime);
   }
 
-  private _renderPlayer(player: PlayerState, album: Album, track: Track) {
+  private _renderPlayer(
+    player: PlayerState,
+    album: Album,
+    track: Track,
+    currentTime: number,
+  ) {
+    if (Option.isSome(album.embeddedCover)) {
+      this._cachedObjectUrl.setValue(
+        URL.createObjectURL(album.embeddedCover.value),
+        [album.embeddedCover.value],
+      );
+    }
+
     return html`
       <div id="player" class="current-track">
         <div class="track-info">
           ${Option.isSome(album.embeddedCover)
             ? html` <img
                 id="current-track-cover"
-                src="${URL.createObjectURL(album.embeddedCover.value)}"
+                src="${this._cachedObjectUrl.value ?? ""}"
                 height="40"
                 width="40"
                 alt="Album cover"
               />`
             : nothing}
-          <div class="track-details">
-            <h4 id="track-name" title=${track.name}>${track.name}</h4>
-            <h6 id="artist-name" title=${track.mainArtist.name}>
-              ${track.mainArtist.name}
+          <div class="left-container">
+            <div class="track-details">
+              <h4 id="track-name" title=${track.name}>${track.name}</h4>
+              <h6 id="artist-name" title=${track.mainArtist.name}>
+                ${track.mainArtist.name}
+              </h6>
+            </div>
+            <h6 id="track-duration">
+              ${this._formatDuration(currentTime)}/${this._formatDuration(
+                track.durationInSeconds,
+              )}
             </h6>
           </div>
         </div>
@@ -224,6 +260,17 @@ export class EchoPlayer extends LitElement {
 
   private _onSkipTrack() {
     this._skipTrack.run({});
+  }
+
+  private _formatDuration(durationInSeconds: number): string {
+    if (durationInSeconds === 0) return "00:00";
+
+    const date = new Date(0);
+    date.setSeconds(durationInSeconds);
+    return date.toLocaleTimeString("en-US", {
+      minute: "2-digit",
+      second: "2-digit",
+    });
   }
 }
 

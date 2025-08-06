@@ -12,11 +12,13 @@ import {
   Data,
   Deferred,
   Effect,
+  Fiber,
   Layer,
   Match,
   Option,
   pipe,
   Queue,
+  Ref,
   Runtime,
   Scope,
   Stream,
@@ -37,13 +39,21 @@ type SpotifyPlayerCommand =
   | { _tag: "PlayTrack"; trackId: TrackId }
   | { _tag: "TogglePlayback" }
   | { _tag: "Stop" }
+  | { _tag: "StartTimeTracking" }
+  | { _tag: "StopTimeTracking" }
   | { _tag: "Dispose" };
 
 const { CallbackRegistered, PlayerCreated, PlayerReady } =
   Data.taggedEnum<InitCommand>();
 
-const { PlayTrack, TogglePlayback, Stop, Dispose } =
-  Data.taggedEnum<SpotifyPlayerCommand>();
+const {
+  PlayTrack,
+  TogglePlayback,
+  Stop,
+  Dispose,
+  StartTimeTracking,
+  StopTimeTracking,
+} = Data.taggedEnum<SpotifyPlayerCommand>();
 
 const make = Effect.gen(function* () {
   const authCache = yield* AuthenticationCache;
@@ -67,6 +77,11 @@ const make = Effect.gen(function* () {
         stream of events from the queue.
         */
         const mediaPlayerEventQueue = yield* Queue.sliding<MediaPlayerEvent>(1);
+
+        const timeTicker = yield* createTimeTicker(
+          mediaPlayerEventQueue,
+          layerScope,
+        );
 
         yield* Effect.log(
           "Registering playback SDK callback in the background",
@@ -115,12 +130,13 @@ const make = Effect.gen(function* () {
               Match.tag("PlayerReady", ({ player, deviceId }) =>
                 Effect.log("Player is ready, setting up listeners").pipe(
                   Effect.andThen(() =>
-                    setupListeners(player, mediaPlayerEventQueue),
+                    setupListeners(player, commandQueue, mediaPlayerEventQueue),
                   ),
                   Effect.andThen(() =>
                     consumeCommandsInBackground(
                       { authInfo, deviceId },
                       { playerApi, player },
+                      timeTicker,
                       commandQueue,
                     ),
                   ),
@@ -143,9 +159,16 @@ const make = Effect.gen(function* () {
         return {
           _tag: ProviderType.ApiBased,
           id: MediaPlayerId("spotify-player"),
-          playTrack: (trackId) => commandQueue.offer(PlayTrack({ trackId })),
+          playTrack: (trackId) =>
+            Effect.gen(function* () {
+              yield* commandQueue.offer(PlayTrack({ trackId }));
+              yield* commandQueue.offer(StartTimeTracking());
+            }),
           togglePlayback: commandQueue.offer(TogglePlayback()),
-          stop: commandQueue.offer(Stop()),
+          stop: Effect.gen(function* () {
+            yield* commandQueue.offer(Stop());
+            yield* commandQueue.offer(StopTimeTracking());
+          }),
           observe: Stream.fromQueue(mediaPlayerEventQueue),
           dispose: commandQueue.offer(Dispose()),
         };
@@ -166,6 +189,7 @@ type Api = {
 const consumeCommandsInBackground = (
   { authInfo, deviceId }: Dependencies,
   { playerApi, player }: Api,
+  timeTicker: TimeTicker,
   commandQueue: Queue.Queue<SpotifyPlayerCommand>,
 ) =>
   pipe(
@@ -183,8 +207,21 @@ const consumeCommandsInBackground = (
             ),
         ),
         Match.tag("TogglePlayback", () =>
-          Effect.sync(() => player.togglePlay()),
+          Effect.gen(function* () {
+            const stateBeforeToggling = yield* Effect.promise(() =>
+              player.getCurrentState(),
+            );
+            yield* Effect.promise(() => player.togglePlay());
+
+            if (stateBeforeToggling?.paused) {
+              yield* timeTicker.start;
+            } else {
+              yield* timeTicker.pause;
+            }
+          }),
         ),
+        Match.tag("StartTimeTracking", () => timeTicker.start),
+        Match.tag("StopTimeTracking", () => timeTicker.stop),
         Match.tag("Stop", () =>
           Effect.all([
             Effect.sync(() => player.pause()),
@@ -199,6 +236,7 @@ const consumeCommandsInBackground = (
 
 const setupListeners = (
   player: Spotify.Player,
+  commandQueue: Queue.Enqueue<SpotifyPlayerCommand>,
   mediaPlayerEventQueue: Queue.Enqueue<MediaPlayerEvent>,
 ) => {
   /*
@@ -250,7 +288,9 @@ const setupListeners = (
         state.timestamp - lastTrackEndedTimestamp > 5000
       ) {
         lastTrackEndedTimestamp = state.timestamp;
-        return mediaPlayerEventQueue.unsafeOffer("trackEnded");
+        mediaPlayerEventQueue.unsafeOffer({ _tag: "trackEnded" });
+        commandQueue.unsafeOffer(StopTimeTracking());
+        return;
       }
 
       /*
@@ -259,9 +299,15 @@ const setupListeners = (
       that messes up the switching of tracks when a track ends.
       */
       if (state.paused && !previousState?.paused) {
-        mediaPlayerEventQueue.unsafeOffer("trackPaused");
+        mediaPlayerEventQueue.unsafeOffer({ _tag: "trackPaused" });
       } else if (!state.paused && previousState?.paused) {
-        mediaPlayerEventQueue.unsafeOffer("trackPlaying");
+        mediaPlayerEventQueue.unsafeOffer({ _tag: "trackPlaying" });
+      } else if (previousState?.position !== state.position) {
+        const positionInSeconds = Math.floor(state.position / 1000);
+        mediaPlayerEventQueue.unsafeOffer({
+          _tag: "trackTimeChanged",
+          time: positionInSeconds,
+        });
       }
 
       previousState = state;
@@ -278,6 +324,101 @@ const statesMatch = (
   previousState?.position === currentState.position &&
   previousState?.track_window.current_track.id ===
     currentState.track_window.current_track.id;
+
+type TimeTicker = {
+  start: Effect.Effect<void>;
+  pause: Effect.Effect<void>;
+  stop: Effect.Effect<void>;
+};
+
+const createTimeTicker = (
+  mediaPlayerEventQueue: Queue.Enqueue<MediaPlayerEvent>,
+  scope: Scope.Scope,
+): Effect.Effect<TimeTicker> =>
+  Effect.gen(function* () {
+    const fiberRef = yield* Ref.make<Fiber.Fiber<void, never> | null>(null);
+    const lastSecondRef = yield* Ref.make(0);
+
+    const stopAndCleanupState = (fiber: Fiber.Fiber<void, never>) =>
+      Effect.gen(function* () {
+        yield* Fiber.interrupt(fiber);
+        yield* Ref.set(fiberRef, null);
+        yield* Ref.set(lastSecondRef, 0);
+      });
+
+    return {
+      /**
+       * Starts a ticker that sends an update for the `trackTimeChanged` event
+       * every second. This is needed because, Spotify's API, being as friend
+       * as it is, doesn't actually send status updates every second and instead
+       * does so every 30 seconds or so. So instead of having a counter that
+       * displays really, really out of sync times, we manually tick them and
+       * allow the state update to still override this if needed.
+       */
+      start: Effect.gen(function* () {
+        const currentFiber = yield* Ref.get(fiberRef);
+        if (currentFiber) {
+          yield* Effect.log(
+            "Running fiber detected while starting the time ticker, cancelling before proceeding...",
+          );
+          yield* stopAndCleanupState(currentFiber);
+        }
+
+        yield* Effect.log("Starting Spotify player's time ticker");
+
+        yield* Ref.set(
+          fiberRef,
+          yield* Effect.forkIn(
+            /*
+            Run the update function forever until interrupted, with a second
+            delay in between to properly compute the time change.
+
+            Note: This value will still be overridden whenever Spotify decides
+            to send a new playback state update. This is expected and indeed
+            desired to keep the counter properly in sync with the actual song
+            and account for changes that might occur due to Spotify Connect.
+             */
+            Effect.forever(
+              Effect.gen(function* () {
+                const updatedTime = yield* Ref.updateAndGet(
+                  lastSecondRef,
+                  (prev) => prev + 1,
+                );
+
+                yield* mediaPlayerEventQueue.offer({
+                  _tag: "trackTimeChanged",
+                  time: updatedTime,
+                });
+              }).pipe(Effect.delay("1 second")),
+            ),
+            scope,
+          ),
+        );
+      }),
+
+      pause: Effect.gen(function* () {
+        yield* Effect.log("Pausing Spotify player's time ticker");
+        const fiber = yield* Ref.get(fiberRef);
+        if (fiber) {
+          yield* Fiber.interrupt(fiber);
+          yield* Ref.set(fiberRef, null);
+        }
+      }),
+
+      /**
+       * Stops the time ticker, which effectively removes the updates, and
+       * resets the fibers and internal states.
+       */
+      stop: Effect.gen(function* () {
+        yield* Effect.log("Stopping Spotify player's time ticker");
+        const fiber = yield* Ref.get(fiberRef);
+
+        if (fiber) {
+          yield* stopAndCleanupState(fiber);
+        }
+      }),
+    };
+  });
 
 /**
  * Implementation of the media player service using the Spotify Web Playback SDK.

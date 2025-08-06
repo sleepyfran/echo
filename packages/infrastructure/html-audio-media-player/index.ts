@@ -50,10 +50,15 @@ const make = MediaPlayerFactory.of({
           audioElement.currentTime = 0;
         }),
         observe: Stream.async((emit) => {
-          // TODO: Keep track in the state? If something, it can be done via a ref.
-          audioElement.onplay = () => emit.single("trackPlaying");
-          audioElement.onpause = () => emit.single("trackPaused");
-          audioElement.onended = () => emit.single("trackEnded");
+          audioElement.onplay = () => emit.single({ _tag: "trackPlaying" });
+          audioElement.onpause = () => emit.single({ _tag: "trackPaused" });
+          audioElement.onended = () => emit.single({ _tag: "trackEnded" });
+          audioElement.addEventListener("timeupdate", () => {
+            emit.single({
+              _tag: "trackTimeChanged",
+              time: audioElement.currentTime,
+            });
+          });
         }),
         dispose: Effect.sync(() => {
           const audioElement = document.querySelector("audio");
