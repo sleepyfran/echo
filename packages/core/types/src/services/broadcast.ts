@@ -1,6 +1,5 @@
-import type { Serializable } from "@effect/schema";
-import type { ParseError } from "@effect/schema/ParseResult";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
+import { ParseError } from "effect/ParseResult";
 import { Context, Scope, type Effect, type Stream } from "effect";
 
 /**
@@ -19,7 +18,7 @@ export type IBroadcaster = {
    */
   broadcast: <TValue, TEncoded>(
     channel: ChannelName,
-    value: Serializable.Serializable<TValue, TEncoded, never>,
+    value: S.Serializable<TValue, TEncoded, never>,
   ) => Effect.Effect<void, ParseError>;
 };
 

@@ -349,11 +349,16 @@ const playTracks = ({
   commandQueue,
   preservePreviousTracks = true,
   nextAlbums,
-}: PlayTracksInput) =>
+}: PlayTracksInput): Effect.Effect<
+  void,
+  ProviderNotReady | PlayNotFoundError | NoMoreTracksAvailable,
+  never
+> =>
   Effect.gen(function* () {
     const requestedTrack = Array.get(album.tracks, trackIndex);
     if (Option.isNone(requestedTrack)) {
-      return yield* Effect.fail(new NoMoreTracksAvailable());
+      yield* Effect.fail(new NoMoreTracksAvailable());
+      return;
     }
 
     const { provider, player } = yield* resolveDependenciesForTrack(

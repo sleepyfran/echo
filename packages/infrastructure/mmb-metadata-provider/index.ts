@@ -65,7 +65,9 @@ const tryCreateBlob = (parsedMetadata: IAudioMetadata) =>
       return undefined;
     }
 
-    return new Blob([firstPicture.data], { type: firstPicture.format });
+    return new Blob([firstPicture.data as unknown as BlobPart], {
+      type: firstPicture.format,
+    });
   });
 
 /**

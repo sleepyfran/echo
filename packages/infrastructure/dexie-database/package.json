@@ -11,7 +11,7 @@
   "dependencies": {
     "@echo/core-strings": "^1.0.0",
     "@echo/core-types": "^1.0.0",
-    "dexie": "^4.0.7",
-    "effect": "^3.8.3"
+    "dexie": "^4.0.11",
+    "effect": "^3.17.6"
   }
 }

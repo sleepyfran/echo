@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import type { ProviderId } from "../model";
-import type { ParseError } from "@effect/schema/ParseResult";
+import type { ParseError } from "effect/ParseResult";
 
 export type IMediaProviderManager = {
   /**

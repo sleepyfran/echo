@@ -1,5 +1,5 @@
 import type { ProviderId, ProviderStartArgs } from "@echo/core-types";
-import type { ParseError } from "@effect/schema/ParseResult";
+import type { ParseError } from "effect/ParseResult";
 import { Context, Option, Ref } from "effect";
 import type { RuntimeFiber } from "effect/Fiber";
 

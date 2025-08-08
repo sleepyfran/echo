@@ -1,4 +1,4 @@
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { AuthenticationInfo } from "./authentication";
 import { FolderMetadata } from "./file-system";
 

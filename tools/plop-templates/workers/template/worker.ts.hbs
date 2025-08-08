@@ -1,6 +1,6 @@
 import { WorkerLive } from "@echo/services-bootstrap";
 import { Effect, Match, Stream } from "effect";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { InitMessage, init } from "./init";
 
 export const WorkerMessage = S.Union(InitMessage);

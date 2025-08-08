@@ -3,8 +3,7 @@ import {
   BroadcastListener,
   type ChannelName,
 } from "@echo/core-types";
-import { Serializable } from "@effect/schema";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { Effect, Layer, Stream } from "effect";
 
 const createChannel = (channelName: ChannelName) =>
@@ -17,7 +16,7 @@ const makeBroadcaster = Broadcaster.of({
   broadcast: (channel, value) =>
     Effect.gen(function* () {
       const broadcastChannel = yield* createChannel(channel);
-      const serializedRequest = yield* Serializable.serialize(value).pipe(
+      const serializedRequest = yield* S.serialize(value).pipe(
         Effect.tapError((error) =>
           Effect.logError(
             "An error happened while serializing the value:",

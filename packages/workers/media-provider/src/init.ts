@@ -7,7 +7,7 @@ import {
 } from "@echo/core-types";
 import { Effect, Stream } from "effect";
 import { startMediaProviderResolver } from "./resolvers/start.resolver";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { WorkerStateRef } from "./state";
 import { stopMediaProviderResolver } from "./resolvers/stop.resolver";
 import { forkSync } from "./sync/sync";

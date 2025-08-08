@@ -1,5 +1,5 @@
 import { Effect, Fiber, Match, Stream } from "effect";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { MediaProviderStatus } from "@echo/core-types";
 import { syncArtistsImages } from "./artist-image-sync";
 

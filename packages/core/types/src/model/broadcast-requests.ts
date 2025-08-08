@@ -1,11 +1,10 @@
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import {
   ProviderId,
   ProviderMetadata,
   ProviderStartArgs,
   ProviderStatus,
 } from "./provider-metadata";
-import { Serializable } from "@effect/schema";
 import { AuthenticationInfo } from "./authentication";
 
 /***
@@ -16,7 +15,7 @@ export class StartProvider extends S.TaggedClass<StartProvider>(
 )("StartProvider", {
   args: ProviderStartArgs,
 }) {
-  get [Serializable.symbol]() {
+  get [S.symbolSerializable]() {
     return StartProvider;
   }
 }
@@ -30,7 +29,7 @@ export class ForceSyncProvider extends S.TaggedClass<ForceSyncProvider>(
 )("ForceSyncProvider", {
   args: ProviderStartArgs,
 }) {
-  get [Serializable.symbol]() {
+  get [S.symbolSerializable]() {
     return ForceSyncProvider;
   }
 }
@@ -43,7 +42,7 @@ export class StopProvider extends S.TaggedClass<StopProvider>(
 )("StopProvider", {
   provider: ProviderMetadata,
 }) {
-  get [Serializable.symbol]() {
+  get [S.symbolSerializable]() {
     return StopProvider;
   }
 }
@@ -57,7 +56,7 @@ export class ProviderStatusChanged extends S.Class<ProviderStatusChanged>(
   startArgs: ProviderStartArgs,
   status: ProviderStatus,
 }) {
-  get [Serializable.symbol]() {
+  get [S.symbolSerializable]() {
     return ProviderStatusChanged;
   }
 }
@@ -71,7 +70,7 @@ export class ProviderAuthInfoChanged extends S.Class<ProviderAuthInfoChanged>(
   providerId: ProviderId,
   authInfo: AuthenticationInfo,
 }) {
-  get [Serializable.symbol]() {
+  get [S.symbolSerializable]() {
     return ProviderAuthInfoChanged;
   }
 }

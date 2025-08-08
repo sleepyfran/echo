@@ -16,7 +16,7 @@ import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
 import { syncApiBasedProvider } from "../sync/api-based-sync";
-import type { ParseError } from "@effect/schema/ParseResult";
+import type { ParseError } from "effect/ParseResult";
 
 export type ForkSyncMediaProviderInput = {
   input: ProviderStartArgs;

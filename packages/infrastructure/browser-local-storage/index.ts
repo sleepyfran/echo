@@ -1,5 +1,5 @@
 import { LocalStorage, type LocalStorageNamespace } from "@echo/core-types";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { Effect, Layer, Option, pipe } from "effect";
 
 const createKey = (namespace: LocalStorageNamespace, key: string) =>

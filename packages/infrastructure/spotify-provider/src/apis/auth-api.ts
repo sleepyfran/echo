@@ -1,5 +1,4 @@
 import {
-  HttpClient,
   HttpClientError,
   HttpClientRequest,
   HttpClientResponse,
@@ -7,8 +6,9 @@ import {
 import { SpotifyAuthenticationResponse, SpotifyRefreshResponse } from "./types";
 import { Effect, Layer, pipe } from "effect";
 import { AppConfig } from "@echo/core-types";
-import type { ParseError } from "@effect/schema/ParseResult";
-import type { Struct } from "@effect/schema/Schema";
+import type { ParseError } from "effect/ParseResult";
+import type { Struct } from "effect/Schema";
+import { createClient } from "./client";
 
 const SPOTIFY_AUTH_BASE = "https://accounts.spotify.com";
 
@@ -42,7 +42,7 @@ export const SpotifyAuthApiLive = Layer.scoped(
   SpotifyAuthApi,
   Effect.gen(function* () {
     const appConfig = yield* AppConfig;
-    const httpClient = yield* HttpClient.HttpClient;
+    const httpClient = yield* createClient;
 
     const requestAndTransform = <T extends Struct.Fields>(
       req: HttpClientRequest.HttpClientRequest,
@@ -55,11 +55,6 @@ export const SpotifyAuthApiLive = Layer.scoped(
           appConfig.spotify.secret,
         ),
         httpClient.execute,
-        /*
-        Disable tracing for this request, otherwise a `b3` and `traceparent` header
-        will be added to the request and the request will fail with CORS.
-        */
-        HttpClient.withTracerPropagation(false),
         Effect.flatMap(HttpClientResponse.schemaBodyJson(bodySchema)),
         Effect.scoped,
       );

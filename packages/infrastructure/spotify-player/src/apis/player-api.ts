@@ -27,18 +27,19 @@ export class SpotifyPlayerApi extends Effect.Tag(
 export const SpotifyPlayerApiLive = Layer.scoped(
   SpotifyPlayerApi,
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient;
+    /*
+    Disabled tracing, since otherwise a `b3` and `traceparent` header will be
+    added to the request and the request will fail with CORS.
+    */
+    const httpClient = (yield* HttpClient.HttpClient).pipe(
+      HttpClient.withTracerPropagation(false),
+    );
 
     return SpotifyPlayerApi.of({
       playTrack: (deviceId, trackId, authInfo) =>
         pipe(
           createPlayRequest(deviceId, trackId, authInfo),
           Effect.flatMap(httpClient.execute),
-          /*
-            Disable tracing for this request, otherwise a `b3` and `traceparent` header
-            will be added to the request and the request will fail with CORS.
-            */
-          HttpClient.withTracerPropagation(false),
           Effect.scoped,
           Effect.asVoid,
         ),

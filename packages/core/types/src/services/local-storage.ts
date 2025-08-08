@@ -1,5 +1,5 @@
 import { Effect, Option } from "effect";
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 
 /**
  * Defines all the possible namespaces that can be used to store data in the

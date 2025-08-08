@@ -1,13 +1,13 @@
 import {
-  HttpClient,
   HttpClientError,
   HttpClientRequest,
   HttpClientResponse,
 } from "@effect/platform";
 import { SpotifyUserSavedAlbumsResponse } from "./types";
 import { Effect, Layer, pipe } from "effect";
-import type { ParseError } from "@effect/schema/ParseResult";
+import type { ParseError } from "effect/ParseResult";
 import type { AuthenticationInfo } from "@echo/core-types";
+import { createClient } from "./client";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com";
 
@@ -32,18 +32,13 @@ export class SpotifyLibraryApi extends Effect.Tag(
 export const SpotifyLibraryApiLive = Layer.scoped(
   SpotifyLibraryApi,
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient;
+    const httpClient = yield* createClient;
 
     return SpotifyLibraryApi.of({
       savedAlbums: ({ authInfo, offset, limit }) =>
         pipe(
           createAlbumsRequest(authInfo, offset, limit),
           httpClient.execute,
-          /*
-            Disable tracing for this request, otherwise a `b3` and `traceparent` header
-            will be added to the request and the request will fail with CORS.
-            */
-          HttpClient.withTracerPropagation(false),
           Effect.flatMap(
             HttpClientResponse.schemaBodyJson(SpotifyUserSavedAlbumsResponse),
           ),

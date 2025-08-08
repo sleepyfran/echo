@@ -1,4 +1,4 @@
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 import { Data, Effect, Match } from "effect";
 import { InitFinishedMessage, InitMessage } from "./src/init";
 

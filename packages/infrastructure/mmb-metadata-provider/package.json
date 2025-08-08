@@ -11,8 +11,8 @@
   "dependencies": {
     "@echo/core-types": "^1.0.0",
     "buffer": "^6.0.3",
-    "effect": "^3.8.3",
-    "music-metadata": "^11.2.1",
+    "effect": "^3.17.6",
+    "music-metadata": "^11.7.3",
     "process": "^0.11.10"
   }
 }
