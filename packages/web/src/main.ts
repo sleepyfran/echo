@@ -25,6 +25,31 @@ export class AppRoot extends LitElement {
       align-items: center;
       height: 100vh;
     }
+
+    .dot {
+      display: inline-block;
+      animation: dot-jump 0.7s infinite;
+    }
+
+    .dot:nth-of-type(2) {
+      animation-duration: 0.9s;
+    }
+
+    .dot:nth-of-type(3) {
+      animation-duration: 1.1s;
+    }
+
+    @keyframes dot-jump {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
   `;
 
   render() {
@@ -47,7 +72,10 @@ export class AppRoot extends LitElement {
   private _renderInitializingMessage() {
     return html`
       <div class="initializing">
-        <h1>Re-initializing Echo...</h1>
+        <h1>
+          Re-initializing Echo<span class="dot">.</span
+          ><span class="dot">.</span><span class="dot">.</span>
+        </h1>
       </div>
     `;
   }
