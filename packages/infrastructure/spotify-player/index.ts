@@ -40,6 +40,7 @@ type SpotifyPlayerCommand =
   | { _tag: "TogglePlayback" }
   | { _tag: "Stop" }
   | { _tag: "StartTimeTracking" }
+  | { _tag: "SyncTimeTracking"; seconds: number }
   | { _tag: "StopTimeTracking" }
   | { _tag: "Dispose" };
 
@@ -52,6 +53,7 @@ const {
   Stop,
   Dispose,
   StartTimeTracking,
+  SyncTimeTracking,
   StopTimeTracking,
 } = Data.taggedEnum<SpotifyPlayerCommand>();
 
@@ -221,6 +223,9 @@ const consumeCommandsInBackground = (
           }),
         ),
         Match.tag("StartTimeTracking", () => timeTicker.start),
+        Match.tag("SyncTimeTracking", ({ seconds }) =>
+          timeTicker.sync(seconds),
+        ),
         Match.tag("StopTimeTracking", () => timeTicker.stop),
         Match.tag("Stop", () =>
           Effect.all([
@@ -304,10 +309,9 @@ const setupListeners = (
         mediaPlayerEventQueue.unsafeOffer({ _tag: "trackPlaying" });
       } else if (previousState?.position !== state.position) {
         const positionInSeconds = Math.floor(state.position / 1000);
-        mediaPlayerEventQueue.unsafeOffer({
-          _tag: "trackTimeChanged",
-          time: positionInSeconds,
-        });
+        commandQueue.unsafeOffer(
+          SyncTimeTracking({ seconds: positionInSeconds }),
+        );
       }
 
       previousState = state;
@@ -327,6 +331,7 @@ const statesMatch = (
 
 type TimeTicker = {
   start: Effect.Effect<void>;
+  sync: (seconds: number) => Effect.Effect<void>;
   pause: Effect.Effect<void>;
   stop: Effect.Effect<void>;
 };
@@ -396,6 +401,18 @@ const createTimeTicker = (
         );
       }),
 
+      /**
+       * Syncs the time ticker with the current playback position.
+       */
+      sync: (seconds: number) =>
+        Effect.gen(function* () {
+          yield* Effect.log(`Syncing time ticker with ${seconds} seconds`);
+          yield* Ref.set(lastSecondRef, seconds);
+        }),
+
+      /**
+       * Pauses the time ticker, preventing further updates until resumed.
+       */
       pause: Effect.gen(function* () {
         yield* Effect.log("Pausing Spotify player's time ticker");
         const fiber = yield* Ref.get(fiberRef);
