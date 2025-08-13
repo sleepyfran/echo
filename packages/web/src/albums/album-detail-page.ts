@@ -26,6 +26,8 @@ export class AlbumDetail extends LitElement {
   @state()
   playingTrackIndex: number | null = null;
 
+  private _playAlbum = new EffectFn(this, Player.playAlbum);
+
   static styles = css`
     ol.track-list {
       display: flex;
@@ -128,6 +130,11 @@ export class AlbumDetail extends LitElement {
       text-align: left;
     }
 
+    table.track-list tr:hover {
+      cursor: pointer;
+      background-color: var(--background-color-muted);
+    }
+
     table.track-list tr.track-playing {
       background-color: var(--background-color-muted);
     }
@@ -193,6 +200,7 @@ export class AlbumDetail extends LitElement {
                 this.album.tracks,
                 (track, index) =>
                   html`<tr
+                    @click=${() => this.playFromTrack(index)}
                     class=${classMap({
                       "track-playing": this.playingTrackIndex === index,
                     })}
@@ -215,6 +223,10 @@ export class AlbumDetail extends LitElement {
         </div>
       </two-column-layout>
     `;
+  }
+
+  private playFromTrack(trackIndex: number) {
+    this._playAlbum.run({ album: this.album, fromTrackIdx: trackIndex });
   }
 
   private _formatDuration(durationInSeconds: number): string {

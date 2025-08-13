@@ -190,7 +190,7 @@ export class PlayableAlbumCover extends LitElement {
 
   private _onPlayClick() {
     if (this._playStatus === PlayStatus.NotPlaying) {
-      return this._playAlbum.run(this.album);
+      return this._playAlbum.run({ album: this.album });
     }
 
     this._togglePlayback.run({});

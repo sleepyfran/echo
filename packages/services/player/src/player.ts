@@ -68,9 +68,10 @@ const makePlayer = Effect.gen(function* () {
   yield* consumeCommandsInBackground(commandQueue);
 
   return Player.of({
-    playAlbum: (album) =>
+    playAlbum: ({ album, fromTrackIdx }) =>
       playTracks({
         album,
+        trackIndex: fromTrackIdx ?? 0,
         providerCache,
         commandQueue,
         preservePreviousTracks: false,

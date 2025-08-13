@@ -20,11 +20,13 @@ export class ProviderNotReady extends Error {
 export type IPlayer = {
   /**
    * Plays the given album, detecting the source from each track and delegating
-   * the playback to the appropriate media provider.
+   * the playback to the appropriate media provider. If `fromTrackIdx` is provided,
+   * playback will start from the specified track index.
    */
-  readonly playAlbum: (
-    album: Album,
-  ) => Effect.Effect<void, ProviderNotReady | PlayNotFoundError>;
+  readonly playAlbum: (args: {
+    album: Album;
+    fromTrackIdx?: number;
+  }) => Effect.Effect<void, ProviderNotReady | PlayNotFoundError>;
 
   /**
    * Plays the given albums, detecting the source from each track and delegating
