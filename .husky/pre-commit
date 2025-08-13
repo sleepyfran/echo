@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 yarn workspace @echo/web typecheck
 yarn workspace @echo/web lint
 yarn format
