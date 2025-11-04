@@ -1,4 +1,5 @@
 export * from "./chevron-icon";
+export * from "./command-icon";
 export * from "./cross-icon";
 export * from "./done-icon";
 export * from "./loader-icon";

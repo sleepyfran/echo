@@ -27,6 +27,11 @@ export class CommandBar extends LitElement {
   });
 
   static styles = css`
+    .input-container {
+      position: relative;
+      width: 95%;
+    }
+
     input {
       padding: 0.5rem;
       border: 1px solid var(--border-color);
@@ -35,11 +40,30 @@ export class CommandBar extends LitElement {
       font-family: "DepartureMono", monospace;
       font-size: 1rem;
       outline: none;
-      width: 95%;
+      width: 100%;
     }
 
     input:focus {
       border-color: var(--accent-color);
+    }
+
+    .keyboard-hint {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      opacity: 0.2;
+      pointer-events: none;
+      font-family: "DepartureMono", monospace;
+      font-size: 16px;
+    }
+
+    .keyboard-hint span {
+      margin-bottom: 5px;
     }
 
     div.search-results {
@@ -67,12 +91,18 @@ export class CommandBar extends LitElement {
   render() {
     return html`
       <sl-popup ?active=${this.resultsVisible} placement="bottom" sync="width">
-        <input
-          slot="anchor"
-          placeholder="Search or command"
-          @input="${this._onQueryChanged}"
-          @focus="${() => (this.resultsVisible = true)}"
-        />
+        <div slot="anchor" class="input-container">
+          <input
+            placeholder="Search or command"
+            @input="${this._onQueryChanged}"
+            @focus="${() => (this.resultsVisible = true)}"
+          />
+          <div class="keyboard-hint">
+            <command-icon size="16"></command-icon>
+            <span>+</span>
+            <span>K</span>
+          </div>
+        </div>
 
         <div class="search-results">
           ${this.searchResults[0].map(
