@@ -1,4 +1,4 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "@shoelace-style/shoelace/dist/components/popup/popup";
 import { Library, type Album, type Artist } from "@echo/core-types";
@@ -189,14 +189,15 @@ class CommandBarResult extends LitElement {
   render() {
     return html`
       <a href=${this.link}>
-        ${Option.isSome(this.imageSource) &&
-        html`
-          <img
-            class="${this.rounded ? "rounded" : ""}"
-            src="${URL.createObjectURL(this.imageSource.value)}"
-            alt="${this.title}"
-          />
-        `}
+        ${Option.isSome(this.imageSource)
+          ? html`
+              <img
+                class="${this.rounded ? "rounded" : ""}"
+                src="${URL.createObjectURL(this.imageSource.value)}"
+                alt="${this.title}"
+              />
+            `
+          : nothing}
         <div class="info">
           <h4>${this.title}</h4>
           <p>${this.subtitle}</p>
