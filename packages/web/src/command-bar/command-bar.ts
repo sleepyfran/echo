@@ -1,8 +1,8 @@
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "@shoelace-style/shoelace/dist/components/popup/popup";
-import { Library, type Album, type Artist } from "@echo/core-types";
-import { EffectFn } from "~web/shared-controllers";
+import { Keyboard, Library, type Album, type Artist } from "@echo/core-types";
+import { EffectFn, StreamConsumer } from "~web/shared-controllers";
 import { Option } from "effect";
 
 /**
@@ -50,6 +50,14 @@ export class CommandBar extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+
+    new StreamConsumer(this, Keyboard.observeEvent("command-bar:open"), {
+      item: () => {
+        this.resultsVisible = true;
+        const input = this.shadowRoot?.querySelector("input");
+        input?.focus();
+      },
+    });
 
     // Listen for the Escape key to close the search bar.
     window.addEventListener("keydown", (event) => this._onKeyDown(event));

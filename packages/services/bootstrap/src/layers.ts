@@ -21,6 +21,7 @@ import {
   AuthenticationRefresherLive,
 } from "@echo/services-reauthentication";
 import { MediaProviderManagerLive } from "@echo/services-media-provider-manager";
+import { KeyboardLive } from "@echo/services-keyboard";
 
 /**
  * Exports a layer that can provide all dependencies that are needed in the
@@ -39,6 +40,7 @@ export const MainLive = MediaProviderArgStorageLive.pipe(
   Layer.provideMerge(BrowserLocalStorageLive),
   Layer.provideMerge(BrowserCryptoLive),
   Layer.provideMerge(DexieDatabaseLive),
+  Layer.provideMerge(KeyboardLive),
   Layer.provideMerge(AppConfigLive),
   Layer.provide(Logger.pretty),
 );

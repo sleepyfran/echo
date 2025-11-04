@@ -4,6 +4,7 @@ export * from "./artist";
 export * from "./authentication";
 export * from "./broadcast-requests";
 export * from "./common";
+export * from "./keyboard-events";
 export * from "./file-system";
 export * from "./player-state";
 export * from "./provider-metadata";

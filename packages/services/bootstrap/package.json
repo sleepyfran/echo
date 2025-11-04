@@ -21,6 +21,7 @@
     "@echo/infrastructure-spotify-player": "^1.0.0",
     "@echo/infrastructure-spotify-provider": "^1.0.0",
     "@echo/services-active-media-provider-cache": "^1.0.0",
+    "@echo/services-keyboard": "^1.0.0",
     "@echo/services-media-provider-manager": "^1.0.0",
     "@echo/services-media-provider-status": "^1.0.0",
     "@echo/services-reauthentication": "^1.0.0",

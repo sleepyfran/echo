@@ -1,0 +1,16 @@
+{
+  "name": "@echo/services-keyboard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contains a pubsub that can be listened from the UI to react to global keyboard events.",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@echo/core-types": "^1.0.0",
+    "@echo/core-config": "^1.0.0",
+    "effect": "^3.17.6"
+  }
+}

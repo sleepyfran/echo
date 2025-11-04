@@ -5,6 +5,7 @@ export * from "./authentication";
 export * from "./broadcast";
 export * from "./crypto";
 export * from "./database";
+export * from "./keyboard";
 export * from "./library";
 export * from "./local-storage";
 export * from "./metadata-provider";
