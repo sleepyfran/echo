@@ -14,8 +14,7 @@
     "preview": "yarn workspace @echo/web vite preview",
     "test": "vitest",
     "typecheck": "yarn workspaces run typecheck",
-    "prepare": "husky",
-    "setup": "node ./tools/certificates/generate-certificates.js"
+    "prepare": "husky"
   },
   "dependencies": {
     "effect": "^3.17.6"

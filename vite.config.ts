@@ -1,20 +1,8 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
-import fs from "fs";
 import path from "path";
 
-export default defineConfig(({ command }) => {
-  const serverOptions =
-    command == "serve"
-      ? {
-          https: {
-            key: fs.readFileSync("./tools/certificates/key.pem"),
-            cert: fs.readFileSync("./tools/certificates/cert.pem"),
-          },
-          port: 4443,
-        }
-      : {};
-
+export default defineConfig(() => {
   return {
     resolve: {
       alias: {
@@ -48,7 +36,9 @@ export default defineConfig(({ command }) => {
     worker: {
       format: "es",
     },
-    server: serverOptions,
+    server: {
+      port: 5173,
+    },
     test: {
       server: {},
       root: ".",

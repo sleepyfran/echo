@@ -37,28 +37,21 @@ the dependencies:
 yarn install
 ```
 
-In order to connect to certain backends that the app supports, you'll need to
-run the local server via HTTPS instead of HTTP to avoid CORS issues. To do this,
-make sure you have [mkcert](https://github.com/FiloSottile/mkcert) installed and
-then run:
-
-```sh
-mkcert -install
-yarn setup
-```
-
 Once you've done this, make sure you have a `.env.local` file on the web package that
 contains the configuration for the backends you want to connect to. A full example
 of this file would be:
 
 ```
-VITE_ECHO_BASE_URL=https://localhost:443
+VITE_ECHO_BASE_URL=http://localhost:5173
 VITE_GRAPH_CLIENT_ID=your client ID
-VITE_GRAPH_REDIRECT_URI=http://localhost:443
+VITE_GRAPH_REDIRECT_URI=http://localhost:5173
 VITE_GRAPH_SCOPES=user.read,files.read,files.read.all
 VITE_SPOTIFY_CLIENT_ID=your client ID
 VITE_SPOTIFY_SECRET=your secret
 ```
+
+If you are using an OAuth-backed provider, make sure its allowed redirect URI
+matches your local dev URL.
 
 Finally, once all this is done, you can run the app with:
 
