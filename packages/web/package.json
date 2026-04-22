@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@echo/core-types": "^1.0.0",
+    "@lit-labs/virtualizer": "^2.1.1",
     "@echo/services-bootstrap-runtime": "^1.0.0",
     "date-fns": "^4.1.0",
     "effect": "^3.17.6",

@@ -1,11 +1,21 @@
 import { StreamConsumer } from "~web/shared-controllers";
-import { Genre, Library } from "@echo/core-types";
+import { Genre, Library, type Album } from "@echo/core-types";
+import {
+  virtualize,
+  type RenderItemFunction,
+} from "@lit-labs/virtualizer/virtualize.js";
 import { LitElement, css, html, nothing, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { map } from "lit/directives/map.js";
+import type { KeyFn } from "lit/directives/repeat.js";
 import "~web/albums";
 import { cache } from "lit/directives/cache.js";
 import type { ItemSelected } from "~web/ui-atoms";
+import { createResponsiveGridLayout } from "~web/utils";
+
+const GRID_PADDING_PX = 4;
+const ALBUM_IDEAL_ITEM_WIDTH_PX = 200;
+const ALBUM_MIN_ITEM_WIDTH_PX = 160;
+const ALBUM_INFO_HEIGHT_PX = 80;
 
 /**
  * Component that displays the user's library of albums and allows them to
@@ -103,7 +113,27 @@ class GenreAlbumLibrary extends LitElement {
   @property({ type: Object })
   genre: Genre | undefined;
 
+  @state()
+  private _layout = this._createAlbumGridLayout(0);
+
+  private _resizeObserver: ResizeObserver | undefined;
+
+  private _lastContainerWidth = 0;
+
+  private _renderAlbum: RenderItemFunction<Album> = (album, _index) => html`
+    <div class="virtualized-item">
+      <library-album .album=${album}></library-album>
+    </div>
+  `;
+
+  private _albumKey: KeyFn<Album> = (album, _index) => String(album.id);
+
   static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+    }
+
     div.loading-container {
       display: flex;
       justify-content: center;
@@ -127,11 +157,22 @@ class GenreAlbumLibrary extends LitElement {
       }
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
-      padding: 1rem;
+    .virtualizer-host {
+      display: block;
+      width: 100%;
+    }
+
+    .virtualized-item {
+      box-sizing: border-box;
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+
+    .virtualized-item > library-album {
+      display: block;
+      height: 100%;
+      width: 100%;
     }
   `;
 
@@ -147,6 +188,23 @@ class GenreAlbumLibrary extends LitElement {
     }
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    this._resizeObserver = new ResizeObserver(([entry]) => {
+      this._updateLayout(entry.contentRect.width);
+    });
+
+    this._resizeObserver.observe(this);
+  }
+
+  disconnectedCallback(): void {
+    this._resizeObserver?.disconnect();
+    this._resizeObserver = undefined;
+
+    super.disconnectedCallback();
+  }
+
   render() {
     return this._albums.render({
       initial: () =>
@@ -156,18 +214,43 @@ class GenreAlbumLibrary extends LitElement {
       item: (albums) =>
         albums.length > 0
           ? html`
-              <div class="grid">
-                ${map(
-                  albums,
-                  (album) => html`
-                    <library-album .album=${album}></library-album>
-                  `,
-                )}
+              <div class="virtualizer-host">
+                ${virtualize<Album>({
+                  items: albums,
+                  layout: this._layout,
+                  keyFunction: this._albumKey,
+                  renderItem: this._renderAlbum,
+                })}
               </div>
             `
           : html`<div class="loading-container">
               <h1>Your albums will appear here...</h1>
             </div>`,
+    });
+  }
+
+  private _updateLayout(containerWidth: number) {
+    const nextContainerWidth = Math.round(containerWidth);
+
+    if (
+      nextContainerWidth === 0 ||
+      nextContainerWidth === this._lastContainerWidth
+    ) {
+      return;
+    }
+
+    this._lastContainerWidth = nextContainerWidth;
+    this._layout = this._createAlbumGridLayout(nextContainerWidth);
+  }
+
+  private _createAlbumGridLayout(containerWidth: number) {
+    return createResponsiveGridLayout({
+      containerWidth:
+        containerWidth || ALBUM_IDEAL_ITEM_WIDTH_PX + GRID_PADDING_PX * 2,
+      idealItemWidth: ALBUM_IDEAL_ITEM_WIDTH_PX,
+      minItemWidth: ALBUM_MIN_ITEM_WIDTH_PX,
+      itemHeight: (itemWidth) => itemWidth + ALBUM_INFO_HEIGHT_PX,
+      paddingPx: GRID_PADDING_PX,
     });
   }
 }
