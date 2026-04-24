@@ -15,21 +15,41 @@ export class CommandBar extends LitElement {
   private resultsVisible = false;
 
   @state()
+  private selectedResultIndex = -1;
+
+  @state()
   private searchResults: [Album[], Artist[]] = [[], []];
 
   private previousSearchTimeout: NodeJS.Timeout | undefined;
+
+  private readonly _handleWindowKeyDown = (event: KeyboardEvent) =>
+    this._onWindowKeyDown(event);
+
+  private readonly _handleWindowMouseDown = (event: MouseEvent) =>
+    this._onWindowMouseDown(event);
 
   private search = new EffectFn(this, Library.search, {
     complete: (results) => {
       this.searchResults = results;
       this.resultsVisible = true;
+      this.selectedResultIndex = -1;
     },
   });
 
   static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      min-width: 0;
+    }
+
     .input-container {
       position: relative;
-      width: 95%;
+      width: 100%;
+    }
+
+    sl-popup {
+      width: 100%;
     }
 
     input {
@@ -41,6 +61,7 @@ export class CommandBar extends LitElement {
       font-size: 1rem;
       outline: none;
       width: 100%;
+      box-sizing: border-box;
     }
 
     input:focus {
@@ -69,6 +90,9 @@ export class CommandBar extends LitElement {
     div.search-results {
       background-color: var(--background-color-muted);
       box-shadow: var(--large-shadow);
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
   `;
 
@@ -84,8 +108,15 @@ export class CommandBar extends LitElement {
     });
 
     // Listen for the Escape key to close the search bar.
-    window.addEventListener("keydown", (event) => this._onKeyDown(event));
-    window.addEventListener("mousedown", (event) => this._onMouseDown(event));
+    window.addEventListener("keydown", this._handleWindowKeyDown);
+    window.addEventListener("mousedown", this._handleWindowMouseDown);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+
+    window.removeEventListener("keydown", this._handleWindowKeyDown);
+    window.removeEventListener("mousedown", this._handleWindowMouseDown);
   }
 
   render() {
@@ -95,7 +126,13 @@ export class CommandBar extends LitElement {
           <input
             placeholder="Search or command"
             @input="${this._onQueryChanged}"
+            @keydown="${this._onInputKeyDown}"
             @focus="${() => (this.resultsVisible = true)}"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="${this.resultsVisible}"
+            aria-controls="command-bar-results"
+            aria-activedescendant=${this._activeDescendantId}
           />
           <div class="keyboard-hint">
             <command-icon size="16"></command-icon>
@@ -104,30 +141,40 @@ export class CommandBar extends LitElement {
           </div>
         </div>
 
-        <div class="search-results">
+        <div id="command-bar-results" class="search-results" role="listbox">
           ${this.searchResults[0].map(
-            (album) => html`
+            (album, index) => html`
               <command-bar-result
+                id="${this._resultId(index)}"
                 title="${album.name}"
                 subtitle="${album.artist.name}"
                 .imageSource="${album.embeddedCover}"
                 link="/albums/${album.id}"
+                ?active="${this.selectedResultIndex === index}"
+                aria-selected="${this.selectedResultIndex === index}"
+                role="option"
                 @click="${this._onOptionSelected}"
               ></command-bar-result>
             `,
           )}
-          ${this.searchResults[1].map(
-            (artist) => html`
+          ${this.searchResults[1].map((artist, index) => {
+            const resultIndex = this.searchResults[0].length + index;
+
+            return html`
               <command-bar-result
+                id="${this._resultId(resultIndex)}"
                 title="${artist.name}"
                 subtitle=""
                 .imageSource="${artist.image}"
                 rounded
                 link="/artists/${artist.id}"
+                ?active="${this.selectedResultIndex === resultIndex}"
+                aria-selected="${this.selectedResultIndex === resultIndex}"
+                role="option"
                 @click="${this._onOptionSelected}"
               ></command-bar-result>
-            `,
-          )}
+            `;
+          })}
         </div>
       </sl-popup>
     `;
@@ -140,18 +187,38 @@ export class CommandBar extends LitElement {
       clearTimeout(this.previousSearchTimeout);
     }
 
+    this.selectedResultIndex = -1;
+
     this.previousSearchTimeout = setTimeout(() => {
       this.search.run(query);
     }, 200);
   }
 
-  private _onKeyDown(event: KeyboardEvent) {
+  private _onWindowKeyDown(event: KeyboardEvent) {
     if (event.key === "Escape") {
       this.resultsVisible = false;
+      this.selectedResultIndex = -1;
     }
   }
 
-  private _onMouseDown(event: MouseEvent) {
+  private _onInputKeyDown(event: KeyboardEvent) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      this._selectNextResult();
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      this._selectPreviousResult();
+    }
+
+    if (event.key === "Enter" && this.selectedResultIndex >= 0) {
+      event.preventDefault();
+      this._openSelectedResult();
+    }
+  }
+
+  private _onWindowMouseDown(event: MouseEvent) {
     const elementPath = event.composedPath();
     const popup = this.shadowRoot?.querySelector("sl-popup") as HTMLElement;
 
@@ -160,11 +227,63 @@ export class CommandBar extends LitElement {
     // through, so if the popup is not in the path, the user clicked outside.
     if (!elementPath.includes(popup)) {
       this.resultsVisible = false;
+      this.selectedResultIndex = -1;
     }
   }
 
   private _onOptionSelected() {
     this.resultsVisible = false;
+    this.selectedResultIndex = -1;
+  }
+
+  private _selectNextResult() {
+    const resultCount = this._resultCount;
+
+    if (resultCount === 0) {
+      return;
+    }
+
+    this.resultsVisible = true;
+    this.selectedResultIndex = (this.selectedResultIndex + 1) % resultCount;
+  }
+
+  private _selectPreviousResult() {
+    const resultCount = this._resultCount;
+
+    if (resultCount === 0) {
+      return;
+    }
+
+    this.resultsVisible = true;
+    this.selectedResultIndex =
+      this.selectedResultIndex <= 0
+        ? resultCount - 1
+        : this.selectedResultIndex - 1;
+  }
+
+  private _openSelectedResult() {
+    const result =
+      this.shadowRoot?.querySelectorAll<CommandBarResult>("command-bar-result")[
+        this.selectedResultIndex
+      ];
+
+    result?.open();
+  }
+
+  private _resultId(index: number) {
+    return `command-bar-result-${index}`;
+  }
+
+  private get _activeDescendantId() {
+    if (this.selectedResultIndex < 0) {
+      return nothing;
+    }
+
+    return this._resultId(this.selectedResultIndex);
+  }
+
+  private get _resultCount() {
+    return this.searchResults[0].length + this.searchResults[1].length;
   }
 }
 
@@ -185,7 +304,15 @@ class CommandBarResult extends LitElement {
   @property({ type: Boolean })
   rounded = false;
 
+  @property({ type: Boolean, reflect: true })
+  active = false;
+
   static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+    }
+
     a {
       display: flex;
       align-items: center;
@@ -194,9 +321,12 @@ class CommandBarResult extends LitElement {
       text-decoration: none;
       color: inherit;
       padding: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    a:hover {
+    a:hover,
+    :host([active]) a {
       background-color: var(--background-selected-color);
     }
 
@@ -242,6 +372,10 @@ class CommandBarResult extends LitElement {
         </div>
       </a>
     `;
+  }
+
+  public open() {
+    this.shadowRoot?.querySelector("a")?.click();
   }
 }
 
