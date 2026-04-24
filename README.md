@@ -42,12 +42,13 @@ contains the configuration for the backends you want to connect to. A full examp
 of this file would be:
 
 ```
-VITE_ECHO_BASE_URL=http://localhost:5173
+VITE_ECHO_BASE_URL=http://127.0.0.1:5173
 VITE_GRAPH_CLIENT_ID=your client ID
 VITE_GRAPH_REDIRECT_URI=http://localhost:5173
 VITE_GRAPH_SCOPES=user.read,files.read,files.read.all
 VITE_SPOTIFY_CLIENT_ID=your client ID
 VITE_SPOTIFY_SECRET=your secret
+VITE_SPOTIFY_REDIRECT_URI=http://127.0.0.1:5173
 ```
 
 If you are using an OAuth-backed provider, make sure its allowed redirect URI
