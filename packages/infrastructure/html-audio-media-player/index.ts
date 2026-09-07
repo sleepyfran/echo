@@ -44,7 +44,11 @@ const make = MediaPlayerFactory.of({
             });
           }),
         togglePlayback: Effect.sync(() => {
-          audioElement.paused ? audioElement.play() : audioElement.pause();
+          if (audioElement.paused) {
+            void audioElement.play();
+          } else {
+            audioElement.pause();
+          }
         }),
         stop: Effect.sync(() => {
           audioElement.pause();

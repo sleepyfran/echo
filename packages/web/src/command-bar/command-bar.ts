@@ -1,6 +1,6 @@
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import "@shoelace-style/shoelace/dist/components/popup/popup";
+import "@shoelace-style/shoelace/dist/components/popup/popup.js";
 import { Keyboard, Library, type Album, type Artist } from "@echo/core-types";
 import { EffectFn, StreamConsumer } from "~web/shared-controllers";
 import { Option } from "effect";
@@ -365,15 +365,17 @@ class CommandBarResult extends LitElement {
   render() {
     return html`
       <a href=${this.link}>
-        ${Option.isSome(this.imageSource)
-          ? html`
-              <img
-                class="${this.rounded ? "rounded" : ""}"
-                src="${URL.createObjectURL(this.imageSource.value)}"
-                alt="${this.title}"
-              />
-            `
-          : nothing}
+        ${
+          Option.isSome(this.imageSource)
+            ? html`
+                <img
+                  class="${this.rounded ? "rounded" : ""}"
+                  src="${URL.createObjectURL(this.imageSource.value)}"
+                  alt="${this.title}"
+                />
+              `
+            : nothing
+        }
         <div class="info">
           <h4>${this.title}</h4>
           <p>${this.subtitle}</p>

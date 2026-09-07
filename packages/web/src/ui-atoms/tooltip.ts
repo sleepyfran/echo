@@ -1,7 +1,7 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import "@shoelace-style/shoelace/dist/components/popup/popup";
-import "@shoelace-style/shoelace/dist/components/tooltip/tooltip";
+import "@shoelace-style/shoelace/dist/components/popup/popup.js";
+import "@shoelace-style/shoelace/dist/components/tooltip/tooltip.js";
 
 /**
  * Component that wraps a slot in a tooltip.

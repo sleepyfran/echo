@@ -202,15 +202,17 @@ export class EchoPlayer extends LitElement {
     return html`
       <div id="player" class="current-track">
         <div class="track-info">
-          ${Option.isSome(album.embeddedCover)
-            ? html` <img
-                id="current-track-cover"
-                src="${this._cachedObjectUrl.value ?? ""}"
-                height="40"
-                width="40"
-                alt="Album cover"
-              />`
-            : nothing}
+          ${
+            Option.isSome(album.embeddedCover)
+              ? html` <img
+                  id="current-track-cover"
+                  src="${this._cachedObjectUrl.value ?? ""}"
+                  height="40"
+                  width="40"
+                  alt="Album cover"
+                />`
+              : nothing
+          }
           <div class="left-container">
             <div class="track-details">
               <h4 id="track-name" title=${track.name}>${track.name}</h4>
@@ -225,34 +227,38 @@ export class EchoPlayer extends LitElement {
             </h6>
           </div>
         </div>
-        ${player.status._tag !== "Stopped"
-          ? html`
-              <div class="playback-buttons">
-                <echo-button
-                  .type=${ButtonType.Icon}
-                  @click=${this._onPreviousTrack}
-                  ?disabled=${!player.allowsPrevious}
-                >
-                  <prev-icon></prev-icon>
-                </echo-button>
-                <echo-button
-                  .type=${ButtonType.Icon}
-                  @click=${this._onTogglePlayback}
-                >
-                  ${player.status._tag === "Paused"
-                    ? html` <play-icon id="play"></play-icon> `
-                    : html` <pause-icon id="pause"></pause-icon> `}
-                </echo-button>
-                <echo-button
-                  .type=${ButtonType.Icon}
-                  @click=${this._onSkipTrack}
-                  ?disabled=${!player.allowsNext}
-                >
-                  <next-icon></next-icon>
-                </echo-button>
-              </div>
-            `
-          : nothing}
+        ${
+          player.status._tag !== "Stopped"
+            ? html`
+                <div class="playback-buttons">
+                  <echo-button
+                    .type=${ButtonType.Icon}
+                    @click=${this._onPreviousTrack}
+                    ?disabled=${!player.allowsPrevious}
+                  >
+                    <prev-icon></prev-icon>
+                  </echo-button>
+                  <echo-button
+                    .type=${ButtonType.Icon}
+                    @click=${this._onTogglePlayback}
+                  >
+                    ${
+                      player.status._tag === "Paused"
+                        ? html` <play-icon id="play"></play-icon> `
+                        : html` <pause-icon id="pause"></pause-icon> `
+                    }
+                  </echo-button>
+                  <echo-button
+                    .type=${ButtonType.Icon}
+                    @click=${this._onSkipTrack}
+                    ?disabled=${!player.allowsNext}
+                  >
+                    <next-icon></next-icon>
+                  </echo-button>
+                </div>
+              `
+            : nothing
+        }
       </div>
     `;
   }

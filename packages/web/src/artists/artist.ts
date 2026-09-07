@@ -57,15 +57,17 @@ export class LibraryArtist extends LitElement {
     return html`
       <echo-hoverable>
         <div key=${String(this.artist.id)} class="artist-container">
-          ${Option.isSome(this.artist.image)
-            ? html`
-                <img
-                  src="${URL.createObjectURL(this.artist.image.value)}"
-                  alt=${`Image of ${this.artist.name}`}
-                  class="artist-image"
-                />
-              `
-            : nothing}
+          ${
+            Option.isSome(this.artist.image)
+              ? html`
+                  <img
+                    src="${URL.createObjectURL(this.artist.image.value)}"
+                    alt=${`Image of ${this.artist.name}`}
+                    class="artist-image"
+                  />
+                `
+              : nothing
+          }
           <div class="artist-info">
             <a href="/artists/${this.artist.id}"
               ><h5>${this.artist.name}</h5></a

@@ -1,4 +1,4 @@
-import type { Keybinding } from "packages/core/types";
+import type { Keybinding } from "@echo/core-types";
 
 /**
  * Normalizes a keybinding into a string representation by concatenating all

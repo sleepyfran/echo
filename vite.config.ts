@@ -6,7 +6,7 @@ export default defineConfig(() => {
   return {
     resolve: {
       alias: {
-        "~web": path.resolve(__dirname, "./packages/web/src"),
+        "~web": path.resolve(import.meta.dirname, "./packages/web/src"),
       },
     },
 

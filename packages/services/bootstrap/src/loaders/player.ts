@@ -35,16 +35,14 @@ const lazyLoadFromMetadata = (
   switch (metadata.type) {
     case ProviderType.FileBased:
       return Effect.promise(async () => {
-        const { HtmlAudioMediaPlayerFactoryLive } = await import(
-          "@echo/infrastructure-html-audio-media-player"
-        );
+        const { HtmlAudioMediaPlayerFactoryLive } =
+          await import("@echo/infrastructure-html-audio-media-player");
         return HtmlAudioMediaPlayerFactoryLive;
       });
     case ProviderType.ApiBased:
       return Effect.promise(async () => {
-        const { SpotifyMediaPlayerFactoryLive } = await import(
-          "@echo/infrastructure-spotify-player"
-        );
+        const { SpotifyMediaPlayerFactoryLive } =
+          await import("@echo/infrastructure-spotify-player");
         return SpotifyMediaPlayerFactoryLive.pipe(
           Layer.provide(FetchHttpClient.layer),
         );

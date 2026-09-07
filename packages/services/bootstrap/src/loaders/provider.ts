@@ -45,16 +45,14 @@ const lazyLoadFromMetadata = (
   switch (metadata.id) {
     case FileBasedProviderId.OneDrive:
       return Effect.promise(async () => {
-        const { OneDriveProviderFactoryLive } = await import(
-          "@echo/infrastructure-onedrive-provider"
-        );
+        const { OneDriveProviderFactoryLive } =
+          await import("@echo/infrastructure-onedrive-provider");
         return OneDriveProviderFactoryLive.pipe(Layer.provide(AppConfigLive));
       });
     case ApiBasedProviderId.Spotify:
       return Effect.promise(async () => {
-        const { SpotifyProviderFactoryLive } = await import(
-          "@echo/infrastructure-spotify-provider"
-        );
+        const { SpotifyProviderFactoryLive } =
+          await import("@echo/infrastructure-spotify-provider");
         return SpotifyProviderFactoryLive.pipe(
           Layer.provide(AppConfigLive),
           Layer.provide(FetchHttpClient.layer),

@@ -1,7 +1,7 @@
 import { Match } from "effect";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import type { ProviderStatus } from "packages/core/types";
+import type { ProviderStatus } from "@echo/core-types";
 
 @customElement("provider-status-icon")
 export class ProviderStatusIcon extends LitElement {

@@ -174,25 +174,29 @@ export class PlayableAlbumCover extends LitElement {
           providerId=${this.album.providerId}
           title=${`This album is hosted on ${this.album.providerId}`}
         ></provider-icon>
-        ${Option.isSome(this.album.embeddedCover) &&
-        html`
-          <img
-            src="${URL.createObjectURL(this.album.embeddedCover.value)}"
-            alt="Album cover"
-            class="album-cover"
-          />
-        `}
+        ${
+          Option.isSome(this.album.embeddedCover) &&
+          html`
+            <img
+              src="${URL.createObjectURL(this.album.embeddedCover.value)}"
+              alt="Album cover"
+              class="album-cover"
+            />
+          `
+        }
         <button
           class="play"
           @click=${this._onPlayClick}
           ?disabled=${this._playStatus === PlayStatus.Loading}
           title="Play"
         >
-          ${this._playStatus === PlayStatus.Loading
-            ? html`<loader-icon size="24"></loader-icon>`
-            : this._playStatus === PlayStatus.Playing
-              ? html`<pause-icon size="24"></pause-icon>`
-              : html`<play-icon size="24"></play-icon>`}
+          ${
+            this._playStatus === PlayStatus.Loading
+              ? html`<loader-icon size="24"></loader-icon>`
+              : this._playStatus === PlayStatus.Playing
+                ? html`<pause-icon size="24"></pause-icon>`
+                : html`<play-icon size="24"></play-icon>`
+          }
         </button>
       </div>
     `;

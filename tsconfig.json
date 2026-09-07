@@ -22,9 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true,
     /* Aliases */
-    "baseUrl": ".",
     "paths": {
-      "~web/*": ["packages/web/src/*"]
+      "~web/*": ["./packages/web/src/*"]
     }
   },
   "references": [

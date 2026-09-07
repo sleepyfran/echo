@@ -1,9 +1,9 @@
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import "@shoelace-style/shoelace/dist/components/popup/popup";
-import "@shoelace-style/shoelace/dist/components/dropdown/dropdown";
-import "@shoelace-style/shoelace/dist/components/menu/menu";
-import "@shoelace-style/shoelace/dist/components/menu-item/menu-item";
+import "@shoelace-style/shoelace/dist/components/popup/popup.js";
+import "@shoelace-style/shoelace/dist/components/dropdown/dropdown.js";
+import "@shoelace-style/shoelace/dist/components/menu/menu.js";
+import "@shoelace-style/shoelace/dist/components/menu-item/menu-item.js";
 import "~web/ui-atoms";
 import { Player, type Album } from "@echo/core-types";
 import { EffectFn } from "~web/shared-controllers";

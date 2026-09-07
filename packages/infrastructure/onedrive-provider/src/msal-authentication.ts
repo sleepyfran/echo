@@ -38,8 +38,6 @@ export const MsalAuthenticationLive = Layer.effect(
         },
         cache: {
           cacheLocation: "localStorage",
-          temporaryCacheLocation: "sessionStorage",
-          storeAuthStateInCookie: true,
         },
       }),
     );

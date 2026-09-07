@@ -192,9 +192,11 @@ export class AlbumDetail extends LitElement {
             <a href="/artists/${this.album.artist.id}"
               >${this.album.artist.name}</a
             >
-            ${Option.isSome(this.album.releaseYear)
-              ? html`(${this.album.releaseYear.value})`
-              : nothing}
+            ${
+              Option.isSome(this.album.releaseYear)
+                ? html`(${this.album.releaseYear.value})`
+                : nothing
+            }
           </h5>
           <h6>${this._formatAlbumDuration()}</h6>
           <div class="genres">${this._renderGenres()}</div>
@@ -214,11 +216,13 @@ export class AlbumDetail extends LitElement {
                     })}
                   >
                     <td class="track-number">
-                      ${this.playingTrackIndex === index
-                        ? html`<animated-volume-icon
-                            size="16"
-                          ></animated-volume-icon>`
-                        : html`${index + 1}`}
+                      ${
+                        this.playingTrackIndex === index
+                          ? html`<animated-volume-icon
+                              size="16"
+                            ></animated-volume-icon>`
+                          : html`${index + 1}`
+                      }
                     </td>
                     <td>${track.name}</td>
                     <td class="duration">

@@ -68,9 +68,11 @@ export class SelectRoot extends LitElement {
             ?disabled=${!this._selectedFolder}
             @click=${this._onStartProvider}
           >
-            ${this._selectedFolder
-              ? `Start provider using ${this._selectedFolder.name}`
-              : "Select a folder"}
+            ${
+              this._selectedFolder
+                ? `Start provider using ${this._selectedFolder.name}`
+                : "Select a folder"
+            }
           </echo-button>
         </div>
       `,

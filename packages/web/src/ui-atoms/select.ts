@@ -1,8 +1,8 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import "~web/icons";
-import "@shoelace-style/shoelace/dist/components/select/select";
-import "@shoelace-style/shoelace/dist/components/option/option";
+import "@shoelace-style/shoelace/dist/components/select/select.js";
+import "@shoelace-style/shoelace/dist/components/option/option.js";
 
 export class ItemSelected<T> extends CustomEvent<
   [T | undefined, number | undefined]

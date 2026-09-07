@@ -11,7 +11,7 @@
   "dependencies": {
     "@echo/core-strings": "workspace:*",
     "@echo/core-types": "workspace:*",
-    "dexie": "^4.0.11",
+    "dexie": "^4.4.5",
     "effect": "4.0.0-rc.112"
   }
 }

@@ -80,15 +80,17 @@ export class ArtistDetail extends LitElement {
       <library-selection></library-selection>
       <two-column-layout>
         <div class="artist-info" slot="left-column">
-          ${Option.isSome(this.details.artist.image)
-            ? html`
-                <img
-                  src="${URL.createObjectURL(this.details.artist.image.value)}"
-                  alt=${`Image of ${this.details.artist.name}`}
-                  class="artist-image"
-                />
-              `
-            : nothing}
+          ${
+            Option.isSome(this.details.artist.image)
+              ? html`
+                  <img
+                    src="${URL.createObjectURL(this.details.artist.image.value)}"
+                    alt=${`Image of ${this.details.artist.name}`}
+                    class="artist-image"
+                  />
+                `
+              : nothing
+          }
           <h1>${this.details.artist.name}</h1>
           <play-all-button .albums=${this.details.albums}></play-all-button>
         </div>

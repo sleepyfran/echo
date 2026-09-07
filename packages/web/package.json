@@ -12,16 +12,16 @@
   },
   "dependencies": {
     "@echo/core-types": "workspace:*",
-    "@lit-labs/virtualizer": "^2.1.1",
     "@echo/services-bootstrap-runtime": "workspace:*",
-    "date-fns": "^4.1.0",
-    "effect": "4.0.0-rc.112",
-    "lit": "^3.3.1",
+    "@lit-labs/virtualizer": "^2.1.1",
     "@lit/task": "^1.0.3",
     "@shoelace-style/shoelace": "^2.20.1",
-    "@vaadin/router": "^2.0.0"
+    "@vaadin/router": "^2.0.1",
+    "date-fns": "^4.4.0",
+    "effect": "4.0.0-rc.112",
+    "lit": "^3.3.3"
   },
   "devDependencies": {
-    "vite": "^5.4.8"
+    "vite": "^8.2.2"
   }
 }

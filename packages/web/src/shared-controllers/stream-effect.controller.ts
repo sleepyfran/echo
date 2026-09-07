@@ -61,8 +61,7 @@ export class StreamConsumer<A, E> implements ReactiveController {
   constructor(
     host: ReactiveControllerHost,
     private readonly _streamEffect:
-      | OutputEffect<A, E>
-      | (() => OutputEffect<A, E>),
+      OutputEffect<A, E> | (() => OutputEffect<A, E>),
     private readonly _listeners?: Omit<StatusRenderer<A, E>, "initial">,
   ) {
     (this.host = host).addController(this);
