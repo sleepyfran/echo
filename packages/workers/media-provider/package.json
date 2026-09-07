@@ -15,5 +15,8 @@
     "@echo/core-types": "workspace:*",
     "@echo/services-bootstrap": "workspace:*",
     "effect": "4.0.0-rc.112"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.0"
   }
 }

@@ -31,13 +31,24 @@ export const partiallyDownloadIntoStream = (
   byteRangeStart = 0,
   byteRangeEnd = 10000,
 ) =>
+  fetchIntoStream(file, {
+    Range: `bytes=${byteRangeStart}-${byteRangeEnd}`,
+  });
+
+/**
+ * Downloads the entire file into a readable stream.
+ */
+export const downloadIntoStream = (file: FileMetadata) => fetchIntoStream(file);
+
+const fetchIntoStream = (
+  file: FileMetadata,
+  headers?: Record<string, string>,
+) =>
   Effect.tryPromise({
     try: () =>
-      fetch(file.downloadUrl, {
-        headers: {
-          Range: `bytes=${byteRangeStart}-${byteRangeEnd}`,
-        },
-      }).then((response) => response.body), // TODO: Check if this works on Firefox.
+      fetch(file.downloadUrl, headers ? { headers } : undefined).then(
+        (response) => response.body,
+      ), // TODO: Check if this works on Firefox.
     catch: () => new UnknownError(),
   }).pipe(
     Effect.flatMap((response) => {

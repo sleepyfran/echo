@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@echo/core-types": "workspace:*",
+    "@echo/infrastructure-onedrive-provider": "workspace:*",
     "@echo/services-bootstrap-runtime": "workspace:*",
     "@lit-labs/virtualizer": "^2.1.1",
     "@lit/task": "^1.0.3",
@@ -22,6 +23,7 @@
     "lit": "^3.3.3"
   },
   "devDependencies": {
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
   }
 }

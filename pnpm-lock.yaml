@@ -434,6 +434,9 @@ importers:
       '@echo/core-types':
         specifier: workspace:*
         version: link:../core/types
+      '@echo/infrastructure-onedrive-provider':
+        specifier: workspace:*
+        version: link:../infrastructure/onedrive-provider
       '@echo/services-bootstrap-runtime':
         specifier: workspace:*
         version: link:../services/bootstrap-runtime
@@ -462,6 +465,9 @@ importers:
       vite:
         specifier: ^8.2.2
         version: 8.2.2(@types/node@26.4.1)
+      vitest:
+        specifier: ^5.0.0
+        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1))
 
   packages/workers/image-provider:
     dependencies:
@@ -495,6 +501,10 @@ importers:
       effect:
         specifier: 4.0.0-rc.112
         version: 4.0.0-rc.112
+    devDependencies:
+      vitest:
+        specifier: ^5.0.0
+        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1))
 
 packages:
 

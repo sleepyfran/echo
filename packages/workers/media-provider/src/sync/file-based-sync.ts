@@ -22,10 +22,11 @@ import {
   ProviderStatusChanged,
   MalformedFileError,
 } from "@echo/core-types";
-import { Effect, Match, Option, Schedule, Stream } from "effect";
+import { Effect, Match, Option, Stream } from "effect";
 import { head } from "effect/Array";
 import { isSupportedAudioFile } from "@echo/core-files";
 import {
+  downloadIntoStream,
   partiallyDownloadIntoStream,
   type DownloadError,
 } from "./partial-downloader";
@@ -45,6 +46,9 @@ type SyncState = {
   albums: Map<string, DatabaseAlbum>;
   artists: Map<string, DatabaseArtist>;
 };
+
+const PARTIAL_METADATA_BYTE_RANGE_END = 500_000;
+const PARTIAL_METADATA_BYTE_COUNT = PARTIAL_METADATA_BYTE_RANGE_END + 1;
 
 export const syncFileBasedProvider = ({
   startArgs,
@@ -125,20 +129,41 @@ export const syncFileBasedProvider = ({
     ),
   );
 
-const partiallyDownloadFile = (file: FileMetadata) =>
-  // TODO: Implement retry with a bigger partial range if metadata is undefined.
-  partiallyDownloadIntoStream(file, 0, 500000).pipe(
-    Effect.map((stream) => [stream, file] as const),
-    Effect.retry({
-      times: 3,
-      schedule: Schedule.exponential("1 second"),
-    }),
-    Effect.tapError((error) =>
-      Effect.logError(
-        `Failed to download file ${file.name} with error: ${error}`,
-      ),
-    ),
+export const resolveFileMetadata = (
+  metadataProvider: MetadataProvider,
+  file: FileMetadata,
+) => {
+  const resolveFromStream = (stream: ReadableStream) =>
+    metadataProvider.trackMetadataFromReadableStream(stream, file);
+  const resolveFromEntireFile = Effect.logDebug(
+    `Retrying metadata extraction for ${file.name} with the entire file`,
+  ).pipe(
+    Effect.andThen(downloadIntoStream(file)),
+    Effect.flatMap(resolveFromStream),
   );
+
+  const partialMetadata = partiallyDownloadIntoStream(
+    file,
+    0,
+    PARTIAL_METADATA_BYTE_RANGE_END,
+  ).pipe(Effect.flatMap(resolveFromStream));
+
+  return Effect.matchEffect(partialMetadata, {
+    onFailure: (initialError) =>
+      resolveFromEntireFile.pipe(
+        Effect.tapError((retryError) =>
+          Effect.logError(
+            `Failed to download or process ${file.name} with error: ${retryError}. Initial error: ${initialError}`,
+          ),
+        ),
+      ),
+    onSuccess: (metadata) =>
+      metadata.embeddedCover === undefined &&
+      file.byteSize > PARTIAL_METADATA_BYTE_COUNT
+        ? resolveFromEntireFile
+        : Effect.succeed(metadata),
+  });
+};
 
 const retrieveSupportedFilesFromFolder = (
   provider: FileBasedProvider,
@@ -176,10 +201,7 @@ const resolveMetadataFromStream = (
   stream.pipe(
     Stream.mapEffect(
       (file) =>
-        partiallyDownloadFile(file).pipe(
-          Effect.flatMap(([stream, file]) =>
-            metadataProvider.trackMetadataFromReadableStream(stream, file),
-          ),
+        resolveFileMetadata(metadataProvider, file).pipe(
           Effect.map((metadata) => ({ metadata, file })),
           Effect.tap(({ file }) =>
             Effect.logDebug(`Downloaded and processed ${file.name}`),
@@ -382,6 +404,7 @@ const tryRetrieveOrCreateAlbum = (
 
     return {
       ...existingAlbum.value,
+      embeddedCover: existingAlbum.value.embeddedCover ?? embeddedCover,
       genres,
       tracks,
     };

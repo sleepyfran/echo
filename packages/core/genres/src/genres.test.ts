@@ -17,6 +17,20 @@ describe("flatten", () => {
     expect(Genres.flatten(genres)).toEqual(["Shoegaze", "Post-Rock"]);
   });
 
+  test("flattens a single, semicolon-separated value", () => {
+    const genres = ["Shoegaze; Post-Rock"];
+    expect(Genres.flatten(genres)).toEqual(["Shoegaze", "Post-Rock"]);
+  });
+
+  test("flattens values containing both supported separators", () => {
+    const genres = ["Shoegaze; Post-Rock, Alt-Rock"];
+    expect(Genres.flatten(genres)).toEqual([
+      "Shoegaze",
+      "Post-Rock",
+      "Alt-Rock",
+    ]);
+  });
+
   test("flattens a combination of comma-separated value and regular array elements", () => {
     const genres = [
       "Shoegaze, Post-Rock",
