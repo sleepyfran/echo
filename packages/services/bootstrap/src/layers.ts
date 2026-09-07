@@ -42,7 +42,7 @@ export const MainLive = MediaProviderArgStorageLive.pipe(
   Layer.provideMerge(DexieDatabaseLive),
   Layer.provideMerge(KeyboardLive),
   Layer.provideMerge(AppConfigLive),
-  Layer.provide(Logger.pretty),
+  Layer.provide(Logger.layer([Logger.consolePretty()])),
 );
 
 /**
@@ -59,5 +59,5 @@ export const WorkerLive = MediaProviderStatusLive.pipe(
   Layer.provideMerge(MmbMetadataProviderLive),
   Layer.provideMerge(SpotifyArtistImageProvider),
   Layer.provideMerge(AppConfigLive),
-  Layer.provide(Logger.pretty),
+  Layer.provide(Logger.layer([Logger.consolePretty()])),
 );

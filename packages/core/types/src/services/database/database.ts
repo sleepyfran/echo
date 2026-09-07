@@ -38,9 +38,7 @@ export type Database = {
 /**
  * Tag to identify the database service.
  */
-export const Database = Context.GenericTag<Database>(
-  "@echo/core-types/Database",
-);
+export const Database = Context.Service<Database>("@echo/core-types/Database");
 
 /**
  * Returns the keys of T that are strings.

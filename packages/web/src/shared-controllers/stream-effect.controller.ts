@@ -2,7 +2,7 @@ import {
   getOrCreateRuntime,
   type EchoRuntimeServices,
 } from "@echo/services-bootstrap-runtime";
-import { Effect, Fiber, Stream, type SubscriptionRef } from "effect";
+import { Effect, Fiber, Stream, SubscriptionRef } from "effect";
 import type { ReactiveController, ReactiveControllerHost } from "lit";
 
 /**
@@ -39,7 +39,7 @@ type StreamStatus<A, E> =
 const isSubscriptionRef = <A, E>(
   streamOrRef: Stream.Stream<A, E> | SubscriptionRef.SubscriptionRef<A>,
 ): streamOrRef is SubscriptionRef.SubscriptionRef<A> =>
-  "changes" in streamOrRef;
+  SubscriptionRef.isSubscriptionRef(streamOrRef);
 
 type OutputEffect<A, E> = Effect.Effect<
   Stream.Stream<A, E> | SubscriptionRef.SubscriptionRef<A>,
@@ -55,7 +55,7 @@ type OutputEffect<A, E> = Effect.Effect<
 export class StreamConsumer<A, E> implements ReactiveController {
   private host: ReactiveControllerHost;
 
-  private _fiber: Fiber.RuntimeFiber<void, E> | undefined;
+  private _fiber: Fiber.Fiber<void, E> | undefined;
   private _status: StreamStatus<A, E> = { _tag: "Initial" };
 
   constructor(
@@ -77,7 +77,7 @@ export class StreamConsumer<A, E> implements ReactiveController {
     const consumer$ = streamEffect.pipe(
       Effect.flatMap((streamOrRef) => {
         const stream = isSubscriptionRef(streamOrRef)
-          ? streamOrRef.changes
+          ? SubscriptionRef.changes(streamOrRef)
           : streamOrRef;
         return stream.pipe(
           Stream.tap((item) => this.handleUpdate$({ _tag: "Item", item })),

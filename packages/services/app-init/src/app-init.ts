@@ -22,7 +22,15 @@ import {
   LazyLoadedProvider,
 } from "@echo/services-bootstrap";
 import type { ILoadedProvider } from "@echo/services-bootstrap/src/loaders/provider";
-import { Effect, Layer, Match, Option, Scope, Stream } from "effect";
+import {
+  Effect,
+  Layer,
+  Match,
+  Option,
+  Scope,
+  Stream,
+  SubscriptionRef,
+} from "effect";
 import { initializeWorkers } from "@echo/services-bootstrap-workers";
 
 const make = Effect.gen(function* () {
@@ -47,13 +55,13 @@ const make = Effect.gen(function* () {
       yield* Effect.log("Worker initialization finished, starting app...");
 
       yield* mediaProviderArgsStorage.keepInSync.pipe(
-        Scope.extend(globalScope),
+        Scope.provide(globalScope),
         Effect.forkIn(globalScope),
       );
       yield* authRefresher.start.pipe(Effect.forkIn(globalScope));
 
       yield* syncPageTitleWithPlayer(player).pipe(
-        Scope.extend(globalScope),
+        Scope.provide(globalScope),
         Effect.forkIn(globalScope),
       );
 
@@ -129,6 +137,7 @@ const reinitializeProvider = (
 
     yield* broadcaster.broadcast(
       "mediaProvider",
+      StartProvider,
       new StartProvider({
         args: {
           ...startArgs,
@@ -146,13 +155,14 @@ const reinitializeProvider = (
     yield* broadcaster
       .broadcast(
         "authentication",
+        ProviderAuthInfoChanged,
         new ProviderAuthInfoChanged({
           providerId: startArgs.metadata.id,
           authInfo: authResult,
         }),
       )
       .pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.logError(
             `Failed to broadcast token update to broadcast channel due to error:\n${error.toString()}`,
           ),
@@ -168,7 +178,7 @@ const syncPageTitleWithPlayer = (player: IPlayer) =>
   Effect.gen(function* () {
     const playerState = yield* player.observe;
 
-    yield* playerState.changes.pipe(
+    yield* SubscriptionRef.changes(playerState).pipe(
       Stream.runForEach((state) =>
         Match.value(state.status).pipe(
           Match.tag("Stopped", "Loading", () =>
@@ -186,4 +196,4 @@ const syncPageTitleWithPlayer = (player: IPlayer) =>
     );
   });
 
-export const AppInitLive = Layer.scoped(AppInit, make);
+export const AppInitLive = Layer.effect(AppInit, make);

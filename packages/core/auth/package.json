@@ -9,6 +9,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-types": "^1.0.0"
+    "@echo/core-types": "workspace:*"
   }
 }

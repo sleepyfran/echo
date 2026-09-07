@@ -27,7 +27,6 @@ import {
   pipe,
   Queue,
   Random,
-  Ref,
   Scope,
   Stream,
   SubscriptionRef,
@@ -109,7 +108,7 @@ const makePlayer = Effect.gen(function* () {
         });
       }),
     togglePlayback: Effect.gen(function* () {
-      const mediaPlayer = yield* activeMediaPlayer.get;
+      const mediaPlayer = yield* SubscriptionRef.get(activeMediaPlayer);
       if (Option.isNone(mediaPlayer)) {
         yield* Effect.logWarning(
           "Attempted to toggle playback with no media player active.",
@@ -121,7 +120,7 @@ const makePlayer = Effect.gen(function* () {
     }),
     previous: Effect.gen(function* () {
       const { previouslyPlayedAlbums, comingUpAlbums, status } =
-        yield* Ref.get(state);
+        yield* SubscriptionRef.get(state);
 
       yield* Match.value(status).pipe(
         Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
@@ -157,7 +156,7 @@ const makePlayer = Effect.gen(function* () {
         ),
       );
     }),
-    skip: commandQueue.offer(NextTrack()),
+    skip: Queue.offer(commandQueue, NextTrack()),
     observe: Effect.sync(() => state),
   });
 });
@@ -232,7 +231,8 @@ const consumeCommandsInBackground = (
             const state = yield* PlayerStateRef;
             const providerCache = yield* ActiveMediaProviderCache;
 
-            const { status, comingUpAlbums } = yield* Ref.get(state);
+            const { status, comingUpAlbums } =
+              yield* SubscriptionRef.get(state);
             yield* Match.value(status).pipe(
               Match.tag("Playing", "Paused", ({ album, trackIndex }) =>
                 Effect.gen(function* () {
@@ -274,7 +274,8 @@ const consumeCommandsInBackground = (
               `Playback changed to ${isPlaying ? "playing" : "paused"}`,
             );
 
-            yield* commandQueue.offer(
+            yield* Queue.offer(
+              commandQueue,
               UpdateState({
                 updateFn: (state) =>
                   Match.value(state.status).pipe(
@@ -311,7 +312,7 @@ const consumeCommandsInBackground = (
         Match.tag("UpdateState", ({ updateFn }) =>
           Effect.gen(function* () {
             const state = yield* PlayerStateRef;
-            yield* Ref.update(state, updateFn);
+            yield* SubscriptionRef.update(state, updateFn);
           }),
         ),
         Match.tag("SyncPlayerState", ({ withMediaPlayer }) =>
@@ -367,14 +368,19 @@ const playTracks = ({
       requestedTrack.value,
     );
 
-    yield* commandQueue.offer(SyncPlayerState({ withMediaPlayer: player }));
-    yield* commandQueue.offer(
+    yield* Queue.offer(
+      commandQueue,
+      SyncPlayerState({ withMediaPlayer: player }),
+    );
+    yield* Queue.offer(
+      commandQueue,
       UpdateState({
         updateFn: toLoadingState(album, trackIndex),
       }),
     );
     yield* playTrack(provider, player, requestedTrack.value);
-    yield* commandQueue.offer(
+    yield* Queue.offer(
+      commandQueue,
       UpdateState({
         updateFn: toPlayingState(
           album,
@@ -417,7 +423,7 @@ const syncPlayerState = (
   commandQueue: Queue.Enqueue<PlayerCommand>,
 ) =>
   Effect.gen(function* () {
-    const activePlayer = yield* activeMediaPlayer.get;
+    const activePlayer = yield* SubscriptionRef.get(activeMediaPlayer);
     if (Option.isSome(activePlayer)) {
       if (activePlayer.value.player.id === mediaPlayer.id) {
         yield* Effect.log(
@@ -435,7 +441,7 @@ const syncPlayerState = (
     yield* Effect.log(`Setting player ${mediaPlayer.id} as active.`);
 
     const playerScope = yield* Scope.make();
-    yield* Ref.set(
+    yield* SubscriptionRef.set(
       activeMediaPlayer,
       Option.some({
         player: mediaPlayer,
@@ -455,14 +461,15 @@ const syncPlayerState = (
       Stream.runForEach((event) =>
         Match.value(event).pipe(
           Match.tag("trackPlaying", () =>
-            commandQueue.offer(PlaybackChanged({ isPlaying: true })),
+            Queue.offer(commandQueue, PlaybackChanged({ isPlaying: true })),
           ),
-          Match.tag("trackEnded", () => commandQueue.offer(NextTrack())),
+          Match.tag("trackEnded", () => Queue.offer(commandQueue, NextTrack())),
           Match.tag("trackPaused", () =>
-            commandQueue.offer(PlaybackChanged({ isPlaying: false })),
+            Queue.offer(commandQueue, PlaybackChanged({ isPlaying: false })),
           ),
           Match.tag("trackTimeChanged", ({ time }) =>
-            commandQueue.offer(
+            Queue.offer(
+              commandQueue,
               UpdateState({
                 updateFn: (state) => ({
                   ...state,
@@ -581,11 +588,11 @@ const sortAlbums = (albums: Album[], order: "newest" | "oldest" | "shuffled") =>
       : Array.sortWith(
           albums,
           (album) => album.releaseYear.pipe(Option.getOrElse(() => 0)),
-          order === "newest" ? Order.reverse(Order.number) : Order.number,
+          order === "newest" ? Order.flip(Order.Number) : Order.Number,
         );
   });
 
-const PlayerLiveWithState = Layer.scoped(Player, makePlayer);
+const PlayerLiveWithState = Layer.effect(Player, makePlayer);
 
 const PlayerStateLive = Layer.effect(
   PlayerStateRef,

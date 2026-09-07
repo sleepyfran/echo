@@ -1,13 +1,6 @@
-import { Effect, Fiber, Match, Stream } from "effect";
-import * as S from "effect/Schema";
+import { Effect, Fiber, Match, Stream, SubscriptionRef } from "effect";
 import { MediaProviderStatus } from "@echo/core-types";
 import { syncArtistsImages } from "./artist-image-sync";
-
-export const InitMessage = S.TaggedStruct("init", {});
-type InitMessage = S.Schema.Type<typeof InitMessage>;
-
-export const initMessageDecoder = S.decode(InitMessage);
-export const initMessageEncoder = S.encode(InitMessage);
 
 /**
  * Initializes the image provider worker.
@@ -16,8 +9,11 @@ export const init = () =>
   Effect.gen(function* () {
     yield* Effect.log("Initializing image provider worker...");
 
-    const providerStatusRef = yield* MediaProviderStatus.observe;
-    const providerStatusFiber = yield* providerStatusRef.changes.pipe(
+    const providerStatus = yield* MediaProviderStatus;
+    const providerStatusRef = yield* providerStatus.observe;
+    const providerStatusFiber = yield* SubscriptionRef.changes(
+      providerStatusRef,
+    ).pipe(
       Stream.flatMap((status) => Stream.fromIterable(status.entries())),
       Stream.runForEach(([providerId, providerStatus]) =>
         Match.value(providerStatus).pipe(
@@ -33,7 +29,7 @@ export const init = () =>
           Match.orElse(() => Effect.void),
         ),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
     );
 
     yield* Effect.log(

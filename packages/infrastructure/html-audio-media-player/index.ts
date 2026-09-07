@@ -1,10 +1,11 @@
 import {
   MediaPlayerFactory,
   MediaPlayerId,
+  type MediaPlayerEvent,
   PlayNotFoundError,
   ProviderType,
 } from "@echo/core-types";
-import { Effect, Layer, Stream } from "effect";
+import { Effect, Layer, Queue, Stream } from "effect";
 
 const make = MediaPlayerFactory.of({
   createMediaPlayer: () =>
@@ -49,17 +50,37 @@ const make = MediaPlayerFactory.of({
           audioElement.pause();
           audioElement.currentTime = 0;
         }),
-        observe: Stream.async((emit) => {
-          audioElement.onplay = () => emit.single({ _tag: "trackPlaying" });
-          audioElement.onpause = () => emit.single({ _tag: "trackPaused" });
-          audioElement.onended = () => emit.single({ _tag: "trackEnded" });
-          audioElement.addEventListener("timeupdate", () => {
-            emit.single({
-              _tag: "trackTimeChanged",
-              time: audioElement.currentTime,
-            });
-          });
-        }),
+        observe: Stream.callback<MediaPlayerEvent>((queue) =>
+          Effect.acquireRelease(
+            Effect.sync(() => {
+              const onPlay = () =>
+                Queue.offerUnsafe(queue, { _tag: "trackPlaying" });
+              const onPause = () =>
+                Queue.offerUnsafe(queue, { _tag: "trackPaused" });
+              const onEnded = () =>
+                Queue.offerUnsafe(queue, { _tag: "trackEnded" });
+              const onTimeUpdate = () =>
+                Queue.offerUnsafe(queue, {
+                  _tag: "trackTimeChanged",
+                  time: audioElement.currentTime,
+                });
+
+              audioElement.addEventListener("play", onPlay);
+              audioElement.addEventListener("pause", onPause);
+              audioElement.addEventListener("ended", onEnded);
+              audioElement.addEventListener("timeupdate", onTimeUpdate);
+
+              return { onPlay, onPause, onEnded, onTimeUpdate };
+            }),
+            ({ onPlay, onPause, onEnded, onTimeUpdate }) =>
+              Effect.sync(() => {
+                audioElement.removeEventListener("play", onPlay);
+                audioElement.removeEventListener("pause", onPause);
+                audioElement.removeEventListener("ended", onEnded);
+                audioElement.removeEventListener("timeupdate", onTimeUpdate);
+              }),
+          ),
+        ),
         dispose: Effect.sync(() => {
           const audioElement = document.querySelector("audio");
           if (audioElement) {

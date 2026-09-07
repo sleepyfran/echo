@@ -93,6 +93,6 @@ export type MetadataProvider = {
 /**
  * Tag to identify the metadata provider service.
  */
-export const MetadataProvider = Context.GenericTag<MetadataProvider>(
+export const MetadataProvider = Context.Service<MetadataProvider>(
   "@echo/core-types/MetadataProvider",
 );

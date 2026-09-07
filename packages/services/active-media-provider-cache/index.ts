@@ -4,7 +4,7 @@ import {
   ProviderStatusChanged,
   type MediaProviderById,
 } from "@echo/core-types";
-import { Effect, Layer, Option, Ref, Stream, SubscriptionRef } from "effect";
+import { Effect, Layer, Option, Stream, SubscriptionRef } from "effect";
 
 const makeActiveMediaProviderCache = Effect.gen(function* () {
   const providerByIdRef = yield* SubscriptionRef.make<MediaProviderById>(
@@ -25,7 +25,7 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
         return Effect.void;
       }
 
-      return Ref.update(providerByIdRef, (current) => {
+      return SubscriptionRef.update(providerByIdRef, (current) => {
         const updatedMap = new Map(current);
         updatedMap.delete(startArgs.metadata.id);
         return updatedMap;
@@ -42,7 +42,7 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
 
   return ActiveMediaProviderCache.of({
     add: (args) =>
-      Ref.update(providerByIdRef, (current) => {
+      SubscriptionRef.update(providerByIdRef, (current) => {
         const updatedMap = new Map(current);
         updatedMap.set(args.metadata.id, args);
         return updatedMap;
@@ -52,7 +52,7 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
         ),
       ),
     get: (providerId) =>
-      Ref.get(providerByIdRef).pipe(
+      SubscriptionRef.get(providerByIdRef).pipe(
         Effect.map((providerMap) => {
           const cachedProvider = providerMap.get(providerId);
           if (!cachedProvider) {
@@ -63,16 +63,16 @@ const makeActiveMediaProviderCache = Effect.gen(function* () {
         }),
       ),
     getAll: Effect.gen(function* () {
-      const providerMap = yield* Ref.get(providerByIdRef);
+      const providerMap = yield* SubscriptionRef.get(providerByIdRef);
       return Array.from(providerMap.values());
     }),
-    observe: providerByIdRef.changes.pipe(
+    observe: SubscriptionRef.changes(providerByIdRef).pipe(
       Stream.map((providerMap) => Array.from(providerMap.values())),
     ),
   });
 });
 
-export const ActiveMediaProviderCacheLive = Layer.scoped(
+export const ActiveMediaProviderCacheLive = Layer.effect(
   ActiveMediaProviderCache,
   makeActiveMediaProviderCache,
 );

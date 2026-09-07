@@ -29,7 +29,7 @@ const mmbMetadataProvider = MetadataProvider.of({
       Effect.flatMap((metadata) =>
         Effect.gen(function* () {
           const embeddedCover = yield* tryCreateBlob(metadata).pipe(
-            Effect.catchAll(() =>
+            Effect.catch(() =>
               Effect.logError(
                 `Cover extraction failed for ${file.name}, continuing without cover`,
               ).pipe(Effect.map(() => undefined)),

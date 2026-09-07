@@ -1,15 +1,9 @@
 import { WorkerLive } from "@echo/services-bootstrap";
-import { Effect, Match, Ref, Stream } from "effect";
-import * as S from "effect/Schema";
-import { InitMessage, init } from "./init";
+import { Effect, Ref } from "effect";
+import { init } from "./init";
 import { WorkerStateRef, type WorkerState } from "./state";
 
-export const WorkerMessage = S.Union(InitMessage);
-type WorkerMessage = S.Schema.Type<typeof WorkerMessage>;
-
-const decodeWorkerMessage = S.decode(WorkerMessage);
-
-const initialState = Ref.make<WorkerState>({
+const initialState = Ref.makeUnsafe<WorkerState>({
   stateByProvider: new Map(),
 });
 
@@ -18,20 +12,13 @@ const initialState = Ref.make<WorkerState>({
  * upon initialization, it sets up itself to resolve messages from the main
  * thread.
  */
-const worker = Stream.fromEventListener<MessageEvent>(self, "message").pipe(
-  Stream.runForEach((event) =>
-    Effect.gen(function* () {
-      const message = yield* decodeWorkerMessage(event.data);
-
-      return yield* Match.type<WorkerMessage>().pipe(
-        Match.tag("init", () => init()),
-        Match.exhaustive,
-      )(message);
-    }),
-  ),
+const worker = Effect.gen(function* () {
+  yield* init();
+  return yield* Effect.never;
+}).pipe(
   Effect.scoped,
   Effect.provide(WorkerLive),
-  Effect.provideServiceEffect(WorkerStateRef, initialState),
+  Effect.provideService(WorkerStateRef, initialState),
 );
 
 Effect.runPromise(worker)

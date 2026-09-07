@@ -36,6 +36,7 @@ export const syncApiBasedProvider = ({
 
     yield* broadcaster.broadcast(
       "mediaProvider",
+      ProviderStatusChanged,
       new ProviderStatusChanged({
         startArgs,
         status: { _tag: "syncing" },
@@ -59,6 +60,7 @@ export const syncApiBasedProvider = ({
 
     yield* broadcaster.broadcast(
       "mediaProvider",
+      ProviderStatusChanged,
       new ProviderStatusChanged({
         startArgs,
         status: {
@@ -70,7 +72,7 @@ export const syncApiBasedProvider = ({
       }),
     );
   }).pipe(
-    Effect.catchAll(() =>
+    Effect.catch(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
           `Sync of ${startArgs.metadata.id} has failed, reporting error with API to main thread.`,
@@ -80,6 +82,7 @@ export const syncApiBasedProvider = ({
         // API.
         yield* broadcaster.broadcast(
           "mediaProvider",
+          ProviderStatusChanged,
           new ProviderStatusChanged({
             startArgs,
             status: { _tag: "errored", error: ProviderError.ApiGatewayError },
@@ -95,10 +98,11 @@ const normalizeData = (
 ) =>
   Stream.fromIterable(albums).pipe(
     Stream.runFoldEffect(
-      {
-        albums: [],
-        artists: [],
-      } as SyncState,
+      () =>
+        ({
+          albums: [],
+          artists: [],
+        }) as SyncState,
       (accumulator, album) =>
         Effect.gen(function* () {
           const artist = yield* tryFindExisting({ database }, album.artist);

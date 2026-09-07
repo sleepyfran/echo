@@ -3,7 +3,7 @@ import type {
   AuthenticationError,
   AuthenticationInfo,
 } from "../model/authentication";
-import { Effect, Option } from "effect";
+import { Context, Effect, Option } from "effect";
 
 /**
  * Service that can connect to an authentication provider to authenticate the user.
@@ -46,9 +46,10 @@ export type IAuthenticationCache = {
 /**
  * Tag to identify the AuthenticationCache service.
  */
-export class AuthenticationCache extends Effect.Tag(
-  "@echo/core-types/AuthenticationCache",
-)<AuthenticationCache, IAuthenticationCache>() {}
+export class AuthenticationCache extends Context.Service<
+  AuthenticationCache,
+  IAuthenticationCache
+>()("@echo/core-types/AuthenticationCache") {}
 
 /**
  * Service that supervises the authentication info and triggers the refresh
@@ -65,6 +66,7 @@ export type IAuthenticationRefresher = {
 /**
  * Tag to identify the AuthenticationRefresher service.
  */
-export class AuthenticationRefresher extends Effect.Tag(
-  "@echo/core-types/AuthenticationRefresher",
-)<AuthenticationRefresher, IAuthenticationRefresher>() {}
+export class AuthenticationRefresher extends Context.Service<
+  AuthenticationRefresher,
+  IAuthenticationRefresher
+>()("@echo/core-types/AuthenticationRefresher") {}

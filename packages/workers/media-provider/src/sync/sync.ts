@@ -16,7 +16,7 @@ import type { WorkerState } from "../state";
 import { isValidToken } from "@echo/core-auth";
 import { syncFileBasedProvider } from "../sync/file-based-sync";
 import { syncApiBasedProvider } from "../sync/api-based-sync";
-import type { ParseError } from "effect/ParseResult";
+import type { SchemaError } from "effect/Schema";
 
 export type ForkSyncMediaProviderInput = {
   input: ProviderStartArgs;
@@ -34,13 +34,12 @@ export const forkSync = ({
   Effect.gen(function* () {
     yield* Effect.log(`Attempting to sync media provider ${input.metadata.id}`);
 
-    const currentWorkerState = yield* workerStateRef.get;
+    const currentWorkerState = yield* Ref.get(workerStateRef);
     const providerSyncState = currentWorkerState.stateByProvider.get(
       input.metadata.id,
     );
     if (providerSyncState && Option.isSome(providerSyncState.fiber)) {
-      const fiberStatus = yield* providerSyncState.fiber.value.status;
-      if (fiberStatus._tag === "Running") {
+      if (providerSyncState.fiber.value.pollUnsafe() === undefined) {
         yield* Effect.log(
           `Provider with ID ${input.metadata.id} is already syncing. Ignoring command.`,
         );
@@ -49,12 +48,12 @@ export const forkSync = ({
     }
 
     if (!force && Option.isSome(input.lastSyncedAt)) {
-      const lastSyncDate = DateTime.unsafeFromDate(input.lastSyncedAt.value);
-      const aDayAgo = DateTime.unsafeNow().pipe(
+      const lastSyncDate = DateTime.fromDateUnsafe(input.lastSyncedAt.value);
+      const aDayAgo = DateTime.nowUnsafe().pipe(
         DateTime.subtractDuration("1 day"),
       );
 
-      const lessThanADayAgo = aDayAgo.pipe(DateTime.lessThan(lastSyncDate));
+      const lessThanADayAgo = aDayAgo.pipe(DateTime.isLessThan(lastSyncDate));
       if (lessThanADayAgo) {
         yield* Effect.log(
           `Provider with ID ${input.metadata.id} was synced less than a day ago. Ignoring command.`,
@@ -91,7 +90,7 @@ export const forkSync = ({
 
     const runtimeFiber = yield* Match.type<ProviderStartArgs>().pipe(
       Match.tag(ProviderType.FileBased, (input) =>
-        Effect.fork(
+        Effect.forkChild(
           syncFileBasedProvider({
             startArgs: input,
             broadcaster,
@@ -108,7 +107,7 @@ export const forkSync = ({
         ),
       ),
       Match.tag(ProviderType.ApiBased, (input) =>
-        Effect.fork(
+        Effect.forkChild(
           syncApiBasedProvider({
             startArgs: input,
             broadcaster,
@@ -138,6 +137,7 @@ export const notifyMainThreadOfExpiredToken = (
   Effect.gen(function* () {
     return yield* broadcaster.broadcast(
       "mediaProvider",
+      ProviderStatusChanged,
       new ProviderStatusChanged({
         startArgs,
         status: { _tag: "errored", error: ProviderError.TokenExpired },
@@ -152,6 +152,7 @@ export const notifyMainThreadOfSyncSkipped = (
 ) =>
   broadcaster.broadcast(
     "mediaProvider",
+    ProviderStatusChanged,
     new ProviderStatusChanged({
       startArgs,
       status: { _tag: "sync-skipped", lastSyncedAt: lastSyncDate },
@@ -161,7 +162,7 @@ export const notifyMainThreadOfSyncSkipped = (
 export const updateStateInWorkerMap = (
   workerStateRef: Ref.Ref<WorkerState>,
   startArgs: ProviderStartArgs,
-  fiber: Option.Option<Fiber.RuntimeFiber<void, ParseError>> = Option.none(),
+  fiber: Option.Option<Fiber.Fiber<void, SchemaError>> = Option.none(),
 ) =>
   Ref.update(workerStateRef, (state) => {
     const updatedMap = new Map(state.stateByProvider);

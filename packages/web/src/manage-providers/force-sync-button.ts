@@ -16,7 +16,7 @@ export class ForceSyncButton extends LitElement {
   providerStatus!: ProviderStatus;
 
   private _forceSync = new EffectFn(this, () =>
-    MediaProviderManager.forceSync(this.providerId),
+    MediaProviderManager.use((service) => service.forceSync(this.providerId)),
   );
 
   render() {

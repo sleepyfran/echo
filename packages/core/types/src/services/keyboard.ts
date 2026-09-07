@@ -1,4 +1,4 @@
-import { Effect, type Stream } from "effect";
+import { Context, Effect, type Stream } from "effect";
 import type { GlobalKeyboardEvent } from "../model/keyboard-events";
 
 /**
@@ -22,10 +22,9 @@ export type IKeyboard = {
 /**
  * Tag to identify the Keyboard service.
  */
-export class Keyboard extends Effect.Tag("@echo/core-types/Keyboard")<
-  Keyboard,
-  IKeyboard
->() {}
+export class Keyboard extends Context.Service<Keyboard, IKeyboard>()(
+  "@echo/core-types/Keyboard",
+) {}
 
 /**
  * Represents a keyboard binding that can be used to trigger commands.

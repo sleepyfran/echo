@@ -47,7 +47,7 @@ export const LibraryLive = Layer.effect(
               const uniqueGenres = [...new Set(genres)];
               return uniqueGenres.sort();
             }),
-            Stream.catchAll(() => Stream.empty),
+            Stream.catch(() => Stream.empty),
           );
         }),
       artistDetail: (artistId) =>
@@ -116,7 +116,7 @@ export const LibraryLive = Layer.effect(
             Stream.map((artists) =>
               sortArtistsByName(artists.map(toArtistSchema)),
             ),
-            Stream.catchAll(() => Stream.empty),
+            Stream.catch(() => Stream.empty),
           );
         }),
       search: (term) =>
@@ -187,8 +187,8 @@ const toAlbumSchema = (
   return Effect.succeed({
     ...album,
     artist: resolvedArtist,
-    embeddedCover: Option.fromNullable(album.embeddedCover),
-    releaseYear: Option.fromNullable(album.releaseYear),
+    embeddedCover: Option.fromNullishOr(album.embeddedCover),
+    releaseYear: Option.fromNullishOr(album.releaseYear),
     tracks: album.tracks.map((track) => ({
       ...track,
       mainArtist: resolvedArtist,
@@ -199,7 +199,7 @@ const toAlbumSchema = (
 
 const toArtistSchema = (artist: DatabaseArtist): Artist => ({
   ...artist,
-  image: Option.fromNullable(artist.image),
+  image: Option.fromNullishOr(artist.image),
 });
 
 const sortAlbumsByArtistName = (albums: Album[]): Album[] =>

@@ -21,7 +21,10 @@ const ARTIST_INFO_HEIGHT_PX = 54;
  */
 @customElement("artist-library-page")
 export class ArtistLibraryPage extends LitElement {
-  private _library = new StreamConsumer(this, Library.observeArtists);
+  private _library = new StreamConsumer(
+    this,
+    Library.use((service) => service.observeArtists()),
+  );
 
   @state()
   private _layout = this._createArtistGridLayout(0);

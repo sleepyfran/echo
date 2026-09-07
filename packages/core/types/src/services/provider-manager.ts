@@ -1,6 +1,6 @@
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
 import type { ProviderId } from "../model";
-import type { ParseError } from "effect/ParseResult";
+import type { SchemaError } from "effect/Schema";
 
 export type IMediaProviderManager = {
   /**
@@ -8,7 +8,7 @@ export type IMediaProviderManager = {
    * not re-start a previous sync, but rather forces a provider that is idle to
    * start syncing.
    */
-  forceSync: (providerId: ProviderId) => Effect.Effect<void, ParseError>;
+  forceSync: (providerId: ProviderId) => Effect.Effect<void, SchemaError>;
 
   /**
    * Signs out from the given provider, stopping the syncing engine, its media
@@ -21,6 +21,7 @@ export type IMediaProviderManager = {
 /**
  * Tag to identify the MediaProviderManager service.
  */
-export class MediaProviderManager extends Effect.Tag(
-  "@echo/core-types/MediaProviderManager",
-)<MediaProviderManager, IMediaProviderManager>() {}
+export class MediaProviderManager extends Context.Service<
+  MediaProviderManager,
+  IMediaProviderManager
+>()("@echo/core-types/MediaProviderManager") {}

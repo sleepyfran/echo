@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect";
 import {
   FileBasedProviderId,
   type ProviderMetadata,
@@ -8,7 +8,7 @@ import {
   AuthenticationCache,
 } from "@echo/core-types";
 import { AppConfigLive } from "../app-config";
-import { FetchHttpClient } from "@effect/platform";
+import { FetchHttpClient } from "effect/unstable/http";
 
 /**
  * Represents the available data for a loaded provider.
@@ -29,9 +29,10 @@ export type ILazyLoadedProvider = {
 /**
  * Tag to identify the lazy loaded provider service.
  */
-export class LazyLoadedProvider extends Effect.Tag(
-  "@echo/services-bootstrap/LazyLoadedProvider",
-)<LazyLoadedProvider, ILazyLoadedProvider>() {}
+export class LazyLoadedProvider extends Context.Service<
+  LazyLoadedProvider,
+  ILazyLoadedProvider
+>()("@echo/services-bootstrap/LazyLoadedProvider") {}
 
 /**
  * Lazy loads a media provider based on the metadata provided.

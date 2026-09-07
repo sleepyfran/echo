@@ -1,4 +1,4 @@
-import { Effect, Option, Stream } from "effect";
+import { Context, Effect, Option, Stream } from "effect";
 import type { Album, AlbumId, Artist, ArtistId, Genre } from "../model";
 
 /**
@@ -66,7 +66,6 @@ export type ILibrary = {
 /**
  * Tag to identify the library service.
  */
-export class Library extends Effect.Tag("@echo/core-types/Library")<
-  Library,
-  ILibrary
->() {}
+export class Library extends Context.Service<Library, ILibrary>()(
+  "@echo/core-types/Library",
+) {}

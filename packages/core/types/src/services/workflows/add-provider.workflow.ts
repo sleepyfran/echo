@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
 import type {
   ProviderMetadata,
   FolderMetadata,
@@ -58,6 +58,7 @@ export type IAddProviderWorkflow = {
 /**
  * Tag to identify the operations that can be performed by the AddProviderWorkflow.
  */
-export class AddProviderWorkflow extends Effect.Tag(
-  "@echo/services-add-provider-fsm/AddProviderWorkflow",
-)<AddProviderWorkflow, IAddProviderWorkflow>() {}
+export class AddProviderWorkflow extends Context.Service<
+  AddProviderWorkflow,
+  IAddProviderWorkflow
+>()("@echo/services-add-provider-fsm/AddProviderWorkflow") {}

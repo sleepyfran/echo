@@ -27,51 +27,50 @@ export const createListAlbums = (
   authCache: IAuthenticationCache,
   userLibraryApi: ISpotifyLibraryApi,
 ) =>
-  Effect.iterate(initialState, {
-    while: ({ maybeOffset }) => Option.isSome(maybeOffset),
-    body: (state) =>
-      Effect.gen(function* () {
-        const { maybeOffset, albums } = state;
+  Effect.gen(function* () {
+    let state = initialState;
 
-        if (Option.isNone(maybeOffset)) {
-          return state;
-        }
+    while (Option.isSome(state.maybeOffset)) {
+      const { maybeOffset, albums } = state;
 
-        const authInfoOrFallback = yield* authCache
-          .get(ApiBasedProviderId.Spotify)
-          .pipe(Effect.map(Option.getOrElse(() => fallbackAuthInfo)));
+      if (Option.isNone(maybeOffset)) {
+        break;
+      }
 
-        const response = yield* userLibraryApi
-          .savedAlbums({
-            authInfo: authInfoOrFallback,
-            offset: maybeOffset.value,
-            limit: 50,
-          })
-          .pipe(
-            Effect.tapError((error) =>
-              Effect.logError(
-                `An error happened while fetching albums from Spotify: ${error}`,
-              ),
+      const authInfoOrFallback = yield* authCache
+        .get(ApiBasedProviderId.Spotify)
+        .pipe(Effect.map(Option.getOrElse(() => fallbackAuthInfo)));
+
+      const response = yield* userLibraryApi
+        .savedAlbums({
+          authInfo: authInfoOrFallback,
+          offset: maybeOffset.value,
+          limit: 50,
+        })
+        .pipe(
+          Effect.tapError((error) =>
+            Effect.logError(
+              `An error happened while fetching albums from Spotify: ${error}`,
             ),
-          );
-
-        const previousOffset = response.offset;
-        const nextOffset = response.next
-          ? Option.some(previousOffset + response.limit)
-          : Option.none();
-        const nextAlbums = yield* Effect.all(
-          response.items.map((response) => resolveAlbum(response.album)),
+          ),
         );
 
-        return {
-          maybeOffset: nextOffset,
-          albums: [...albums, ...nextAlbums],
-        };
-      }),
-  }).pipe(
-    Effect.map(({ albums }) => albums),
-    Effect.catchAll(() => Effect.fail(ApiBasedProviderError.NotFound)),
-  );
+      const previousOffset = response.offset;
+      const nextOffset = response.next
+        ? Option.some(previousOffset + response.limit)
+        : Option.none();
+      const nextAlbums = yield* Effect.all(
+        response.items.map((response) => resolveAlbum(response.album)),
+      );
+
+      state = {
+        maybeOffset: nextOffset,
+        albums: [...albums, ...nextAlbums],
+      };
+    }
+
+    return state.albums;
+  }).pipe(Effect.catch(() => Effect.fail(ApiBasedProviderError.NotFound)));
 
 const resolveAlbum = (
   spotifyAlbum: SpotifyAlbumResponse,

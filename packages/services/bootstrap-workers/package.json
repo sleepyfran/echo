@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-types": "^1.0.0",
-    "@echo/workers-image-provider": "^1.0.0",
-    "@echo/workers-media-provider": "^1.0.0",
-    "effect": "^3.17.6"
+    "@echo/core-types": "workspace:*",
+    "@echo/workers-image-provider": "workspace:*",
+    "@echo/workers-media-provider": "workspace:*",
+    "effect": "4.0.0-rc.112"
   }
 }

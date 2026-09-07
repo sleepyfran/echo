@@ -60,6 +60,7 @@ export const syncFileBasedProvider = ({
 
     yield* broadcaster.broadcast(
       "mediaProvider",
+      ProviderStatusChanged,
       new ProviderStatusChanged({
         startArgs,
         status: { _tag: "syncing" },
@@ -92,6 +93,7 @@ export const syncFileBasedProvider = ({
 
     return yield* broadcaster.broadcast(
       "mediaProvider",
+      ProviderStatusChanged,
       new ProviderStatusChanged({
         startArgs,
         status: {
@@ -103,7 +105,7 @@ export const syncFileBasedProvider = ({
       }),
     );
   }).pipe(
-    Effect.catchAll(() =>
+    Effect.catch(() =>
       Effect.gen(function* () {
         yield* Effect.logError(
           `Sync of ${startArgs.metadata.id} has failed, reporting error with API to main thread.`,
@@ -113,6 +115,7 @@ export const syncFileBasedProvider = ({
         // files, since the stream is made to never fail. Report back an error.
         yield* broadcaster.broadcast(
           "mediaProvider",
+          ProviderStatusChanged,
           new ProviderStatusChanged({
             startArgs,
             status: { _tag: "errored", error: ProviderError.ApiGatewayError },
@@ -201,7 +204,7 @@ const resolveMetadataFromStream = (
               Match.exhaustive,
             ),
           ),
-          Effect.either /* We don't want to fail the whole stream in case we
+          Effect.result /* We don't want to fail the whole stream in case we
                          can't process one element, instead collect both
                          successes and errors into the stream so that we can
                          report them back to the main thread */,
@@ -209,17 +212,17 @@ const resolveMetadataFromStream = (
       { concurrency: 10 },
     ),
     Stream.runFold(
-      {
+      () => ({
         processed: [] as { metadata: TrackMetadata; file: FileMetadata }[],
         errors: [] as (DownloadError | MalformedFileError | ProviderError)[],
-      },
+      }),
       (acc, currentItem) =>
         Match.value(currentItem).pipe(
-          Match.tag("Left", ({ left: error }) => ({
+          Match.tag("Failure", ({ failure: error }) => ({
             ...acc,
             errors: [...acc.errors, error],
           })),
-          Match.tag("Right", ({ right: processedFile }) => ({
+          Match.tag("Success", ({ success: processedFile }) => ({
             ...acc,
             processed: [...acc.processed, processedFile],
           })),
@@ -241,10 +244,11 @@ const normalizeData = (
 ) =>
   Stream.fromIterable(successes).pipe(
     Stream.runFoldEffect(
-      {
-        albums: new Map(),
-        artists: new Map(),
-      } as SyncState,
+      () =>
+        ({
+          albums: new Map(),
+          artists: new Map(),
+        }) as SyncState,
       (accumulator, { metadata, file }) =>
         Effect.gen(function* () {
           const mainArtistName = metadata.artists?.[0] ?? "Unknown Artist";
@@ -303,7 +307,7 @@ const tryRetrieveOrCreateArtist = (
         Effect.map(head),
         Effect.map(
           Option.orElse(() =>
-            Option.fromNullable(processedArtists.get(artistName)),
+            Option.fromNullishOr(processedArtists.get(artistName)),
           ),
         ),
       );
@@ -335,7 +339,7 @@ const tryRetrieveOrCreateAlbum = (
         Effect.map(head),
         Effect.map(
           Option.orElse(() =>
-            Option.fromNullable(processedAlbums.get(albumName)),
+            Option.fromNullishOr(processedAlbums.get(albumName)),
           ),
         ),
       );

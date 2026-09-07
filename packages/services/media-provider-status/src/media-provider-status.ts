@@ -4,13 +4,13 @@ import {
   type StateByProvider,
   ProviderStatusChanged,
 } from "@echo/core-types";
-import { Effect, Layer, Ref, Stream, SubscriptionRef } from "effect";
+import { Effect, Layer, Stream, SubscriptionRef } from "effect";
 
 /**
  * Implementation of the media provider status service that keeps the latest
  * status of each provider in a subscription ref.
  */
-export const MediaProviderStatusLive = Layer.scoped(
+export const MediaProviderStatusLive = Layer.effect(
   MediaProviderStatus,
   Effect.gen(function* () {
     const stateByProviderRef = yield* SubscriptionRef.make<StateByProvider>(
@@ -23,7 +23,7 @@ export const MediaProviderStatusLive = Layer.scoped(
     );
     yield* statusStream.pipe(
       Stream.runForEach(({ startArgs, status }) => {
-        return Ref.update(stateByProviderRef, (current) => {
+        return SubscriptionRef.update(stateByProviderRef, (current) => {
           const updatedMap = new Map(current);
 
           if (status._tag === "stopped") {

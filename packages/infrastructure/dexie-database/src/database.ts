@@ -9,7 +9,7 @@ import {
   DatabaseObserveError,
 } from "@echo/core-types";
 import Dexie, { type Table as DexieTable, liveQuery } from "dexie";
-import { Effect, Layer, Option, Ref, Stream } from "effect";
+import { Effect, Layer, Option, Queue, Ref, Stream } from "effect";
 
 /**
  * Implementation of the Database service using Dexie.js.
@@ -24,7 +24,7 @@ export const DexieDatabaseLive = Layer.effect(
     return Database.of({
       table: (tableName) =>
         Effect.gen(function* () {
-          const db = yield* _db.get;
+          const db = yield* Ref.get(_db);
           return createTable(db, tableName);
         }),
     });
@@ -89,8 +89,8 @@ const createTable = <
             id,
           }) as unknown as PromiseLike<TSchema>,
       ).pipe(
-        Effect.catchAllCause(catchToDefaultAndLog),
-        Effect.map(Option.fromNullable),
+        Effect.catchCause(catchToDefaultAndLog),
+        Effect.map(Option.fromNullishOr),
       );
     }),
   all: Effect.gen(function* () {
@@ -99,7 +99,7 @@ const createTable = <
     return yield* Effect.tryPromise<TSchema[]>(
       () => table.toArray() as unknown as PromiseLike<TSchema[]>,
     ).pipe(
-      Effect.catchAllCause(catchToDefaultAndLog),
+      Effect.catchCause(catchToDefaultAndLog),
       Effect.map((res) => res ?? []),
     );
   }),
@@ -136,25 +136,33 @@ const createTable = <
 
         return query.toArray() as unknown as Promise<TSchema[]>;
       }).pipe(
-        Effect.catchAllCause(catchToDefaultAndLog),
+        Effect.catchCause(catchToDefaultAndLog),
         Effect.map((res) => res ?? []),
       );
     }),
   observe: () =>
     Effect.sync(() => {
       const table = db[tableName];
-      return Stream.async((emit) => {
-        const subscription = liveQuery(
-          () => table.toArray() as unknown as Promise<TSchema[]>,
-        ).subscribe(
-          (items) => emit.single(items),
-          (error) =>
-            emit.fail(new DatabaseObserveError(tableName, error as unknown)),
-          () => emit.end(),
-        );
-
-        return Effect.sync(subscription.unsubscribe);
-      });
+      return Stream.callback<TSchema[], DatabaseObserveError>((queue) =>
+        Effect.acquireRelease(
+          Effect.sync(() =>
+            liveQuery(
+              () => table.toArray() as unknown as Promise<TSchema[]>,
+            ).subscribe(
+              (items) => Queue.offerUnsafe(queue, items),
+              (error) =>
+                Effect.runFork(
+                  Queue.fail(
+                    queue,
+                    new DatabaseObserveError(tableName, error as unknown),
+                  ),
+                ),
+              () => Queue.endUnsafe(queue),
+            ),
+          ),
+          (subscription) => Effect.sync(() => subscription.unsubscribe()),
+        ),
+      );
     }),
 });
 

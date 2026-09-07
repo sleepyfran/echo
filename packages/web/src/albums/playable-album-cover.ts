@@ -28,8 +28,14 @@ export class PlayableAlbumCover extends LitElement {
   @state()
   private _playStatus = PlayStatus.NotPlaying;
 
-  private _playAlbum = new EffectFn(this, Player.playAlbum);
-  private _togglePlayback = new EffectFn(this, () => Player.togglePlayback);
+  private _playAlbum = new EffectFn(
+    this,
+    (args: { album: Album; fromTrackIdx?: number }) =>
+      Player.use((service) => service.playAlbum(args)),
+  );
+  private _togglePlayback = new EffectFn(this, () =>
+    Player.use((service) => service.togglePlayback),
+  );
 
   static styles = css`
     div.album-container {
@@ -137,24 +143,28 @@ export class PlayableAlbumCover extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
 
-    new StreamConsumer(this, Player.observe, {
-      item: (playerStatus) => {
-        if (
-          playerStatus.status._tag === "Stopped" ||
-          playerStatus.status.album.id !== this.album.id
-        ) {
-          this._playStatus = PlayStatus.NotPlaying;
-          return;
-        }
+    new StreamConsumer(
+      this,
+      Player.use((service) => service.observe),
+      {
+        item: (playerStatus) => {
+          if (
+            playerStatus.status._tag === "Stopped" ||
+            playerStatus.status.album.id !== this.album.id
+          ) {
+            this._playStatus = PlayStatus.NotPlaying;
+            return;
+          }
 
-        this._playStatus =
-          playerStatus.status._tag === "Playing"
-            ? PlayStatus.Playing
-            : playerStatus.status._tag === "Loading"
-              ? PlayStatus.Loading
-              : PlayStatus.Paused;
+          this._playStatus =
+            playerStatus.status._tag === "Playing"
+              ? PlayStatus.Playing
+              : playerStatus.status._tag === "Loading"
+                ? PlayStatus.Loading
+                : PlayStatus.Paused;
+        },
       },
-    });
+    );
   }
 
   render() {

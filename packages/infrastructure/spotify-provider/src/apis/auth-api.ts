@@ -2,12 +2,11 @@ import {
   HttpClientError,
   HttpClientRequest,
   HttpClientResponse,
-} from "@effect/platform";
+} from "effect/unstable/http";
 import { SpotifyAuthenticationResponse, SpotifyRefreshResponse } from "./types";
-import { Effect, Layer, pipe } from "effect";
+import { Context, Effect, Layer, pipe } from "effect";
 import { AppConfig } from "@echo/core-types";
-import type { ParseError } from "effect/ParseResult";
-import type { Struct } from "effect/Schema";
+import type { SchemaError, Struct } from "effect/Schema";
 import { createClient } from "./client";
 
 const SPOTIFY_AUTH_BASE = "https://accounts.spotify.com";
@@ -20,7 +19,7 @@ export type ISpotifyAuthApi = {
     code: string,
   ) => Effect.Effect<
     SpotifyAuthenticationResponse,
-    HttpClientError.HttpClientError | ParseError
+    HttpClientError.HttpClientError | SchemaError
   >;
 
   /**
@@ -30,15 +29,16 @@ export type ISpotifyAuthApi = {
     refreshToken: string,
   ) => Effect.Effect<
     SpotifyRefreshResponse,
-    HttpClientError.HttpClientError | ParseError
+    HttpClientError.HttpClientError | SchemaError
   >;
 };
 
-export class SpotifyAuthApi extends Effect.Tag(
-  "@echo/spotify-provider/SpotifyAuthApi",
-)<SpotifyAuthApi, ISpotifyAuthApi>() {}
+export class SpotifyAuthApi extends Context.Service<
+  SpotifyAuthApi,
+  ISpotifyAuthApi
+>()("@echo/spotify-provider/SpotifyAuthApi") {}
 
-export const SpotifyAuthApiLive = Layer.scoped(
+export const SpotifyAuthApiLive = Layer.effect(
   SpotifyAuthApi,
   Effect.gen(function* () {
     const appConfig = yield* AppConfig;

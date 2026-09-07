@@ -18,9 +18,12 @@ import { CachedValue } from "~web/utils";
  */
 @customElement("echo-player")
 export class EchoPlayer extends LitElement {
-  private _player = new StreamConsumer(this, PlayerService.observe, {
-    item: (playerState) => {
-      /*
+  private _player = new StreamConsumer(
+    this,
+    PlayerService.use((service) => service.observe),
+    {
+      item: (playerState) => {
+        /*
       This pattern matches against the player state and dispatches custom events
       that can be used to react to changes in the playing/stopped state of the player.
 
@@ -28,34 +31,38 @@ export class EchoPlayer extends LitElement {
       properly broadcast the player state to external components that might need
       it, like WebScrobbler to scrobble tracks.
       */
-      Match.value(playerState.status).pipe(
-        Match.tag("Loading", () => {}),
-        Match.tag("Playing", ({ album, trackIndex }) => {
-          const track = album.tracks[trackIndex];
-          this.dispatchEvent(
-            new CustomEvent("track-playing", {
-              detail: {
-                trackName: track.name,
-                artistName: album.artist.name,
-                albumName: album.name,
-                providerId: track.resource.provider,
-              },
-            }),
-          );
-        }),
-        Match.tag("Paused", "Stopped", () => {
-          this.dispatchEvent(new CustomEvent("track-paused"));
-        }),
-        Match.exhaustive,
-      );
+        Match.value(playerState.status).pipe(
+          Match.tag("Loading", () => {}),
+          Match.tag("Playing", ({ album, trackIndex }) => {
+            const track = album.tracks[trackIndex];
+            this.dispatchEvent(
+              new CustomEvent("track-playing", {
+                detail: {
+                  trackName: track.name,
+                  artistName: album.artist.name,
+                  albumName: album.name,
+                  providerId: track.resource.provider,
+                },
+              }),
+            );
+          }),
+          Match.tag("Paused", "Stopped", () => {
+            this.dispatchEvent(new CustomEvent("track-paused"));
+          }),
+          Match.exhaustive,
+        );
+      },
     },
-  });
-  private _togglePlayback = new EffectFn(
-    this,
-    () => PlayerService.togglePlayback,
   );
-  private _previousTrack = new EffectFn(this, () => PlayerService.previous);
-  private _skipTrack = new EffectFn(this, () => PlayerService.skip);
+  private _togglePlayback = new EffectFn(this, () =>
+    PlayerService.use((service) => service.togglePlayback),
+  );
+  private _previousTrack = new EffectFn(this, () =>
+    PlayerService.use((service) => service.previous),
+  );
+  private _skipTrack = new EffectFn(this, () =>
+    PlayerService.use((service) => service.skip),
+  );
   private _cachedObjectUrl = new CachedValue<string>();
 
   static styles = css`

@@ -9,7 +9,7 @@ export class SignOutFromProviderButton extends LitElement {
   providerId!: ProviderId;
 
   private _removeProvider = new EffectFn(this, () =>
-    MediaProviderManager.signOut(this.providerId),
+    MediaProviderManager.use((service) => service.signOut(this.providerId)),
   );
 
   render() {

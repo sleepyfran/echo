@@ -109,7 +109,9 @@ export class ArtistDetail extends LitElement {
 
 @customElement("artist-detail-page")
 export class ArtistDetailPage extends LitElement {
-  private _loadArtist = new EffectFn(this, Library.artistDetail);
+  private _loadArtist = new EffectFn(this, (artistId: ArtistId) =>
+    Library.use((service) => service.artistDetail(artistId)),
+  );
 
   @property({ type: Object })
   public location!: RouterLocation;

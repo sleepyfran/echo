@@ -26,7 +26,11 @@ export class AlbumDetail extends LitElement {
   @state()
   playingTrackIndex: number | null = null;
 
-  private _playAlbum = new EffectFn(this, Player.playAlbum);
+  private _playAlbum = new EffectFn(
+    this,
+    (args: { album: Album; fromTrackIdx?: number }) =>
+      Player.use((service) => service.playAlbum(args)),
+  );
 
   static styles = css`
     ol.track-list {
@@ -155,18 +159,22 @@ export class AlbumDetail extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
 
-    new StreamConsumer(this, Player.observe, {
-      item: (playerStatus) => {
-        if (
-          playerStatus.status._tag === "Playing" &&
-          playerStatus.status.album.id === this.album.id
-        ) {
-          this.playingTrackIndex = playerStatus.status.trackIndex;
-        } else {
-          this.playingTrackIndex = null;
-        }
+    new StreamConsumer(
+      this,
+      Player.use((service) => service.observe),
+      {
+        item: (playerStatus) => {
+          if (
+            playerStatus.status._tag === "Playing" &&
+            playerStatus.status.album.id === this.album.id
+          ) {
+            this.playingTrackIndex = playerStatus.status.trackIndex;
+          } else {
+            this.playingTrackIndex = null;
+          }
+        },
       },
-    });
+    );
   }
 
   render() {
@@ -265,7 +273,9 @@ export class AlbumDetail extends LitElement {
 
 @customElement("album-detail-page")
 export class AlbumDetailPage extends LitElement {
-  private _loadAlbum = new EffectFn(this, Library.albumDetail);
+  private _loadAlbum = new EffectFn(this, (albumId: AlbumId) =>
+    Library.use((service) => service.albumDetail(albumId)),
+  );
 
   @property({ type: Object })
   public location!: RouterLocation;

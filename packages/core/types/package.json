@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "^3.17.6"
+    "effect": "4.0.0-rc.112"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }

@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Context, Effect, Option } from "effect";
 import * as S from "effect/Schema";
 
 /**
@@ -20,7 +20,7 @@ export type ILocalStorage = {
   readonly set: <T, I>(
     namespace: LocalStorageNamespace,
     key: string,
-    schema: S.Schema<T, I>,
+    schema: S.Codec<T, I>,
     value: T,
   ) => Effect.Effect<void>;
 
@@ -32,7 +32,7 @@ export type ILocalStorage = {
   readonly get: <T, I>(
     namespace: LocalStorageNamespace,
     key: string,
-    schema: S.Schema<T, I>,
+    schema: S.Codec<T, I>,
   ) => Effect.Effect<Option.Option<T>>;
 
   /**
@@ -48,7 +48,7 @@ export type ILocalStorage = {
 /**
  * Tag to identify the LocalStorage service.
  */
-export class LocalStorage extends Effect.Tag("@echo/core-types/LocalStorage")<
+export class LocalStorage extends Context.Service<
   LocalStorage,
   ILocalStorage
->() {}
+>()("@echo/core-types/LocalStorage") {}

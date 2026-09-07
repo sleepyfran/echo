@@ -1,5 +1,4 @@
 import * as S from "effect/Schema";
-import { ParseError } from "effect/ParseResult";
 import { Context, Scope, type Effect, type Stream } from "effect";
 
 /**
@@ -18,17 +17,17 @@ export type IBroadcaster = {
    */
   broadcast: <TValue, TEncoded>(
     channel: ChannelName,
-    value: S.Serializable<TValue, TEncoded, never>,
-  ) => Effect.Effect<void, ParseError>;
+    schema: S.Codec<TValue, TEncoded>,
+    value: TValue,
+  ) => Effect.Effect<void, S.SchemaError>;
 };
 
 /**
  * Tag identifying the broadcaster service.
  */
-export class Broadcaster extends Context.Tag("@echo/core-types/Broadcaster")<
-  Broadcaster,
-  IBroadcaster
->() {}
+export class Broadcaster extends Context.Service<Broadcaster, IBroadcaster>()(
+  "@echo/core-types/Broadcaster",
+) {}
 
 /**
  * Defines a listener that can listen to messages broadcasted to a specific
@@ -41,13 +40,14 @@ export type IBroadcastListener = {
    */
   listen: <TValue, TEncoded>(
     channel: ChannelName,
-    schema: S.Schema<TValue, TEncoded, never>,
+    schema: S.Codec<TValue, TEncoded>,
   ) => Effect.Effect<Stream.Stream<TValue>, never, Scope.Scope>;
 };
 
 /**
  * Tag to identify the broadcast listener service.
  */
-export class BroadcastListener extends Context.Tag(
-  "@echo/core-types/BroadcastListener",
-)<BroadcastListener, IBroadcastListener>() {}
+export class BroadcastListener extends Context.Service<
+  BroadcastListener,
+  IBroadcastListener
+>()("@echo/core-types/BroadcastListener") {}

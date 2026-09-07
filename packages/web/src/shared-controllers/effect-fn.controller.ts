@@ -18,7 +18,7 @@ type StreamStatus<A, E> =
  */
 export class EffectFn<P, A, E> implements ReactiveController {
   private host: ReactiveControllerHost;
-  private _fiber: Fiber.RuntimeFiber<void, E> | undefined;
+  private _fiber: Fiber.Fiber<void, E> | undefined;
   private _status: StreamStatus<A, E> = { _tag: "Initial" };
 
   constructor(

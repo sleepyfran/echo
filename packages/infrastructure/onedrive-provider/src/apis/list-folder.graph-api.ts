@@ -48,7 +48,7 @@ export const createListFolder =
                   id: FileId(item.id),
                   name: item.name,
                   byteSize: item.size ?? 0,
-                  mimeType: Option.fromNullable(item.file.mimeType),
+                  mimeType: Option.fromNullishOr(item.file.mimeType),
                   downloadUrl: item["@microsoft.graph.downloadUrl"],
                 }
               : [];

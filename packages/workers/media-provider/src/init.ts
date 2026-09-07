@@ -12,9 +12,6 @@ import { WorkerStateRef } from "./state";
 import { stopMediaProviderResolver } from "./resolvers/stop.resolver";
 import { forkSync } from "./sync/sync";
 
-export const InitMessage = S.TaggedStruct("init", {});
-type InitMessage = S.Schema.Type<typeof InitMessage>;
-
 export const InitFinishedMessage = S.TaggedStruct("initFinished", {});
 type InitFinishedMessage = S.Schema.Type<typeof InitFinishedMessage>;
 

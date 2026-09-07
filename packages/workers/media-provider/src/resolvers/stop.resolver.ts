@@ -20,7 +20,7 @@ export const stopMediaProviderResolver = ({
   Effect.gen(function* () {
     yield* Effect.log(`Stopping media provider ${providerId}`);
 
-    const currentWorkerState = yield* workerStateRef.get;
+    const currentWorkerState = yield* Ref.get(workerStateRef);
     const providerState = currentWorkerState.stateByProvider.get(providerId);
 
     if (!providerState) {
@@ -37,6 +37,7 @@ export const stopMediaProviderResolver = ({
     currentWorkerState.stateByProvider.delete(providerId);
     yield* broadcaster.broadcast(
       "mediaProvider",
+      ProviderStatusChanged,
       new ProviderStatusChanged({
         startArgs: providerState.startArgs,
         status: { _tag: "stopped" },

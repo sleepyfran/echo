@@ -7,7 +7,10 @@ class SpotifySDKLoadFailure extends Data.TaggedError(
 /**
  * Attempts to load the Spotify SDK, logging the result.
  */
-export const loadSpotifyPlaybackSDK = Effect.async((resolveEff) => {
+export const loadSpotifyPlaybackSDK = Effect.callback<
+  void,
+  SpotifySDKLoadFailure
+>((resolveEff) => {
   const script = document.createElement("script");
   script.src = "https://sdk.scdn.co/spotify-player.js";
   script.async = true;
@@ -17,7 +20,7 @@ export const loadSpotifyPlaybackSDK = Effect.async((resolveEff) => {
     resolveEff(
       Effect.logError(
         `Failed to load Spotify SDK with the following error: ${error}`,
-      ).pipe(Effect.map(() => Effect.fail(new SpotifySDKLoadFailure()))),
+      ).pipe(Effect.andThen(Effect.fail(new SpotifySDKLoadFailure()))),
     );
   };
   document.body.appendChild(script);

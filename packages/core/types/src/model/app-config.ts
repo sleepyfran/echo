@@ -12,9 +12,8 @@ export const AppConfigSchema = S.Struct({
     /**
      * Base URL in which the application is currently running.
      */
-    baseUrl: S.String.pipe(
-      S.nonEmptyString(),
-      S.filter(
+    baseUrl: S.NonEmptyString.check(
+      S.makeFilter(
         (url) => url.startsWith("http://") || url.startsWith("https://"),
       ),
     ),
@@ -27,14 +26,13 @@ export const AppConfigSchema = S.Struct({
     /**
      * The client ID of the application registered in Azure AD.
      */
-    clientId: S.String.pipe(S.nonEmptyString()),
+    clientId: S.NonEmptyString,
 
     /**
      * The redirect URI of the application registered in Azure AD.
      */
-    redirectUri: S.String.pipe(
-      S.nonEmptyString(),
-      S.filter(
+    redirectUri: S.NonEmptyString.check(
+      S.makeFilter(
         (url) => url.startsWith("http://") || url.startsWith("https://"),
       ),
     ),
@@ -52,19 +50,18 @@ export const AppConfigSchema = S.Struct({
     /**
      * The client ID of the application registered in Spotify.
      */
-    clientId: S.String.pipe(S.nonEmptyString()),
+    clientId: S.NonEmptyString,
 
     /**
      * The client secret of the application registered in Spotify.
      */
-    secret: S.String.pipe(S.nonEmptyString()),
+    secret: S.NonEmptyString,
 
     /**
      * The redirect URI of the application registered in Spotify.
      */
-    redirectUri: S.String.pipe(
-      S.nonEmptyString(),
-      S.filter(
+    redirectUri: S.NonEmptyString.check(
+      S.makeFilter(
         (url) => url.startsWith("http://") || url.startsWith("https://"),
       ),
     ),
@@ -79,6 +76,6 @@ export type AppConfig = S.Schema.Type<typeof AppConfigSchema>;
 /**
  * Tag to identify the application configuration in the context.
  */
-export const AppConfig = Context.GenericTag<AppConfig>(
+export const AppConfig = Context.Service<AppConfig>(
   "@echo/core-types/AppConfig",
 );

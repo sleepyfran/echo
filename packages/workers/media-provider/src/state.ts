@@ -1,7 +1,7 @@
 import type { ProviderId, ProviderStartArgs } from "@echo/core-types";
-import type { ParseError } from "effect/ParseResult";
+import type { SchemaError } from "effect/Schema";
 import { Context, Option, Ref } from "effect";
-import type { RuntimeFiber } from "effect/Fiber";
+import type { Fiber } from "effect/Fiber";
 
 type ProviderState = {
   /**
@@ -12,7 +12,7 @@ type ProviderState = {
   /**
    * The fiber that is currently running the provider, if any.
    */
-  fiber: Option.Option<RuntimeFiber<void, ParseError>>;
+  fiber: Option.Option<Fiber<void, SchemaError>>;
 };
 
 /**
@@ -30,6 +30,7 @@ export type WorkerState = {
 /**
  * Tag that can provide a ref to the current worker state.
  */
-export class WorkerStateRef extends Context.Tag(
-  "@echo/workers-media-provider/WorkerStateRef",
-)<WorkerStateRef, Ref.Ref<WorkerState>>() {}
+export class WorkerStateRef extends Context.Service<
+  WorkerStateRef,
+  Ref.Ref<WorkerState>
+>()("@echo/workers-media-provider/WorkerStateRef") {}

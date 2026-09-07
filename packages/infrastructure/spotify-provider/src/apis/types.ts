@@ -34,11 +34,11 @@ export type SpotifyRefreshResponse = S.Schema.Type<
  * Response from the Spotify API that represents an album.
  */
 export const SpotifyAlbumResponse = S.Struct({
-  album_type: S.Union(
+  album_type: S.Union([
     S.Literal("album"),
     S.Literal("single"),
     S.Literal("compilation"),
-  ),
+  ]),
   artists: S.Array(
     S.Struct({
       external_urls: S.Struct({

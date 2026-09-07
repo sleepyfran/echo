@@ -29,7 +29,7 @@ const tokenRetriever = (config: AppConfig) => (_key: CacheKey) =>
     })
       .then((response) => response.json())
       .then((json) => json.access_token),
-  ).pipe(Effect.catchAll(() => Effect.fail(new TokenRetrievalFailed())));
+  ).pipe(Effect.catch(() => Effect.fail(new TokenRetrievalFailed())));
 
 const make = Effect.gen(function* () {
   const config = yield* AppConfig;
@@ -43,7 +43,7 @@ const make = Effect.gen(function* () {
   return ArtistImageProvider.of({
     imageForArtist: (artistName: string) =>
       Effect.gen(function* () {
-        const token = yield* tokenCache.get("token").pipe(Effect.option);
+        const token = yield* Cache.get(tokenCache, "token").pipe(Effect.option);
         if (Option.isNone(token)) {
           yield* Effect.logError(
             "Failed to retrieve Spotify token, unable to retrieve image.",
@@ -68,7 +68,7 @@ const make = Effect.gen(function* () {
           Effect.tapError((error) =>
             Effect.logError(`Failed to fetch artist's image: ${error}`),
           ),
-          Effect.catchAll(() =>
+          Effect.catch(() =>
             Effect.succeed({
               artists: { items: [] },
             } as SpotifyArtistResponse),

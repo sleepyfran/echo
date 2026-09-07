@@ -16,7 +16,7 @@ import { Context, Effect, Layer, Ref } from "effect";
 /**
  * Tag to identify the MSAL implementation of the Authentication interface.
  */
-export const MsalAuthentication = Context.GenericTag<Authentication>(
+export const MsalAuthentication = Context.Service<Authentication>(
   "@echo/infrastructure-msal-authentication/MsalAuthentication",
 );
 
@@ -64,7 +64,7 @@ export const MsalAuthenticationLive = Layer.effect(
       });
 
     const connect = Effect.gen(function* () {
-      const app = yield* msalAppRef.get;
+      const app = yield* Ref.get(msalAppRef);
 
       yield* Effect.tryPromise({
         try: () => app.initialize(),
@@ -84,7 +84,7 @@ export const MsalAuthenticationLive = Layer.effect(
       forceRefresh = false,
     ) =>
       Effect.gen(function* () {
-        const app = yield* msalAppRef.get;
+        const app = yield* Ref.get(msalAppRef);
 
         if (cachedCredentials.providerSpecific._tag !== "MSAL") {
           yield* Effect.logError(
@@ -123,13 +123,13 @@ export const MsalAuthenticationLive = Layer.effect(
             Effect.logError(`Error while connecting silently: ${e}`),
           ),
           Effect.flatMap(handleResponse),
-          Effect.orElse(() => connect),
+          Effect.catch(() => connect),
         );
       });
 
     const signOut = Effect.gen(function* () {
       yield* Effect.log("Signing out from MSAL");
-      const app = yield* msalAppRef.get;
+      const app = yield* Ref.get(msalAppRef);
       yield* Effect.tryPromise({
         try: () => app.clearCache(),
         catch: () => AuthenticationError.Unknown,

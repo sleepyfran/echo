@@ -2,10 +2,10 @@ import {
   HttpClient,
   HttpClientError,
   HttpClientRequest,
-} from "@effect/platform";
-import { Effect, Layer, pipe } from "effect";
+} from "effect/unstable/http";
+import { Context, Effect, Layer, pipe } from "effect";
 import type { AuthenticationInfo, TrackId } from "@echo/core-types";
-import type { HttpBodyError } from "@effect/platform/HttpBody";
+import type { HttpBodyError } from "effect/unstable/http/HttpBody";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com";
 
@@ -20,11 +20,12 @@ export type ISpotifyPlayerApi = {
   ) => Effect.Effect<void, HttpClientError.HttpClientError | HttpBodyError>;
 };
 
-export class SpotifyPlayerApi extends Effect.Tag(
-  "@echo/spotify-player/SpotifyPlayerApi",
-)<SpotifyPlayerApi, ISpotifyPlayerApi>() {}
+export class SpotifyPlayerApi extends Context.Service<
+  SpotifyPlayerApi,
+  ISpotifyPlayerApi
+>()("@echo/spotify-player/SpotifyPlayerApi") {}
 
-export const SpotifyPlayerApiLive = Layer.scoped(
+export const SpotifyPlayerApiLive = Layer.effect(
   SpotifyPlayerApi,
   Effect.gen(function* () {
     /*
@@ -32,7 +33,9 @@ export const SpotifyPlayerApiLive = Layer.scoped(
     added to the request and the request will fail with CORS.
     */
     const httpClient = (yield* HttpClient.HttpClient).pipe(
-      HttpClient.withTracerPropagation(false),
+      HttpClient.transformResponse(
+        Effect.provideService(HttpClient.TracerPropagationEnabled, false),
+      ),
     );
 
     return SpotifyPlayerApi.of({

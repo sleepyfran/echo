@@ -17,7 +17,7 @@ import { isTokenNearingExpiration } from "@echo/core-auth";
  * any are found, it will attempt to refresh the token and store it in the
  * authentication cache.
  */
-export const AuthenticationRefresherLive = Layer.scoped(
+export const AuthenticationRefresherLive = Layer.effect(
   AuthenticationRefresher,
   Effect.gen(function* () {
     const activeProviderCache = yield* ActiveMediaProviderCache;
@@ -31,13 +31,14 @@ export const AuthenticationRefresherLive = Layer.scoped(
       broadcaster
         .broadcast(
           "authentication",
+          ProviderAuthInfoChanged,
           new ProviderAuthInfoChanged({
             providerId,
             authInfo,
           }),
         )
         .pipe(
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             Effect.logError(
               `Failed to broadcast token update to broadcast channel due to error:\n${error.toString()}`,
             ),
@@ -47,7 +48,7 @@ export const AuthenticationRefresherLive = Layer.scoped(
     return AuthenticationRefresher.of({
       start: Effect.repeat(
         pollAndRefresh(activeProviderCache, onTokenUpdated),
-        Schedule.addDelay(Schedule.forever, () => "5 minutes"),
+        Schedule.addDelay(Schedule.forever, () => Effect.succeed("5 minutes")),
       ),
     });
   }),
@@ -120,7 +121,7 @@ const refreshProvider = (
           `Token refreshed and stored in cache for provider ${metadata.id}`,
         ),
       ),
-      Effect.catchAll(() =>
+      Effect.catch(() =>
         Effect.logError(`Failed to refresh token for provider ${metadata.id}`),
       ),
     );

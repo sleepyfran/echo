@@ -1,4 +1,4 @@
-import { Effect, Scope, SubscriptionRef } from "effect";
+import { Context, Effect, Scope, SubscriptionRef } from "effect";
 import type { ProviderId, ProviderStatus } from "../model";
 
 /**
@@ -35,13 +35,15 @@ export type IMediaProviderArgsStorage = {
 /**
  * Tag to identify the MediaProviderStatus service.
  */
-export class MediaProviderStatus extends Effect.Tag(
-  "@echo/core-types/MediaProviderStatus",
-)<MediaProviderStatus, IMediaProviderStatus>() {}
+export class MediaProviderStatus extends Context.Service<
+  MediaProviderStatus,
+  IMediaProviderStatus
+>()("@echo/core-types/MediaProviderStatus") {}
 
 /**
  * Tag to identify the MediaProviderArgsStorage service.
  */
-export class MediaProviderArgsStorage extends Effect.Tag(
-  "@echo/core-types/MediaProviderArgsStorage",
-)<MediaProviderArgsStorage, IMediaProviderArgsStorage>() {}
+export class MediaProviderArgsStorage extends Context.Service<
+  MediaProviderArgsStorage,
+  IMediaProviderArgsStorage
+>()("@echo/core-types/MediaProviderArgsStorage") {}

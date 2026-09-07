@@ -20,7 +20,7 @@ const make = LocalStorage.of({
     Effect.sync(() =>
       pipe(
         localStorage.getItem(createKey(namespace, key)),
-        Option.fromNullable,
+        Option.fromNullishOr,
         Option.map((value) => JSON.parse(value)),
         Option.flatMap(S.decodeUnknownOption(schema)),
       ),

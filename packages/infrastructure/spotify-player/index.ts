@@ -19,7 +19,6 @@ import {
   pipe,
   Queue,
   Ref,
-  Runtime,
   Scope,
   Stream,
 } from "effect";
@@ -91,30 +90,33 @@ const make = Effect.gen(function* () {
 
         const deferredUntilRegistered = yield* Deferred.make<undefined>();
 
-        const runtime = yield* Effect.runtime();
+        yield* Stream.callback<InitCommand>((queue) =>
+          Effect.sync(() => {
+            window.onSpotifyWebPlaybackSDKReady = () => {
+              const player = new window.Spotify.Player({
+                name: "Echo",
+                getOAuthToken: (cb) =>
+                  Effect.runPromise(
+                    authCache
+                      .get(ApiBasedProviderId.Spotify)
+                      .pipe(Effect.map(Option.getOrElse(() => authInfo))),
+                  ).then((authInfo) => cb(authInfo.accessToken)),
+                volume: 1.0,
+              });
 
-        yield* Stream.async<InitCommand>((emit) => {
-          window.onSpotifyWebPlaybackSDKReady = () => {
-            const player = new window.Spotify.Player({
-              name: "Echo",
-              getOAuthToken: (cb) =>
-                Runtime.runPromise(runtime)(
-                  authCache
-                    .get(ApiBasedProviderId.Spotify)
-                    .pipe(Effect.map(Option.getOrElse(() => authInfo))),
-                ).then((authInfo) => cb(authInfo.accessToken)),
-              volume: 1.0,
-            });
+              player.addListener("ready", ({ device_id }) => {
+                Queue.offerUnsafe(
+                  queue,
+                  PlayerReady({ player, deviceId: device_id }),
+                );
+              });
 
-            player.addListener("ready", ({ device_id }) => {
-              emit.single(PlayerReady({ player, deviceId: device_id }));
-            });
+              Queue.offerUnsafe(queue, PlayerCreated({ player }));
+            };
 
-            emit.single(PlayerCreated({ player }));
-          };
-
-          emit.single(CallbackRegistered());
-        }).pipe(
+            Queue.offerUnsafe(queue, CallbackRegistered());
+          }),
+        ).pipe(
           Stream.runForEach((command) =>
             Match.value(command).pipe(
               Match.tag("CallbackRegistered", () =>
@@ -156,23 +158,23 @@ const make = Effect.gen(function* () {
         yield* Deferred.await(deferredUntilRegistered);
 
         yield* Effect.log("Loading Spotify SDK in the background");
-        yield* loadSpotifyPlaybackSDK;
+        yield* loadSpotifyPlaybackSDK.pipe(Effect.orDie);
 
         return {
           _tag: ProviderType.ApiBased,
           id: MediaPlayerId("spotify-player"),
           playTrack: (trackId) =>
             Effect.gen(function* () {
-              yield* commandQueue.offer(PlayTrack({ trackId }));
-              yield* commandQueue.offer(StartTimeTracking());
+              yield* Queue.offer(commandQueue, PlayTrack({ trackId }));
+              yield* Queue.offer(commandQueue, StartTimeTracking());
             }),
-          togglePlayback: commandQueue.offer(TogglePlayback()),
+          togglePlayback: Queue.offer(commandQueue, TogglePlayback()),
           stop: Effect.gen(function* () {
-            yield* commandQueue.offer(Stop());
-            yield* commandQueue.offer(StopTimeTracking());
+            yield* Queue.offer(commandQueue, Stop());
+            yield* Queue.offer(commandQueue, StopTimeTracking());
           }),
           observe: Stream.fromQueue(mediaPlayerEventQueue),
-          dispose: commandQueue.offer(Dispose()),
+          dispose: Queue.offer(commandQueue, Dispose()),
         };
       }),
   });
@@ -203,7 +205,7 @@ const consumeCommandsInBackground = (
           playerApi
             .playTrack(deviceId, trackId, authInfo)
             .pipe(
-              Effect.catchAll((e) =>
+              Effect.catch((e) =>
                 Effect.logError("Failed to play track, error", e),
               ),
             ),
@@ -293,8 +295,8 @@ const setupListeners = (
         state.timestamp - lastTrackEndedTimestamp > 5000
       ) {
         lastTrackEndedTimestamp = state.timestamp;
-        mediaPlayerEventQueue.unsafeOffer({ _tag: "trackEnded" });
-        commandQueue.unsafeOffer(StopTimeTracking());
+        Queue.offerUnsafe(mediaPlayerEventQueue, { _tag: "trackEnded" });
+        Queue.offerUnsafe(commandQueue, StopTimeTracking());
         return;
       }
 
@@ -304,12 +306,13 @@ const setupListeners = (
       that messes up the switching of tracks when a track ends.
       */
       if (state.paused && !previousState?.paused) {
-        mediaPlayerEventQueue.unsafeOffer({ _tag: "trackPaused" });
+        Queue.offerUnsafe(mediaPlayerEventQueue, { _tag: "trackPaused" });
       } else if (!state.paused && previousState?.paused) {
-        mediaPlayerEventQueue.unsafeOffer({ _tag: "trackPlaying" });
+        Queue.offerUnsafe(mediaPlayerEventQueue, { _tag: "trackPlaying" });
       } else if (previousState?.position !== state.position) {
         const positionInSeconds = Math.floor(state.position / 1000);
-        commandQueue.unsafeOffer(
+        Queue.offerUnsafe(
+          commandQueue,
           SyncTimeTracking({ seconds: positionInSeconds }),
         );
       }
@@ -390,7 +393,7 @@ const createTimeTicker = (
                   (prev) => prev + 1,
                 );
 
-                yield* mediaPlayerEventQueue.offer({
+                yield* Queue.offer(mediaPlayerEventQueue, {
                   _tag: "trackTimeChanged",
                   time: updatedTime,
                 });
@@ -440,7 +443,7 @@ const createTimeTicker = (
 /**
  * Implementation of the media player service using the Spotify Web Playback SDK.
  */
-export const SpotifyMediaPlayerFactoryLive = Layer.scoped(
+export const SpotifyMediaPlayerFactoryLive = Layer.effect(
   MediaPlayerFactory,
   make,
 ).pipe(Layer.provide(SpotifyPlayerApiLive));

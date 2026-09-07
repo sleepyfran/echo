@@ -3,15 +3,12 @@
     "target": "ES2020",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "types": ["node", "spotify-web-playback-sdk", "vite/client"],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
@@ -27,9 +24,7 @@
     /* Aliases */
     "baseUrl": ".",
     "paths": {
-      "~web/*": [
-        "packages/web/src/*"
-      ]
+      "~web/*": ["packages/web/src/*"]
     }
   },
   "references": [

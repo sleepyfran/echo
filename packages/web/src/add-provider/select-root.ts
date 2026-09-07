@@ -25,7 +25,9 @@ export class SelectRoot extends LitElement {
   private _selectRoot = new EffectFn(
     this,
     (rootFolder: FolderMetadata) =>
-      AddProviderWorkflow.selectRoot(this.state, rootFolder),
+      AddProviderWorkflow.use((service) =>
+        service.selectRoot(this.state, rootFolder),
+      ),
     {
       complete: () => this.dispatchEvent(new ProviderStartedEvent()),
     },

@@ -171,10 +171,10 @@ export type MediaProviderFactory = {
   readonly createMediaProvider: (authInfo: AuthenticationInfo) => MediaProvider;
 };
 
-export const MediaProviderFactory = Context.GenericTag<MediaProviderFactory>(
+export const MediaProviderFactory = Context.Service<MediaProviderFactory>(
   "@echo/core-types/ProviderFactory",
 );
 
-export const MediaPlayerFactory = Context.GenericTag<MediaPlayerFactory>(
+export const MediaPlayerFactory = Context.Service<MediaPlayerFactory>(
   "@echo/core-types/MediaPlayerFactory",
 );

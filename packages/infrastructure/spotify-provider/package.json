@@ -9,9 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-dates": "^1.0.0",
-    "@echo/core-types": "^1.0.0",
-    "@effect/platform": "^0.90.0",
-    "effect": "^3.17.6"
+    "@echo/core-dates": "workspace:*",
+    "@echo/core-types": "workspace:*",
+    "effect": "4.0.0-rc.112"
   }
 }

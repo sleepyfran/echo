@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-types": "^1.0.0",
-    "effect": "^3.17.6"
+    "@echo/core-types": "workspace:*",
+    "effect": "4.0.0-rc.112"
   }
 }

@@ -19,10 +19,10 @@ export enum ApiBasedProviderId {
 /**
  * ID of the provider that the metadata is for.
  */
-export const ProviderId = S.Union(
-  S.Enums(FileBasedProviderId),
-  S.Enums(ApiBasedProviderId),
-);
+export const ProviderId = S.Union([
+  S.Enum(FileBasedProviderId),
+  S.Enum(ApiBasedProviderId),
+]);
 export type ProviderId = S.Schema.Type<typeof ProviderId>;
 
 /**
@@ -40,7 +40,7 @@ export enum ProviderType {
  */
 export const ProviderMetadata = S.Struct({
   id: ProviderId,
-  type: S.Enums(ProviderType),
+  type: S.Enum(ProviderType),
 });
 export type ProviderMetadata = S.Schema.Type<typeof ProviderMetadata>;
 
@@ -86,29 +86,29 @@ export enum ProviderError {
 const ProviderNotStarted = S.TaggedStruct("not-started", {});
 const ProviderSyncing = S.TaggedStruct("syncing", {});
 const ProviderSynced = S.TaggedStruct("synced", {
-  lastSyncedAt: S.Date,
+  lastSyncedAt: S.DateFromString,
   syncedTracks: S.Number,
   tracksWithError: S.Number,
 });
 const ProviderSyncSkipped = S.TaggedStruct("sync-skipped", {
-  lastSyncedAt: S.Date,
+  lastSyncedAt: S.DateFromString,
 });
 const ProviderErrored = S.TaggedStruct("errored", {
-  error: S.Enums(ProviderError),
+  error: S.Enum(ProviderError),
 });
 const ProviderStopped = S.TaggedStruct("stopped", {});
 
 /**
  * Defines the status of a provider.
  */
-export const ProviderStatus = S.Union(
+export const ProviderStatus = S.Union([
   ProviderNotStarted,
   ProviderSyncing,
   ProviderSynced,
   ProviderSyncSkipped,
   ProviderErrored,
   ProviderStopped,
-);
+]);
 export type ProviderStatus = S.Schema.Type<typeof ProviderStatus>;
 
 /**
@@ -116,37 +116,36 @@ export type ProviderStatus = S.Schema.Type<typeof ProviderStatus>;
  * file-based or API-based.
  */
 const CommonStartArgs = S.Struct({
-  lastSyncedAt: S.Option(S.Date),
+  lastSyncedAt: S.OptionFromNullOr(S.DateFromString),
 });
 
 /**
  * Defines the parameters required to start a file-based provider.
  */
-export const FileBasedStartArgs = S.extend(
-  CommonStartArgs,
-  S.TaggedStruct(ProviderType.FileBased, {
-    metadata: ProviderMetadata,
-    authInfo: AuthenticationInfo,
-    rootFolder: FolderMetadata,
-  }),
-);
+export const FileBasedStartArgs = S.TaggedStruct(ProviderType.FileBased, {
+  ...CommonStartArgs.fields,
+  metadata: ProviderMetadata,
+  authInfo: AuthenticationInfo,
+  rootFolder: FolderMetadata,
+});
 export type FileBasedStartArgs = S.Schema.Type<typeof FileBasedStartArgs>;
 
 /**
  * Defines the parameters required to start an API-based provider.
  */
-export const ApiBasedStartArgs = S.extend(
-  CommonStartArgs,
-  S.TaggedStruct(ProviderType.ApiBased, {
-    metadata: ProviderMetadata,
-    authInfo: AuthenticationInfo,
-  }),
-);
+export const ApiBasedStartArgs = S.TaggedStruct(ProviderType.ApiBased, {
+  ...CommonStartArgs.fields,
+  metadata: ProviderMetadata,
+  authInfo: AuthenticationInfo,
+});
 export type ApiBasedStartArgs = S.Schema.Type<typeof ApiBasedStartArgs>;
 
 /**
  * Defines the parameters required to start a provider, which can be either file-based
  * or API-based.
  */
-export const ProviderStartArgs = S.Union(FileBasedStartArgs, ApiBasedStartArgs);
+export const ProviderStartArgs = S.Union([
+  FileBasedStartArgs,
+  ApiBasedStartArgs,
+]);
 export type ProviderStartArgs = S.Schema.Type<typeof ProviderStartArgs>;

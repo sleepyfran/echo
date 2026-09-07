@@ -1,0 +1,13 @@
+packages:
+  - "packages/*"
+  - "packages/components/*"
+  - "packages/core/*"
+  - "packages/infrastructure/*"
+  - "packages/services/*"
+  - "packages/workflows/*"
+  - "packages/workers/*"
+allowBuilds:
+  "@vaadin/vaadin-usage-statistics": false
+  esbuild: true
+  msgpackr-extract: true
+  unrs-resolver: true

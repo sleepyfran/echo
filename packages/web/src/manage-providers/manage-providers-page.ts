@@ -20,7 +20,7 @@ export class ManageProvidersPage extends LitElement {
 
   private _providerStatus = new StreamConsumer(
     this,
-    MediaProviderStatus.observe,
+    MediaProviderStatus.use((service) => service.observe),
   );
 
   static styles = css`

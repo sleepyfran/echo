@@ -11,4 +11,4 @@ export type Crypto = {
 /**
  * Tag to identify the crypto service.
  */
-export const Crypto = Context.GenericTag<Crypto>("@echo/core-types/Crypto");
+export const Crypto = Context.Service<Crypto>("@echo/core-types/Crypto");

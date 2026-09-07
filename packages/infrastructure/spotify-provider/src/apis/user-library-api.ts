@@ -2,10 +2,10 @@ import {
   HttpClientError,
   HttpClientRequest,
   HttpClientResponse,
-} from "@effect/platform";
+} from "effect/unstable/http";
 import { SpotifyUserSavedAlbumsResponse } from "./types";
-import { Effect, Layer, pipe } from "effect";
-import type { ParseError } from "effect/ParseResult";
+import { Context, Effect, Layer, pipe } from "effect";
+import type { SchemaError } from "effect/Schema";
 import type { AuthenticationInfo } from "@echo/core-types";
 import { createClient } from "./client";
 
@@ -21,15 +21,16 @@ export type ISpotifyLibraryApi = {
     limit: number;
   }) => Effect.Effect<
     SpotifyUserSavedAlbumsResponse,
-    HttpClientError.HttpClientError | ParseError
+    HttpClientError.HttpClientError | SchemaError
   >;
 };
 
-export class SpotifyLibraryApi extends Effect.Tag(
-  "@echo/spotify-provider/SpotifyLibraryApi",
-)<SpotifyLibraryApi, ISpotifyLibraryApi>() {}
+export class SpotifyLibraryApi extends Context.Service<
+  SpotifyLibraryApi,
+  ISpotifyLibraryApi
+>()("@echo/spotify-provider/SpotifyLibraryApi") {}
 
-export const SpotifyLibraryApiLive = Layer.scoped(
+export const SpotifyLibraryApiLive = Layer.effect(
   SpotifyLibraryApi,
   Effect.gen(function* () {
     const httpClient = yield* createClient;

@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
 
 /**
  * Service that encapsulates the orchestration for initializing the application
@@ -17,7 +17,6 @@ export type IAppInit = {
 /**
  * Tag to identify the AppInit service.
  */
-export class AppInit extends Effect.Tag("@echo/core-types/AppInit")<
-  AppInit,
-  IAppInit
->() {}
+export class AppInit extends Context.Service<AppInit, IAppInit>()(
+  "@echo/core-types/AppInit",
+) {}

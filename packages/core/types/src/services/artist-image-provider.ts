@@ -13,6 +13,6 @@ export type ArtistImageProvider = {
 /**
  * Tag to identify the metadata provider service.
  */
-export const ArtistImageProvider = Context.GenericTag<ArtistImageProvider>(
+export const ArtistImageProvider = Context.Service<ArtistImageProvider>(
   "@echo/core-types/ArtistImageProvider",
 );

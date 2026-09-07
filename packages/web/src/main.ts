@@ -12,10 +12,13 @@ import "~web/router";
  */
 @customElement("app-root")
 export class AppRoot extends LitElement {
-  private _init = new EffectConsumer(this, AppInit.init);
+  private _init = new EffectConsumer(
+    this,
+    AppInit.use((service) => service.init),
+  );
   private _activeProviders = new StreamConsumer(
     this,
-    ActiveMediaProviderCache.observe,
+    ActiveMediaProviderCache.useSync((service) => service.observe),
   );
 
   static styles = css`

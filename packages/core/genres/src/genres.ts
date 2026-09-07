@@ -15,7 +15,7 @@ export const flatten = (genres: string[]): Genre[] =>
  */
 export const addTo = (currentGenres: Genre[], newGenres: Genre[]): Genre[] => {
   const updatedGenres = HashSet.fromIterable(currentGenres).pipe(
-    HashSet.union(newGenres),
+    HashSet.union(HashSet.fromIterable(newGenres)),
   );
 
   return Array.from(updatedGenres);

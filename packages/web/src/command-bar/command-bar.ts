@@ -28,13 +28,17 @@ export class CommandBar extends LitElement {
   private readonly _handleWindowMouseDown = (event: MouseEvent) =>
     this._onWindowMouseDown(event);
 
-  private search = new EffectFn(this, Library.search, {
-    complete: (results) => {
-      this.searchResults = results;
-      this.resultsVisible = true;
-      this.selectedResultIndex = -1;
+  private search = new EffectFn(
+    this,
+    (term: string) => Library.use((service) => service.search(term)),
+    {
+      complete: (results) => {
+        this.searchResults = results;
+        this.resultsVisible = true;
+        this.selectedResultIndex = -1;
+      },
     },
-  });
+  );
 
   static styles = css`
     :host {
@@ -99,13 +103,17 @@ export class CommandBar extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
 
-    new StreamConsumer(this, Keyboard.observeEvent("command-bar:open"), {
-      item: () => {
-        this.resultsVisible = true;
-        const input = this.shadowRoot?.querySelector("input");
-        input?.focus();
+    new StreamConsumer(
+      this,
+      Keyboard.use((service) => service.observeEvent("command-bar:open")),
+      {
+        item: () => {
+          this.resultsVisible = true;
+          const input = this.shadowRoot?.querySelector("input");
+          input?.focus();
+        },
       },
-    });
+    );
 
     // Listen for the Escape key to close the search bar.
     window.addEventListener("keydown", this._handleWindowKeyDown);

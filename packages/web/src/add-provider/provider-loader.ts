@@ -32,7 +32,8 @@ export class ProviderLoader extends LitElement {
 
   private _loadProvider = new EffectFn(
     this,
-    (metadata: ProviderMetadata) => AddProviderWorkflow.loadProvider(metadata),
+    (metadata: ProviderMetadata) =>
+      AddProviderWorkflow.use((service) => service.loadProvider(metadata)),
     {
       complete: (state) => {
         this._loaderStatus = state;
@@ -43,7 +44,7 @@ export class ProviderLoader extends LitElement {
   private _connectToProvider = new EffectFn(
     this,
     (state: WaitingForConnectionState) =>
-      AddProviderWorkflow.connectToProvider(state),
+      AddProviderWorkflow.use((service) => service.connectToProvider(state)),
     {
       pending: () => {
         this._loaderStatus = { _tag: "ConnectingToProvider" };

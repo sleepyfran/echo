@@ -34,7 +34,7 @@ backbone of most of the app logic. To get started, clone the repository and inst
 the dependencies:
 
 ```sh
-yarn install
+pnpm install
 ```
 
 Once you've done this, make sure you have a `.env.local` file on the web package that
@@ -57,5 +57,5 @@ matches your local dev URL.
 Finally, once all this is done, you can run the app with:
 
 ```sh
-yarn dev
+pnpm dev
 ```

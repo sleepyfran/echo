@@ -13,7 +13,11 @@ export class PlayAllButton extends LitElement {
   @property({ type: Array })
   albums: Album[] = [];
 
-  private _playAlbums = new EffectFn(this, Player.playAlbums);
+  private _playAlbums = new EffectFn(
+    this,
+    (args: { albums: Album[]; order: "newest" | "oldest" | "shuffled" }) =>
+      Player.use((service) => service.playAlbums(args)),
+  );
 
   static styles = css`
     sl-menu {

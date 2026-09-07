@@ -26,7 +26,10 @@ export class AlbumLibraryPage extends LitElement {
   @state()
   private _selectedGenre: Genre | undefined;
 
-  private _genres = new StreamConsumer(this, Library.observeGenres);
+  private _genres = new StreamConsumer(
+    this,
+    Library.use((service) => service.observeGenres()),
+  );
 
   static styles = css`
     div.filters {
@@ -177,13 +180,17 @@ class GenreAlbumLibrary extends LitElement {
   `;
 
   private _albums = new StreamConsumer(this, () =>
-    Library.observeAlbums(this.genre ? { genre: this.genre } : undefined),
+    Library.use((service) =>
+      service.observeAlbums(this.genre ? { genre: this.genre } : undefined),
+    ),
   );
 
   protected willUpdate(_changedProperties: PropertyValues): void {
     if (_changedProperties.has("genre")) {
       this._albums = new StreamConsumer(this, () =>
-        Library.observeAlbums(this.genre ? { genre: this.genre } : undefined),
+        Library.use((service) =>
+          service.observeAlbums(this.genre ? { genre: this.genre } : undefined),
+        ),
       );
     }
   }

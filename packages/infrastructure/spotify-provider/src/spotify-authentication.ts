@@ -9,7 +9,6 @@ import {
   Context,
   Data,
   Effect,
-  Either,
   Layer,
   pipe,
   Schedule,
@@ -28,11 +27,14 @@ export class UnableToOpenWindow extends Data.TaggedError(
 /**
  * Tag to identify the Spotify implementation of the Authentication interface.
  */
-export const SpotifyAuthentication = Context.GenericTag<Authentication>(
+export const SpotifyAuthentication = Context.Service<Authentication>(
   "@echo/infrastructure-spotify-provider/SpotifyAuthentication",
 );
 
-type CodeOrError = Option.Option<Either.Either<string, string>>;
+type CodeOrError = Option.Option<
+  | { readonly _tag: "Code"; readonly code: string }
+  | { readonly _tag: "Error"; readonly error: string }
+>;
 
 const make = Effect.gen(function* () {
   const appConfig = yield* AppConfig;
@@ -49,7 +51,7 @@ const make = Effect.gen(function* () {
 
     return toAuthenticationInfo(authResponse);
   }).pipe(
-    Effect.catchAll(() => Effect.fail(AuthenticationError.Unknown)),
+    Effect.catch(() => Effect.fail(AuthenticationError.Unknown)),
     Effect.scoped,
   );
 
@@ -71,7 +73,7 @@ const make = Effect.gen(function* () {
         refresh_token: cachedCredentials.providerSpecific.refreshToken,
       });
     }).pipe(
-      Effect.catchAll(() => Effect.fail(AuthenticationError.Unknown)),
+      Effect.catch(() => Effect.fail(AuthenticationError.Unknown)),
       Effect.scoped,
     );
 
@@ -89,14 +91,9 @@ const make = Effect.gen(function* () {
  * Exports a layer that can be used to construct the service, which will use
  * the Spotify API to authenticate the user.
  */
-export const SpotifyAuthenticationLive = Layer.scoped(
+export const SpotifyAuthenticationLive = Layer.effect(
   SpotifyAuthentication,
   make,
-);
-
-const authCheckRepeatPolicy = pipe(
-  Schedule.recurUntil((codeOrError: CodeOrError) => Option.isSome(codeOrError)),
-  Schedule.addDelay(() => "1 second"),
 );
 
 /**
@@ -105,15 +102,16 @@ const authCheckRepeatPolicy = pipe(
  * an error, or a timeout of 1 minute occurs.
  */
 const tryRetrieveAuthenticationCode = (window: Window) =>
-  Effect.repeat(
-    retrieveCodeOrErrorFromWindow(window),
-    authCheckRepeatPolicy,
-  ).pipe(
+  retrieveCodeOrErrorFromWindow(window).pipe(
+    Effect.repeat({
+      until: (result: CodeOrError) => Option.isSome(result),
+      schedule: Schedule.spaced("1 second"),
+    }),
     Effect.timeout("1 minute"),
     Effect.map(Option.getOrThrow), // The schedule should ensure that a code or error is present.
     Effect.flatMap((codeOrError) =>
       Match.value(codeOrError).pipe(
-        Match.tag("Right", (code) => Effect.succeed(code.right)),
+        Match.tag("Code", ({ code }) => Effect.succeed(code)),
         Match.orElse(() =>
           Effect.fail(() => AuthenticationError.InteractionFailed),
         ),
@@ -152,7 +150,9 @@ const openLoginPopup = (appConfig: AppConfig) => {
  * Attempts to read the authentication code or error from the URL search
  * parameters of a window.
  */
-const retrieveCodeOrErrorFromWindow = (window: Window) =>
+const retrieveCodeOrErrorFromWindow = (
+  window: Window,
+): Effect.Effect<CodeOrError> =>
   Effect.sync(() => {
     try {
       const parsedUrl = new URL(window.location.href);
@@ -160,9 +160,9 @@ const retrieveCodeOrErrorFromWindow = (window: Window) =>
       const error = parsedUrl.searchParams.get("error");
 
       if (code) {
-        return Option.some(Either.right(code));
+        return Option.some({ _tag: "Code" as const, code });
       } else if (error) {
-        return Option.some(Either.left(error));
+        return Option.some({ _tag: "Error" as const, error });
       }
 
       return Option.none();

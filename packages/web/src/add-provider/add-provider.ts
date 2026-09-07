@@ -33,14 +33,18 @@ export class AddProvider extends LitElement {
     super.updated(_changedProperties);
 
     if (_changedProperties.has("open") && this.open) {
-      new EffectConsumer(this, AddProviderWorkflow.availableProviders, {
-        complete: (availableProviders) => {
-          this._providerStatus = {
-            _tag: "ProvidersLoaded",
-            availableProviders,
-          };
+      new EffectConsumer(
+        this,
+        AddProviderWorkflow.use((service) => service.availableProviders),
+        {
+          complete: (availableProviders) => {
+            this._providerStatus = {
+              _tag: "ProvidersLoaded",
+              availableProviders,
+            };
+          },
         },
-      });
+      );
     }
   }
 

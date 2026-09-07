@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-strings": "^1.0.0",
-    "@echo/core-types": "^1.0.0",
+    "@echo/core-strings": "workspace:*",
+    "@echo/core-types": "workspace:*",
     "dexie": "^4.0.11",
-    "effect": "^3.17.6"
+    "effect": "4.0.0-rc.112"
   }
 }

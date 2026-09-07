@@ -4,7 +4,7 @@ import {
   type ChannelName,
 } from "@echo/core-types";
 import * as S from "effect/Schema";
-import { Effect, Layer, Stream } from "effect";
+import { Effect, Layer, Result, Stream } from "effect";
 
 const createChannel = (channelName: ChannelName) =>
   Effect.acquireRelease(
@@ -13,10 +13,10 @@ const createChannel = (channelName: ChannelName) =>
   );
 
 const makeBroadcaster = Broadcaster.of({
-  broadcast: (channel, value) =>
+  broadcast: (channel, schema, value) =>
     Effect.gen(function* () {
       const broadcastChannel = yield* createChannel(channel);
-      const serializedRequest = yield* S.serialize(value).pipe(
+      const serializedRequest = yield* S.encodeEffect(schema)(value).pipe(
         Effect.tapError((error) =>
           Effect.logError(
             "An error happened while serializing the value:",
@@ -43,28 +43,16 @@ const makeBroadcastListener = BroadcastListener.of({
       );
 
       const broadcastChannel = yield* createChannel(channel);
-      const decode = S.decodeUnknownSync(schema);
+      const decode = S.decodeUnknownOption(schema);
 
-      return Stream.asyncPush((emit) => {
-        const messageHandler = (message: MessageEvent) => {
-          try {
-            const decoded = decode(message.data);
-            emit.single(decoded);
-          } catch {
-            return;
-          }
-        };
-
-        return Effect.acquireRelease(
-          Effect.sync(() =>
-            broadcastChannel.addEventListener("message", messageHandler),
-          ),
-          () =>
-            Effect.sync(() =>
-              broadcastChannel.removeEventListener("message", messageHandler),
-            ),
-        );
-      });
+      return Stream.fromEventListener<MessageEvent>(
+        broadcastChannel,
+        "message",
+      ).pipe(
+        Stream.filterMap((message) =>
+          Result.fromOption(decode(message.data), () => undefined),
+        ),
+      );
     }),
 });
 

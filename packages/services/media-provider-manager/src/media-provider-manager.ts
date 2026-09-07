@@ -11,7 +11,7 @@ import {
   StopProvider,
 } from "@echo/core-types";
 
-export const MediaProviderManagerLive = Layer.scoped(
+export const MediaProviderManagerLive = Layer.effect(
   MediaProviderManager,
   Effect.gen(function* () {
     const activeMediaProviderCache = yield* ActiveMediaProviderCache;
@@ -51,6 +51,7 @@ export const MediaProviderManagerLive = Layer.scoped(
 
           yield* broadcaster.broadcast(
             "mediaProvider",
+            ForceSyncProvider,
             new ForceSyncProvider({
               args: {
                 ...providerStartArgs.value,
@@ -76,6 +77,7 @@ export const MediaProviderManagerLive = Layer.scoped(
           // Stop the syncing engine.
           yield* broadcaster.broadcast(
             "mediaProvider",
+            StopProvider,
             new StopProvider({
               provider: metadata,
             }),
@@ -94,7 +96,7 @@ export const MediaProviderManagerLive = Layer.scoped(
           // TODO: Cleanup artists with no albums.
         }).pipe(
           // TODO: Maybe propagate the error and show a notification?
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             Effect.logError(
               `Failed to sign out from provider ${providerId}: ${error}`,
             ),

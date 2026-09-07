@@ -1,4 +1,4 @@
-import { Effect, SubscriptionRef } from "effect";
+import { Context, Effect, SubscriptionRef } from "effect";
 import type { Album, PlayerState, ProviderId } from "../model";
 import type { PlayNotFoundError } from "./media-provider";
 
@@ -62,7 +62,6 @@ export type IPlayer = {
 /**
  * Tag to identify the player service.
  */
-export class Player extends Effect.Tag("@echo/core-types/Player")<
-  Player,
-  IPlayer
->() {}
+export class Player extends Context.Service<Player, IPlayer>()(
+  "@echo/core-types/Player",
+) {}

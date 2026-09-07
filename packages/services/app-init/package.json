@@ -9,10 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-auth": "^1.0.0",
-    "@echo/core-types": "^1.0.0",
-    "@echo/services-bootstrap": "^1.0.0",
-    "@echo/services-bootstrap-workers": "^1.0.0",
-    "effect": "^3.17.6"
+    "@echo/core-auth": "workspace:*",
+    "@echo/core-types": "workspace:*",
+    "@echo/services-bootstrap": "workspace:*",
+    "@echo/services-bootstrap-workers": "workspace:*",
+    "effect": "4.0.0-rc.112"
   }
 }

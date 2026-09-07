@@ -67,6 +67,7 @@ const addProvider = (
     yield* broadcaster
       .broadcast(
         "mediaProvider",
+        StartProvider,
         new StartProvider({
           args: startArgs,
         }),
@@ -167,7 +168,7 @@ const createSelectRoot =
       } satisfies DoneState;
     });
 
-export const AddProviderWorkflowLive = Layer.scoped(
+export const AddProviderWorkflowLive = Layer.effect(
   AddProviderWorkflow,
   Effect.gen(function* () {
     const activeMediaProviderCache = yield* ActiveMediaProviderCache;

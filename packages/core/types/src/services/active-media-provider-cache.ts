@@ -1,4 +1,4 @@
-import { Effect, Option, Stream } from "effect";
+import { Context, Effect, Option, Stream } from "effect";
 import type {
   AuthenticationInfo,
   ProviderId,
@@ -55,6 +55,7 @@ export type IActiveMediaProviderCache = {
 /**
  * Tag to identify the ActiveMediaProviderCache service.
  */
-export class ActiveMediaProviderCache extends Effect.Tag(
-  "@echo/core-types/ActiveMediaProviderCache",
-)<ActiveMediaProviderCache, IActiveMediaProviderCache>() {}
+export class ActiveMediaProviderCache extends Context.Service<
+  ActiveMediaProviderCache,
+  IActiveMediaProviderCache
+>()("@echo/core-types/ActiveMediaProviderCache") {}

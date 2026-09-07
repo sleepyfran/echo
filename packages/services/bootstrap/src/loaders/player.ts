@@ -1,11 +1,11 @@
-import { Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect";
 import {
   type ProviderMetadata,
   MediaPlayerFactory,
   ProviderType,
   AuthenticationCache,
 } from "@echo/core-types";
-import { FetchHttpClient } from "@effect/platform";
+import { FetchHttpClient } from "effect/unstable/http";
 
 /**
  * Service that can lazily load a media player.
@@ -19,9 +19,10 @@ export type ILazyLoadedMediaPlayer = {
 /**
  * Tag to identify the lazy loaded player service.
  */
-export class LazyLoadedMediaPlayer extends Effect.Tag(
-  "@echo/services-bootstrap/LazyLoadedMediaPlayer",
-)<LazyLoadedMediaPlayer, ILazyLoadedMediaPlayer>() {}
+export class LazyLoadedMediaPlayer extends Context.Service<
+  LazyLoadedMediaPlayer,
+  ILazyLoadedMediaPlayer
+>()("@echo/services-bootstrap/LazyLoadedMediaPlayer") {}
 
 /**
  * Lazy loads a media player based on the given metadata.

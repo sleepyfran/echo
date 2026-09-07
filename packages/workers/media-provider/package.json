@@ -9,11 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@echo/core-auth": "^1.0.0",
-    "@echo/core-genres": "^1.0.0",
-    "@echo/core-files": "^1.0.0",
-    "@echo/core-types": "^1.0.0",
-    "@echo/services-bootstrap": "^1.0.0",
-    "effect": "^3.17.6"
+    "@echo/core-auth": "workspace:*",
+    "@echo/core-genres": "workspace:*",
+    "@echo/core-files": "workspace:*",
+    "@echo/core-types": "workspace:*",
+    "@echo/services-bootstrap": "workspace:*",
+    "effect": "4.0.0-rc.112"
   }
 }

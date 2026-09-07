@@ -4,21 +4,30 @@ import { LibraryLive } from "@echo/services-library";
 import { PlayerLive } from "@echo/services-player";
 import { AddProviderWorkflowLive } from "@echo/services-provider-manager";
 import { Layer, ManagedRuntime } from "effect";
-import { globalValue } from "effect/GlobalValue";
+
+const runtimeKey = Symbol.for("echo-runtime");
+
+const makeRuntime = () =>
+  ManagedRuntime.make(
+    Layer.mergeAll(AppInitLive, AddProviderWorkflowLive, LibraryLive).pipe(
+      Layer.provideMerge(PlayerLive),
+      Layer.provideMerge(MainLive),
+    ),
+  );
+
+type Runtime = ReturnType<typeof makeRuntime>;
 
 /**
  * Runtime for the application that exposes the services that can be used
  * from the UI layer.
  */
-export const getOrCreateRuntime = () =>
-  globalValue("echo-runtime", () =>
-    ManagedRuntime.make(
-      Layer.mergeAll(AppInitLive, AddProviderWorkflowLive, LibraryLive).pipe(
-        Layer.provideMerge(PlayerLive),
-        Layer.provideMerge(MainLive),
-      ),
-    ),
-  );
+export const getOrCreateRuntime = () => {
+  const globalStore = globalThis as typeof globalThis & {
+    [key: symbol]: Runtime | undefined;
+  };
+
+  return (globalStore[runtimeKey] ??= makeRuntime());
+};
 
 /**
  * Type that represents the runtime that is available in the application.

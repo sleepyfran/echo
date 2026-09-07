@@ -1,4 +1,4 @@
-import { HttpClient } from "@effect/platform";
+import { HttpClient } from "effect/unstable/http";
 import { Effect } from "effect";
 
 /**
@@ -8,6 +8,8 @@ import { Effect } from "effect";
  */
 export const createClient = Effect.gen(function* () {
   return (yield* HttpClient.HttpClient).pipe(
-    HttpClient.withTracerPropagation(false),
+    HttpClient.transformResponse(
+      Effect.provideService(HttpClient.TracerPropagationEnabled, false),
+    ),
   );
 });
